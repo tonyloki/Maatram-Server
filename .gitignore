@@ -1,0 +1,6 @@
+﻿secrets.txt
+.env
+.env.*
+*.zip
+__pycache__/
+node_modules/
