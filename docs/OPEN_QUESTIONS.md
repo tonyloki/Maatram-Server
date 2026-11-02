@@ -216,3 +216,16 @@
   - *Option B*: Adjustments $\le 2\text{ hours}$ require single Admin; adjustments $> 2\text{ hours}$ require Super Admin co-approval.
 - **Recommendation (Non-binding)**: Option B.
 - **Maatram Approval Required**: **MANDATORY**.
+
+---
+
+### Question 16: Password Complexity Rules (Character Classes) Pending Approval
+- **Current Status**: `PENDING_MAATRAM_APPROVAL (UNAPPROVED)`
+- **Architectural Provision**: Minimum length of 8 characters enforced. Character-class complexity rules (uppercase, lowercase, digit, special character) remain unapproved baseline considerations and are not enforced without formal sign-off.
+- **Why Decision is Needed**: Modern NIST SP 800-63B guidelines discourage arbitrary character composition rules in favor of length and breach checking. Formal organizational policy is required from Maatram Foundation.
+- **System Impact**: Affects `src/core/security.py:validate_password_strength` and onboarding registration validation.
+- **Options**:
+  - *Option A*: Length-only policy (minimum 8 characters, NIST compliant).
+  - *Option B*: Complex composition requirements (minimum 8 characters with required upper, lower, digit, and special characters).
+- **Recommendation (Non-binding)**: Option A with compromised password blocklists.
+- **Maatram Approval Required**: **MANDATORY**.
