@@ -48,6 +48,8 @@ env/
 htmlcov/
 .mypy_cache/
 .ruff_cache/
+*profile_results.json
+*load_test_results.json
 
 # Archives & Temporary
 *.zip

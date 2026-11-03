@@ -181,9 +181,12 @@ class EventService:
             published_only=not is_admin,
         )
 
+        event_ids = [ev.id for ev in events]
+        batch_counts = await event_repository.get_batch_registration_counts(db, event_ids)
+
         items: list[EventListItem] = []
         for ev in events:
-            counts = await event_repository.get_registration_counts(db, ev.id)
+            counts = batch_counts.get(ev.id, {"registered": 0, "selected": 0, "waitlisted": 0})
             registered = counts.get("registered", 0)
             selected = counts.get("selected", 0)
             available = max(0, ev.capacity_required - registered)

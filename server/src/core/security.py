@@ -5,10 +5,12 @@ high-entropy refresh token hashing, double-submit CSRF token management,
 and OTP generation/verification.
 """
 
+import asyncio
 import hashlib
 import hmac
 import secrets
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -37,20 +39,38 @@ _argon2_hasher = argon2.PasswordHasher(
     type=argon2.Type.ID,
 )
 
+# Dedicated bounded thread pool for CPU-bound cryptographic operations (Argon2id)
+# Bounded to 4 worker threads to protect CPU cores and prevent event loop starvation
+_crypto_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="argon2_worker")
+
 
 def get_password_hash(password: str) -> str:
-    """Hash password using Argon2id."""
+    """Hash password using Argon2id synchronously."""
     return _argon2_hasher.hash(password)
 
 
+async def get_password_hash_async(password: str) -> str:
+    """Hash password using Argon2id offloaded to a bounded worker thread."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(_crypto_executor, get_password_hash, password)
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify plain password against stored Argon2id hash."""
+    """Verify plain password against stored Argon2id hash synchronously."""
     try:
         return _argon2_hasher.verify(hashed_password, plain_password)
     except VerifyMismatchError:
         return False
     except Exception:
         return False
+
+
+async def verify_password_async(plain_password: str, hashed_password: str) -> bool:
+    """Verify plain password against stored Argon2id hash offloaded to a bounded worker thread."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        _crypto_executor, verify_password, plain_password, hashed_password
+    )
 
 
 def validate_password_strength(password: str) -> None:

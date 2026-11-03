@@ -31,11 +31,13 @@ from src.core.security import (
     generate_otp,
     generate_refresh_token,
     get_password_hash,
+    get_password_hash_async,
     hash_otp,
     hash_token,
     validate_password_strength,
     verify_otp,
     verify_password,
+    verify_password_async,
 )
 from src.models.applications import VolunteerApplication
 from src.models.communications import CommunicationJob
@@ -118,7 +120,7 @@ class AuthService:
             parental_consent_status = "NOT_REQUIRED"
 
         # 5. Create base User
-        pwd_hash = get_password_hash(request.password)
+        pwd_hash = await get_password_hash_async(request.password)
         user = User(
             email=normalized_email,
             password_hash=pwd_hash,
@@ -285,7 +287,8 @@ class AuthService:
             user.failed_login_attempts = 0
 
         # 3. Verify password
-        if not verify_password(request.password, user.password_hash):
+        password_matches = await verify_password_async(request.password, user.password_hash)
+        if not password_matches:
             user.failed_login_attempts += 1
             if user.failed_login_attempts >= settings.MAX_FAILED_LOGIN_ATTEMPTS:
                 user.locked_until = now + timedelta(minutes=settings.ACCOUNT_LOCKOUT_MINUTES)
@@ -742,7 +745,7 @@ class AuthService:
 
         # OTP verified successfully
         prt.is_used = True
-        user.password_hash = get_password_hash(new_password)
+        user.password_hash = await get_password_hash_async(new_password)
 
         # Invalidate all existing sessions
         await user_repository.revoke_all_sessions(db, user.id)

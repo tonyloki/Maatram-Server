@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 5
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 300
+    DB_POOL_PRE_PING: bool = True
 
     # CORS & Cookies
     BACKEND_CORS_ORIGINS: Annotated[list[str], BeforeValidator(parse_cors)] = [

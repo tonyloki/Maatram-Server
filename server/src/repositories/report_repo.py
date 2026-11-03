@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import and_, desc, distinct, func, or_, select
+from sqlalchemy import and_, desc, distinct, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -36,73 +36,77 @@ class ReportRepository:
     """Database persistence and SQL aggregation repository for Administrative Dashboards and Reports."""
 
     async def get_admin_dashboard_metrics(self, db: AsyncSession) -> dict[str, Any]:
-        """Aggregate real database statistics for administrative dashboard."""
-        # 1. Volunteer Counts
-        vol_total_res = await db.execute(select(func.count()).select_from(VolunteerProfile))
-        total_volunteers = vol_total_res.scalar() or 0
+        """Aggregate real database statistics for administrative dashboard using consolidated CTE query."""
+        import json
 
-        active_vol_res = await db.execute(
-            select(func.count())
-            .select_from(User)
-            .where(
-                User.role == "VOLUNTEER",
-                User.status == "APPROVED",
-                User.is_active.is_(True),
-            )
-        )
-        active_volunteers = active_vol_res.scalar() or 0
+        # Handle dialect-specific JSON aggregation functions (PostgreSQL vs SQLite for unit testing)
+        bind = db.get_bind()
+        is_sqlite = bind and "sqlite" in bind.dialect.name
+        json_agg = "json_group_object" if is_sqlite else "json_object_agg"
 
-        cat_counts_res = await db.execute(
-            select(VolunteerProfile.category, func.count(VolunteerProfile.id)).group_by(
-                VolunteerProfile.category
-            )
-        )
-        by_category = {row[0]: row[1] for row in cat_counts_res.all()}
-        for cat in ("STUDENT", "ALUMNI", "CORPORATE"):
-            by_category.setdefault(cat, 0)
+        consolidated_sql = text(f"""
+            SELECT
+              (SELECT count(*) FROM volunteer_profiles) AS total_volunteers,
+              (SELECT count(*) FROM users WHERE role = 'VOLUNTEER' AND status = 'APPROVED' AND is_active = true) AS active_volunteers,
+              (SELECT {json_agg}(coalesce(category, 'OTHER'), count) FROM (
+                  SELECT category, count(*) as count FROM volunteer_profiles GROUP BY category
+              ) s) AS category_counts,
+              (SELECT {json_agg}(coalesce(status, 'OTHER'), count) FROM (
+                  SELECT status, count(*) as count FROM users WHERE role = 'VOLUNTEER' GROUP BY status
+              ) s) AS app_status_counts,
+              (SELECT count(*) FROM events) AS total_events,
+              (SELECT {json_agg}(coalesce(status, 'OTHER'), count) FROM (
+                  SELECT status, count(*) as count FROM events GROUP BY status
+              ) s) AS event_status_counts,
+              (SELECT count(*) FROM event_registrations) AS total_registrations,
+              (SELECT coalesce(sum(hours_credited), 0.00) FROM point_transactions) AS total_hours,
+              (SELECT coalesce(sum(total_points), 0.00) FROM point_transactions) AS total_points;
+        """)
 
-        # 2. Application Pipeline Counts
-        app_status_res = await db.execute(
-            select(User.status, func.count(User.id))
-            .where(User.role == "VOLUNTEER")
-            .group_by(User.status)
-        )
-        app_counts = {row[0]: row[1] for row in app_status_res.all()}
+        metrics_res = await db.execute(consolidated_sql)
+        row = metrics_res.mappings().one()
+
+        def _parse_json_dict(val: Any) -> dict[str, Any]:
+            if isinstance(val, str):
+                try:
+                    return json.loads(val)
+                except Exception:
+                    return {}
+            return val or {}
+
+        total_volunteers = int(row["total_volunteers"] or 0)
+        active_volunteers = int(row["active_volunteers"] or 0)
+
+        # 1. Category breakdown
+        cat_counts = _parse_json_dict(row["category_counts"])
+        by_category = {cat: int(cat_counts.get(cat, 0)) for cat in ("STUDENT", "ALUMNI", "CORPORATE")}
+        for k, v in cat_counts.items():
+            by_category[k] = int(v)
+
+        # 2. Application status breakdown
+        app_counts = _parse_json_dict(row["app_status_counts"])
         pending_apps = (
-            app_counts.get("SUBMITTED", 0)
-            + app_counts.get("UNDER_REVIEW", 0)
-            + app_counts.get("UNVERIFIED", 0)
-            + app_counts.get("PENDING", 0)
+            int(app_counts.get("SUBMITTED", 0))
+            + int(app_counts.get("UNDER_REVIEW", 0))
+            + int(app_counts.get("UNVERIFIED", 0))
+            + int(app_counts.get("PENDING", 0))
         )
-        approved_apps = app_counts.get("APPROVED", 0)
-        rejected_apps = app_counts.get("REJECTED", 0)
-        total_apps = sum(app_counts.values())
+        approved_apps = int(app_counts.get("APPROVED", 0))
+        rejected_apps = int(app_counts.get("REJECTED", 0))
+        total_apps = sum(int(v) for v in app_counts.values())
 
-        # 3. Event Stats
-        event_total_res = await db.execute(select(func.count()).select_from(Event))
-        total_events = event_total_res.scalar() or 0
-
-        event_status_res = await db.execute(
-            select(Event.status, func.count(Event.id)).group_by(Event.status)
-        )
-        by_event_status = {row[0]: row[1] for row in event_status_res.all()}
+        # 3. Event stats
+        total_events = int(row["total_events"] or 0)
+        event_status_counts = _parse_json_dict(row["event_status_counts"])
+        by_event_status = {k: int(v) for k, v in event_status_counts.items()}
         completed_events = by_event_status.get("COMPLETED", 0)
 
-        # 4. Engagement Metrics
-        reg_total_res = await db.execute(select(func.count()).select_from(EventRegistration))
-        total_registrations = reg_total_res.scalar() or 0
+        # 4. Engagement
+        total_registrations = int(row["total_registrations"] or 0)
+        total_hours = f"{Decimal(str(row['total_hours'] or '0.00')):.2f}"
+        total_points = f"{Decimal(str(row['total_points'] or '0.00')):.2f}"
 
-        hours_points_res = await db.execute(
-            select(
-                func.coalesce(func.sum(PointTransaction.hours_credited), Decimal("0.00")),
-                func.coalesce(func.sum(PointTransaction.total_points), Decimal("0.00")),
-            )
-        )
-        row = hours_points_res.one()
-        total_hours = f"{row[0]:.2f}"
-        total_points = f"{row[1]:.2f}"
-
-        # 5. Recent Activity from Audit Logs
+        # 5. Recent Activity from Audit Logs (Query 2)
         activity_stmt = (
             select(AuditLog)
             .options(selectinload(AuditLog.actor))

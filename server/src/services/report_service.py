@@ -1,5 +1,6 @@
 """Core domain service for Administrative Reports, SQL Aggregations, and Excel Exports."""
 
+import asyncio
 import io
 import math
 import time
@@ -44,6 +45,32 @@ def sanitize_excel_cell(value: Any) -> Any:
     if isinstance(value, str) and value.startswith(("=", "+", "-", "@")):
         return f"'{value}"
     return value
+
+
+def _generate_excel_bytes(norm_type: str, headers: list[str], data_rows: list[list[Any]]) -> bytes:
+    """Synchronous CPU-bound Excel workbook generator with cell styling and formula sanitization."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    assert ws is not None
+    ws.title = norm_type[:30]
+
+    header_fill = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+
+    ws.append(headers)
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+
+    for row in data_rows:
+        sanitized_row = [sanitize_excel_cell(c) for c in row]
+        ws.append(sanitized_row)
+
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    return stream.getvalue()
 
 
 class ReportService:
@@ -232,11 +259,6 @@ class ReportService:
         params = parameters or {}
         norm_type = report_type.upper().replace("-", "_")
 
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        assert ws is not None
-        ws.title = norm_type[:30]
-
         headers: list[str] = []
         data_rows: list[list[Any]] = []
 
@@ -400,25 +422,8 @@ class ReportService:
                 code="INVALID_REPORT_TYPE",
             )
 
-        # Style header
-        header_fill = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
-        header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-
-        ws.append(headers)
-        for col_idx in range(1, len(headers) + 1):
-            cell = ws.cell(row=1, column=col_idx)
-            cell.fill = header_fill
-            cell.font = header_font
-
-        # Sanitize and write data rows
-        for row in data_rows:
-            sanitized_row = [sanitize_excel_cell(c) for c in row]
-            ws.append(sanitized_row)
-
-        stream = io.BytesIO()
-        wb.save(stream)
-        stream.seek(0)
-        file_bytes = stream.getvalue()
+        # Generate Excel workbook off the event loop in threadpool
+        file_bytes = await asyncio.to_thread(_generate_excel_bytes, norm_type, headers, data_rows)
 
         # Track export record
         expires_at = datetime.now(UTC) + timedelta(days=settings.REPORT_EXPORT_EXPIRE_DAYS)

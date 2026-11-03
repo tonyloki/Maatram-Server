@@ -23,6 +23,18 @@
 
 ---
 
+## Web Application Milestones & Performance Optimization Tracking
+
+| Milestone | Scope / Feature Set | Status | Verification Report | Key Achievements |
+| :---: | :--- | :---: | :---: | :--- |
+| **M1** | Frontend Foundation & Design Tokens | **COMPLETED** | `MILESTONE_1_VERIFICATION.md` | Next.js 16, Tailwind, Motion tokens, Logo, ApiClient, HttpOnly cookies |
+| **M2** | Public Web Experience & Auth UI | **COMPLETED** | `MILESTONE_2_REPORT.md` | Landing, About, Impact, Registration, Login, Visual alignment |
+| **M3** | Volunteer Portal Experience | **COMPLETED** | `MILESTONE_3_REPORT.md` | Dashboard, Events, Activity, Leaderboard, Privacy Consents |
+| **M4** | Admin Portal & Operations | **COMPLETED** | `MILESTONE_4_REPORT.md` | Dashboard, Applications, Events operations, Reports, Outbox DLQ |
+| **M5** | Pre-Deployment Performance Optimization | **COMPLETED** | `PERFORMANCE_OPTIMIZATION_REPORT.md` | Events N+1 batch (-70%), Admin CTE (-63%), Joinedload (-55%), Argon2id threadpool, SWR cache |
+
+---
+
 ## Phase Status Definitions
 - **NOT_STARTED**: Phase has not yet begun. Prerequisites are in progress or awaiting initiation.
 - **IN_PROGRESS**: Active implementation underway.

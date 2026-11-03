@@ -196,5 +196,43 @@ class EventRepository:
             "waitlisted": waitlisted,
         }
 
+    async def get_batch_registration_counts(
+        self, db: AsyncSession, event_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, dict[str, int]]:
+        """Compute aggregated registration status tallies for multiple events in a single batch query."""
+        if not event_ids:
+            return {}
+
+        stmt = (
+            select(
+                EventRegistration.event_id,
+                EventRegistration.status,
+                func.count(EventRegistration.id),
+            )
+            .where(EventRegistration.event_id.in_(event_ids))
+            .group_by(EventRegistration.event_id, EventRegistration.status)
+        )
+        res = await db.execute(stmt)
+        raw_counts: dict[uuid.UUID, dict[str, int]] = {}
+        for event_id, status, count in res.all():
+            if event_id not in raw_counts:
+                raw_counts[event_id] = {}
+            raw_counts[event_id][str(status)] = int(count)
+
+        result: dict[uuid.UUID, dict[str, int]] = {}
+        for eid in event_ids:
+            ev_counts = raw_counts.get(eid, {})
+            selected = ev_counts.get("SELECTED", 0)
+            subscribed = ev_counts.get("SUBSCRIBED", 0)
+            waitlisted = ev_counts.get("WAITLISTED", 0)
+            registered = selected + subscribed
+            result[eid] = {
+                "registered": registered,
+                "selected": selected,
+                "waitlisted": waitlisted,
+            }
+
+        return result
+
 
 event_repository = EventRepository()

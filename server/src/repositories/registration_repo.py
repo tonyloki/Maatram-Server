@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 
 from src.models.events import Event, EventRegistration, RegistrationHistory
 from src.models.volunteers import VolunteerProfile
@@ -147,10 +147,10 @@ class RegistrationRepository:
             .offset(skip)
             .limit(limit)
             .options(
-                selectinload(EventRegistration.volunteer_profile).selectinload(
+                joinedload(EventRegistration.volunteer_profile).joinedload(
                     VolunteerProfile.user
                 ),
-                selectinload(EventRegistration.event),
+                joinedload(EventRegistration.event),
                 selectinload(EventRegistration.history_entries),
             )
         )
