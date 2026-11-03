@@ -58,6 +58,54 @@ class CloudinaryClient:
                 code="FILE_SIZE_EXCEEDED",
             )
 
+    def verify_uploaded_asset(
+        self,
+        public_id: str,
+        secure_url: str,
+        asset_type: str,
+        file_format: str,
+        byte_size: int,
+        user_id: str,
+        is_admin: bool = False,
+    ) -> None:
+        """Server-side verification of uploaded asset metadata, user folder boundary, and Cloudinary URL integrity."""
+        # 1. Format validation
+        self.validate_file_format(asset_type, file_format)
+
+        # 2. Byte size validation
+        self.validate_byte_size(byte_size)
+
+        # 3. Canonical Cloudinary URL check
+        expected_url_prefix = f"https://res.cloudinary.com/{self.cloud_name}/"
+        if not secure_url.startswith(expected_url_prefix):
+            raise DomainException(
+                f"Invalid secure_url. Must be hosted on Cloudinary cloud '{self.cloud_name}'.",
+                status_code=400,
+                code="INVALID_MEDIA_URL",
+            )
+
+        # 4. Folder / ownership check (non-admins must upload only to their assigned folder)
+        norm_type = asset_type.lower()
+        if not norm_type.endswith("s"):
+            norm_type = f"{norm_type}s"
+        expected_user_prefix = f"maatram/{norm_type}/{user_id}/"
+
+        if not is_admin and not public_id.startswith(expected_user_prefix):
+            raise DomainException(
+                f"Unauthorized public_id path. Non-admin assets must reside within '{expected_user_prefix}'.",
+                status_code=403,
+                code="UNAUTHORIZED_MEDIA_FOLDER",
+            )
+
+        # 5. Public ID correspondence in secure_url
+        clean_public_id = public_id.strip("/")
+        if clean_public_id not in secure_url:
+            raise DomainException(
+                "secure_url does not correspond to the provided public_id.",
+                status_code=400,
+                code="MEDIA_URL_MISMATCH",
+            )
+
     def generate_signature(self, params_to_sign: dict[str, Any], algorithm: str = "sha256") -> str:
         """Generate Cloudinary cryptographic signature for direct client uploads.
 

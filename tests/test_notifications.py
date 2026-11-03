@@ -10,12 +10,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import get_password_hash
 from src.integrations.fcm_client import fcm_client
+from src.models.admin import AuditLog
 from src.models.communications import CommunicationJob, CommunicationLog
 from src.models.notifications import DeviceToken
 from src.models.users import User
 from src.models.volunteers import VolunteerProfile
 from src.services.notification_service import notification_service
-from src.workers.outbox_worker import outbox_worker
+from src.workers.outbox_worker import OutboxWorker, outbox_worker
 
 
 async def create_test_user(
@@ -425,3 +426,148 @@ async def test_admin_outbox_endpoints(client: AsyncClient, async_db: AsyncSessio
     await async_db.refresh(dl_job)
     assert dl_job.status == "PENDING"
     assert dl_job.attempts == 0
+
+    # 4. Verify Audit Log entry created with preserved previous attempt count
+    audit_stmt = select(AuditLog).where(
+        AuditLog.resource_type == "COMMUNICATION_JOB",
+        AuditLog.resource_id == str(dl_job.id),
+    )
+    audit = (await async_db.execute(audit_stmt)).scalar_one_or_none()
+    assert audit is not None
+    assert audit.action == "OUTBOX_JOB_REQUEUED"
+    assert audit.old_state is not None
+    assert audit.old_state["attempts"] == 4
+    assert audit.old_state["status"] == "DEAD_LETTER"
+
+    # 5. Cannot requeue a PENDING job -> 400 Bad Request
+    re_retry = await client.post(
+        f"/api/v1/admin/outbox/jobs/{dl_job.id}/retry", headers=admin_headers
+    )
+    assert re_retry.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_outbox_lease_expiry_and_stale_worker_rejection(
+    async_db: AsyncSession,
+) -> None:
+    """Verify concurrent worker safety:
+    1. Worker A claims job J1 and crashes.
+    2. Lease expires (> 5m).
+    3. Worker B reclaims job J1 and delivers it (SENT).
+    4. Worker A wakes up and attempts late completion.
+    5. System rejects Worker A's update and prevents state overwrites.
+    """
+    now = datetime.now(UTC)
+    worker_a = OutboxWorker(worker_id="worker_A", lease_timeout_seconds=300)
+    worker_b = OutboxWorker(worker_id="worker_B", lease_timeout_seconds=300)
+
+    job = CommunicationJob(
+        id=uuid.uuid4(),
+        channel="EMAIL",
+        recipient="lease_test@maatram.org",
+        template_name="VERIFY_EMAIL",
+        payload={"first_name": "CrashTest", "verify_url": "https://maatram.org"},
+        status="PENDING",
+        attempts=0,
+        max_retries=3,
+        idempotency_key=f"lease_{uuid.uuid4().hex}",
+        scheduled_at=now - timedelta(minutes=1),
+        created_at=now,
+    )
+    async_db.add(job)
+    await async_db.commit()
+
+    # Step 1: Worker A claims the job
+    claimed_a = await worker_a.claim_batch(async_db, batch_size=5)
+    assert len(claimed_a) == 1
+    assert claimed_a[0].id == job.id
+    assert claimed_a[0].worker_id == "worker_A"
+    assert claimed_a[0].attempts == 1
+    assert claimed_a[0].status == "PROCESSING"
+    await async_db.commit()
+
+    # Step 2: Worker A crashes, lease expires (simulate 10 minutes pass)
+    claimed_a[0].locked_at = now - timedelta(minutes=10)
+    await async_db.commit()
+
+    # Step 3: Worker B runs claim_batch - it MUST reclaim the expired PROCESSING job
+    claimed_b = await worker_b.claim_batch(async_db, batch_size=5)
+    assert len(claimed_b) == 1
+    assert claimed_b[0].id == job.id
+    assert claimed_b[0].worker_id == "worker_B"
+    assert claimed_b[0].attempts == 2
+    assert claimed_b[0].status == "PROCESSING"
+
+    # Step 4: Worker B processes and delivers successfully
+    ok_b = await worker_b.process_job(async_db, claimed_b[0])
+    assert ok_b is True
+    await async_db.commit()
+
+    await async_db.refresh(job)
+    assert job.status == "SENT"
+    assert job.locked_at is None
+
+    # Step 5: Worker A wakes up and attempts late completion on its stale reference
+    ok_a = await worker_a.process_job(async_db, claimed_a[0])
+    # Worker A MUST be rejected due to ownership check failure!
+    assert ok_a is False
+
+    # Verify job in DB remains SENT and was NOT overwritten by stale Worker A
+    await async_db.refresh(job)
+    assert job.status == "SENT"
+
+
+@pytest.mark.asyncio
+async def test_fcm_error_classification_matrix() -> None:
+    """Verify FCM selective error classification:
+    - TRUE only for confirmed unregistered or missing device tokens.
+    - FALSE for payload errors, sender-id mismatch, network unavailability, or server quota errors.
+    """
+    # 1. Confirmed invalid tokens -> True
+    assert (
+        fcm_client.classify_error("UnregisteredError", "The registration token is not registered.")
+        is True
+    )
+    assert (
+        fcm_client.classify_error(
+            "RegistrationTokenNotRegistered", "Requested entity was not found."
+        )
+        is True
+    )
+    assert fcm_client.classify_error("NotFoundError", "Token not found.") is True
+    assert (
+        fcm_client.classify_error(
+            "MESSAGING/REGISTRATION-TOKEN-NOT-REGISTERED", "Device token unregistered."
+        )
+        is True
+    )
+    assert fcm_client.classify_error(None, "The registration-token-not-registered.") is True
+
+    # 2. Non-token errors -> False
+    assert (
+        fcm_client.classify_error(
+            "InvalidArgumentError", "The notification payload contains an invalid field."
+        )
+        is False
+    )
+    assert (
+        fcm_client.classify_error(
+            "SenderIdMismatchError", "Sender ID does not match registration token."
+        )
+        is False
+    )
+    assert (
+        fcm_client.classify_error(
+            "UnavailableError", "FCM server is temporarily unavailable. Back off."
+        )
+        is False
+    )
+    assert (
+        fcm_client.classify_error("QuotaExceededError", "Device message rate quota exceeded.")
+        is False
+    )
+    assert fcm_client.classify_error("InternalError", "Internal server error occurred.") is False
+    assert (
+        fcm_client.classify_error(None, "Payload structure or field exceeds allowed length.")
+        is False
+    )

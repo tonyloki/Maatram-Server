@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.exceptions import ConflictException, DomainException, NotFoundException
+from src.models.admin import AuditLog
 from src.models.communications import CommunicationJob
 from src.models.notifications import DeviceToken, Notification
 
@@ -194,13 +196,70 @@ class NotificationRepository:
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def requeue_outbox_job(self, db: AsyncSession, job: CommunicationJob) -> CommunicationJob:
-        """Reset failed or dead-letter job to PENDING."""
+    async def requeue_outbox_job(
+        self,
+        db: AsyncSession,
+        job_or_id: CommunicationJob | uuid.UUID,
+        actor_user_id: uuid.UUID | None = None,
+        reason: str | None = None,
+    ) -> CommunicationJob:
+        """Acquire row lock NOWAIT, verify terminal/failed state, preserve attempt count in audit log, and reset to PENDING."""
+        target_id = job_or_id.id if isinstance(job_or_id, CommunicationJob) else job_or_id
+
+        stmt = (
+            select(CommunicationJob)
+            .where(CommunicationJob.id == target_id)
+            .with_for_update(nowait=True)
+        )
+        try:
+            result = await db.execute(stmt)
+            job = result.scalar_one_or_none()
+        except Exception as exc:
+            raise ConflictException(
+                "Job is currently locked by a worker or concurrent operation. Cannot requeue."
+            ) from exc
+
+        if not job:
+            raise NotFoundException("Outbox job not found.")
+
+        if job.status not in ("FAILED", "DEAD_LETTER"):
+            raise DomainException(
+                f"Job is in '{job.status}' state and cannot be requeued (only FAILED or DEAD_LETTER).",
+                status_code=400,
+                code="JOB_NOT_REQUEUEABLE",
+            )
+
+        old_status = job.status
+        old_attempts = job.attempts
+        old_error = job.last_error
+
+        now = datetime.now(UTC)
         job.status = "PENDING"
         job.attempts = 0
         job.locked_at = None
         job.worker_id = None
-        job.scheduled_at = datetime.now(UTC)
+        job.scheduled_at = now
+
+        # Record immutable audit log
+        audit_log = AuditLog(
+            actor_user_id=actor_user_id,
+            action="OUTBOX_JOB_REQUEUED",
+            resource_type="COMMUNICATION_JOB",
+            resource_id=str(job.id),
+            old_state={
+                "status": old_status,
+                "attempts": old_attempts,
+                "last_error": old_error,
+            },
+            new_state={
+                "status": "PENDING",
+                "attempts": 0,
+                "scheduled_at": now.isoformat(),
+            },
+            reason=reason
+            or f"Manually requeued outbox job from {old_status} state (previous attempts: {old_attempts})",
+        )
+        db.add(audit_log)
         await db.flush()
         await db.refresh(job)
         return job

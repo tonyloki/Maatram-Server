@@ -125,7 +125,7 @@ async def test_media_validation_format_and_size(
 async def test_media_asset_registration_and_bola(
     client: AsyncClient, async_db: AsyncSession
 ) -> None:
-    """Verify media asset registration and BOLA deletion protection."""
+    """Verify media asset registration, path validation, URL integrity, and BOLA deletion protection."""
     user_a, _ = await create_test_user(async_db, role="VOLUNTEER")
     user_b, _ = await create_test_user(async_db, role="VOLUNTEER")
 
@@ -135,13 +135,56 @@ async def test_media_asset_registration_and_bola(
     headers_a = {"Authorization": f"Bearer {token_a}"}
     headers_b = {"Authorization": f"Bearer {token_b}"}
 
-    # User A registers media asset
-    pub_id = f"avatars/user_{uuid.uuid4().hex[:8]}"
+    # 1. Security Check: Non-admin trying to register into another user's folder -> 403 Forbidden
+    forged_prefix_id = f"maatram/avatars/{user_b.id}/forged_{uuid.uuid4().hex[:8]}"
+    bad_folder_res = await client.post(
+        "/api/v1/media/assets",
+        json={
+            "public_id": forged_prefix_id,
+            "secure_url": f"https://res.cloudinary.com/maatram/image/upload/{forged_prefix_id}.jpg",
+            "asset_type": "AVATAR",
+            "format": "jpg",
+            "bytes": 250000,
+        },
+        headers=headers_a,
+    )
+    assert bad_folder_res.status_code == 403
+
+    # 2. Security Check: Non-Cloudinary domain rejected -> 400 Bad Request
+    valid_pub_id = f"maatram/avatars/{user_a.id}/avatar_{uuid.uuid4().hex[:8]}"
+    bad_domain_res = await client.post(
+        "/api/v1/media/assets",
+        json={
+            "public_id": valid_pub_id,
+            "secure_url": f"https://malicious-site.com/{valid_pub_id}.jpg",
+            "asset_type": "AVATAR",
+            "format": "jpg",
+            "bytes": 250000,
+        },
+        headers=headers_a,
+    )
+    assert bad_domain_res.status_code == 400
+
+    # 3. Security Check: URL public_id mismatch rejected -> 400 Bad Request
+    mismatch_res = await client.post(
+        "/api/v1/media/assets",
+        json={
+            "public_id": valid_pub_id,
+            "secure_url": "https://res.cloudinary.com/maatram/image/upload/other_file.jpg",
+            "asset_type": "AVATAR",
+            "format": "jpg",
+            "bytes": 250000,
+        },
+        headers=headers_a,
+    )
+    assert mismatch_res.status_code == 400
+
+    # 4. User A registers legitimate media asset
     create_res = await client.post(
         "/api/v1/media/assets",
         json={
-            "public_id": pub_id,
-            "secure_url": f"https://res.cloudinary.com/test/image/upload/{pub_id}.jpg",
+            "public_id": valid_pub_id,
+            "secure_url": f"https://res.cloudinary.com/maatram/image/upload/{valid_pub_id}.jpg",
             "asset_type": "AVATAR",
             "format": "jpg",
             "bytes": 250000,
@@ -151,14 +194,29 @@ async def test_media_asset_registration_and_bola(
     assert create_res.status_code == 201
     asset_id = create_res.json()["id"]
 
-    # User B attempts to delete User A's asset -> 403 Forbidden
+    # 5. Idempotent re-registration by same user returns 200/201 existing asset
+    re_register_res = await client.post(
+        "/api/v1/media/assets",
+        json={
+            "public_id": valid_pub_id,
+            "secure_url": f"https://res.cloudinary.com/maatram/image/upload/{valid_pub_id}.jpg",
+            "asset_type": "AVATAR",
+            "format": "jpg",
+            "bytes": 250000,
+        },
+        headers=headers_a,
+    )
+    assert re_register_res.status_code in (200, 201)
+    assert re_register_res.json()["id"] == asset_id
+
+    # 6. User B attempts to delete User A's asset -> 403 Forbidden
     del_forbidden = await client.delete(
         f"/api/v1/media/assets/{asset_id}",
         headers=headers_b,
     )
     assert del_forbidden.status_code == 403
 
-    # User A deletes own asset -> 200 OK
+    # 7. User A deletes own asset -> 200 OK
     del_ok = await client.delete(
         f"/api/v1/media/assets/{asset_id}",
         headers=headers_a,
@@ -260,24 +318,44 @@ async def test_event_photo_gallery_and_media_consent(
 async def test_linkedin_celebration_draft_consent(
     client: AsyncClient, async_db: AsyncSession
 ) -> None:
-    """Verify LinkedIn draft post generation honors volunteer name visibility consent."""
+    """Verify LinkedIn draft post generation honors volunteer linkedin_content and name_visible consent."""
     admin, _ = await create_test_user(async_db, role="ADMIN")
 
-    # Volunteer 1: Visible Name
+    # Volunteer 1: Visible Name & Consented to LinkedIn
     user_vis, prof_vis = await create_test_user(async_db, role="VOLUNTEER")
     assert prof_vis is not None
     prof_vis.first_name = "Kavitha"
     prof_vis.last_name = "Raman"
-    c_vis = ConsentRecord(volunteer_profile_id=prof_vis.id, name_visible=True)
+    c_vis = ConsentRecord(
+        volunteer_profile_id=prof_vis.id,
+        name_visible=True,
+        linkedin_content=True,
+    )
     async_db.add(c_vis)
 
-    # Volunteer 2: Hidden Name (Anonymous)
+    # Volunteer 2: Hidden Name (Anonymous) & Consented to LinkedIn
     user_anon, prof_anon = await create_test_user(async_db, role="VOLUNTEER")
     assert prof_anon is not None
     prof_anon.first_name = "Secret"
     prof_anon.last_name = "Contributor"
-    c_anon = ConsentRecord(volunteer_profile_id=prof_anon.id, name_visible=False)
+    c_anon = ConsentRecord(
+        volunteer_profile_id=prof_anon.id,
+        name_visible=False,
+        linkedin_content=True,
+    )
     async_db.add(c_anon)
+
+    # Volunteer 3: Opted Out of LinkedIn Content Entirely (even if name_visible=True)
+    user_no_li, prof_no_li = await create_test_user(async_db, role="VOLUNTEER")
+    assert prof_no_li is not None
+    prof_no_li.first_name = "Private"
+    prof_no_li.last_name = "Person"
+    c_no_li = ConsentRecord(
+        volunteer_profile_id=prof_no_li.id,
+        name_visible=True,
+        linkedin_content=False,
+    )
+    async_db.add(c_no_li)
 
     # Seed completed event with attendances
     now = datetime.now(UTC)
@@ -307,8 +385,14 @@ async def test_linkedin_celebration_draft_consent(
         volunteer_profile_id=prof_anon.id,
         status="SELECTED",
     )
+    reg3 = EventRegistration(
+        event_id=event.id,
+        volunteer_profile_id=prof_no_li.id,
+        status="SELECTED",
+    )
     async_db.add(reg1)
     async_db.add(reg2)
+    async_db.add(reg3)
     await async_db.flush()
 
     att1 = AttendanceRecord(
@@ -325,8 +409,16 @@ async def test_linkedin_celebration_draft_consent(
         duration_minutes=180,
         status="COMPLETED",
     )
+    att3 = AttendanceRecord(
+        event_registration_id=reg3.id,
+        check_in_time=now - timedelta(hours=4),
+        check_out_time=now - timedelta(hours=1),
+        duration_minutes=180,
+        status="COMPLETED",
+    )
     async_db.add(att1)
     async_db.add(att2)
+    async_db.add(att3)
     await async_db.commit()
 
     admin_token = await get_token(client, admin.email)
@@ -339,11 +431,15 @@ async def test_linkedin_celebration_draft_consent(
     assert res.status_code == 200
     data = res.json()
 
-    # Kavitha Raman opted in to name visibility -> included
+    # 1. Kavitha Raman opted in to LinkedIn AND name visibility -> included
     assert "Kavitha Raman" in data["draft_text"]
     assert "Kavitha Raman" in data["featured_volunteers"]
 
-    # Secret Contributor opted out of name visibility -> NOT included
+    # 2. Secret Contributor opted in to LinkedIn, but opted out of name visibility -> counted in anonymous
     assert "Secret Contributor" not in data["draft_text"]
     assert "Secret Contributor" not in data["featured_volunteers"]
     assert data["anonymous_count"] == 1
+
+    # 3. Private Person opted OUT of LinkedIn content -> completely excluded
+    assert "Private Person" not in data["draft_text"]
+    assert "Private Person" not in data["featured_volunteers"]

@@ -126,4 +126,3 @@ class OutboxRetryResponse(BaseModel):
     job_id: uuid.UUID
     status: str
     message: str
-

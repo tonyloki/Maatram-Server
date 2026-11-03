@@ -149,7 +149,11 @@ class ReportService:
         page: int = 1,
         limit: int = 20,
     ) -> InactiveVolunteerReportResponse:
-        """Inactive Volunteer Report with configurable threshold."""
+        """Inactive Volunteer Report with configurable threshold.
+
+        Note: settings.INACTIVE_VOLUNTEER_DAYS_THRESHOLD (180 days) is a provisional
+        technical default pending official Maatram governance ratification.
+        """
         days = threshold_days or settings.INACTIVE_VOLUNTEER_DAYS_THRESHOLD
         page = max(1, page)
         limit = min(100, max(1, limit))

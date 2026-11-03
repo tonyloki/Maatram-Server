@@ -68,8 +68,17 @@ class MediaService:
         payload: MediaAssetCreate,
     ) -> MediaAssetResponse:
         """Register completed Cloudinary asset with ownership and validation."""
-        # Validate byte size
-        cloudinary_client.validate_byte_size(payload.byte_size)
+        # Verify Cloudinary upload metadata, folder boundary, and URL authenticity
+        is_admin = user.role in ("ADMIN", "SUPER_ADMIN")
+        cloudinary_client.verify_uploaded_asset(
+            public_id=payload.public_id,
+            secure_url=payload.secure_url,
+            asset_type=payload.asset_type,
+            file_format=payload.format,
+            byte_size=payload.byte_size,
+            user_id=str(user.id),
+            is_admin=is_admin,
+        )
 
         # Check uniqueness of public_id
         existing = await self.repo.get_asset_by_public_id(db, payload.public_id)
@@ -224,6 +233,7 @@ class MediaService:
                 VolunteerProfile.first_name,
                 VolunteerProfile.last_name,
                 ConsentRecord.name_visible,
+                ConsentRecord.linkedin_content,
                 AttendanceRecord.duration_minutes,
             )
             .join(
@@ -247,17 +257,29 @@ class MediaService:
 
         featured_names: list[str] = []
         anonymous_count = 0
-        total_hours = sum((r[4] or 0) / 60.0 for r in rows)
+        total_hours = sum((r[5] or 0) / 60.0 for r in rows)
 
         for r in rows:
             name_visible = bool(r[3])
+            linkedin_content = bool(r[4])
+
+            # CRITICAL PRIVACY RULE: Only volunteers with affirmative linkedin_content consent
+            # can be referenced in social media drafts.
+            if not linkedin_content:
+                continue
+
             if name_visible:
                 featured_names.append(f"{r[1]} {r[2]}".strip())
             else:
                 anonymous_count += 1
 
         # Compose draft copy
-        vol_summary = f"{len(rows)} incredible volunteers"
+        consented_volunteers_count = len(featured_names) + anonymous_count
+        vol_summary = (
+            f"{consented_volunteers_count} incredible volunteers"
+            if consented_volunteers_count > 0
+            else f"{len(rows)} incredible volunteers"
+        )
         if featured_names:
             featured_str = f"Special kudos to: {', '.join(featured_names[:5])}"
             if len(featured_names) > 5 or anonymous_count > 0:

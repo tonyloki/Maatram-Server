@@ -212,5 +212,50 @@ src/
 - **Phase 10 (Notification System & FCM Push Setup)**: **COMPLETED**
 - **Phase 11 (Email Communications & Cloudinary Media)**: **COMPLETED**
 - **Phase 12 (Administration, Dashboard & Reporting APIs)**: **COMPLETED**
-- **Next Phase**: **Phase 13 (API Stabilization & Web/Flutter Integration)**
+- **Next Phase**: **Phase 13 (API Stabilization & Web/Flutter Integration)** (Hold pending user authorization)
+
+---
+
+## 7. Group 6 Final Security & Reliability Audit Verification
+
+Following the completion of Group 6, a comprehensive security, reliability, and privacy audit was conducted across Phases 10, 11, and 12 with the following verified outcomes:
+
+### 1. Outbox Worker Lease Recovery & Concurrency Safety
+- **Direct Expired Lease Reclaiming**: `claim_batch` query explicitly incorporates expired `PROCESSING` leases (`status == 'PROCESSING' AND (locked_at IS NULL OR locked_at < lease_cutoff)`), ensuring that worker crashes never leave jobs permanently stuck.
+- **Ownership-Aware State Transitions**: In `process_job`, the worker acquires a row-level lock (`SELECT ... FOR UPDATE`) and checks `current_job.worker_id == self.worker_id` and `current_job.status == 'PROCESSING'`. If a worker's lease expired and the job was reclaimed by Worker B, Worker A's late outcome update is safely rejected without modifying the job's state or writing invalid audit records.
+- **Heartbeat Extension**: Added `renew_lease` allowing long-running workers to extend leases before timeout.
+- **Automated Verification**: Verified in `test_outbox_lease_expiry_and_stale_worker_rejection` (simulating Worker A crash, Worker B reclamation, and Worker A stale completion rejection).
+
+### 2. Cloudinary Asset Server-Side Verification
+- **User Folder Boundary Enforcement**: Added `verify_uploaded_asset` in `CloudinaryClient`. For non-admin users, `public_id` must start with `maatram/{asset_type.lower()}s/{user.id}/`. Attempts by malicious users to register assets under other user directories are rejected with `403 UNAUTHORIZED_MEDIA_FOLDER`.
+- **Canonical Cloudinary URL Validation**: `secure_url` must start with `https://res.cloudinary.com/{cloud_name}/`. Arbitrary external domains or malicious URLs are rejected with `400 INVALID_MEDIA_URL`.
+- **Public ID Correspondence**: `secure_url` must match the declared `public_id`.
+- **Idempotency & Conflict Handling**: Re-registering the same asset by the original owner returns the existing record idempotently; registering an asset already owned by another user yields `409 Conflict`.
+- **Automated Verification**: Comprehensive security suite in `tests/test_media.py`.
+
+### 3. Consent Separation in LinkedIn Celebration Drafts
+- **Explicit LinkedIn Consent Dimension**: In `MediaService.generate_linkedin_draft`, volunteer inclusion requires affirmative consent on `ConsentRecord.linkedin_content == True`.
+- **Strict Privacy Rule Matrix**:
+  - `linkedin_content == True` AND `name_visible == True`: Volunteer name included in `featured_names` and `draft_text`.
+  - `linkedin_content == True` AND `name_visible == False`: Volunteer included in `anonymous_count`, name excluded.
+  - `linkedin_content == False`: Volunteer completely excluded from the LinkedIn celebration draft (neither named nor counted anonymously).
+- **Automated Verification**: Verified in `test_linkedin_celebration_draft_consent` across all 3 consent permutations.
+
+### 4. Inactivity Threshold Provisional Documentation
+- Documented `settings.INACTIVE_VOLUNTEER_DAYS_THRESHOLD = 180` in `src/core/config.py` and `src/services/report_service.py` as a provisional technical default pending formal Maatram governance ratification (cross-referenced with Question 4 in `docs/OPEN_QUESTIONS.md`).
+
+### 5. Dead-Letter Retry Row Locking & Immutable Audit Trail
+- **Row Lock Enforcement**: In `NotificationRepository.requeue_outbox_job`, the job row is locked using `SELECT ... FOR UPDATE NOWAIT`. If a worker holds the job, concurrent retry operations fail safely with `ConflictException`.
+- **State Validation**: Non-terminal states (`PENDING`, `PROCESSING`, `SENT`) are rejected with `400 JOB_NOT_REQUEUEABLE`.
+- **Audit Logging**: Every requeue operation creates an `AuditLog` entry capturing `actor_user_id`, `old_state` (previous `attempts` count, previous `status`, `last_error`), `new_state` (`attempts=0`, `status=PENDING`), and justification `reason`.
+- **Automated Verification**: Verified in `test_admin_outbox_endpoints` with audit log inspection.
+
+### 6. FCM Selective Error Classification Matrix
+- **Token Invalidation Scope**: `FCMClient.classify_error` explicitly identifies permanent token failures (`UnregisteredError`, `RegistrationTokenNotRegistered`, `MESSAGING/REGISTRATION-TOKEN-NOT-REGISTERED`) and excludes transient/payload failures (`InvalidArgumentError`, `SenderIdMismatchError`, `UnavailableError`, `QuotaExceededError`, `InternalError`).
+- **Automated Verification**: Verified in `test_fcm_error_classification_matrix`.
+
+### 7. Full Regression Suite Results
+- **Pytest**: 144/144 tests passed (0 failures).
+- **Ruff**: 0 lint errors, 100% formatted.
+- **Mypy**: 0 type errors across 89 source files (`mypy --strict` compliant).
 

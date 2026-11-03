@@ -227,20 +227,18 @@ class NotificationService:
             total_pages=total_pages,
         )
 
-    async def requeue_job(self, db: AsyncSession, job_id: uuid.UUID) -> OutboxRetryResponse:
-        """Requeue a failed or dead-letter outbox communication job."""
-        job = await self.repo.get_outbox_job_by_id(db, job_id)
-        if not job:
-            raise NotFoundException("Outbox job not found.")
-
-        if job.status not in ("FAILED", "DEAD_LETTER"):
-            raise DomainException(
-                f"Job is in '{job.status}' state and cannot be requeued (only FAILED or DEAD_LETTER).",
-                status_code=400,
-                code="JOB_NOT_REQUEUEABLE",
-            )
-
-        updated = await self.repo.requeue_outbox_job(db, job)
+    async def requeue_job(
+        self,
+        db: AsyncSession,
+        job_id: uuid.UUID,
+        actor_user_id: uuid.UUID | None = None,
+    ) -> OutboxRetryResponse:
+        """Requeue a failed or dead-letter outbox communication job with row locking and audit logging."""
+        updated = await self.repo.requeue_outbox_job(
+            db=db,
+            job_or_id=job_id,
+            actor_user_id=actor_user_id,
+        )
         await db.commit()
         return OutboxRetryResponse(
             job_id=updated.id,

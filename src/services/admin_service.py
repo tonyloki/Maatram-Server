@@ -111,7 +111,12 @@ class AdminService:
                 code="JOB_NOT_IN_DEAD_LETTER_STATE",
             )
 
-        updated = await self.notif_repo.requeue_outbox_job(db, job)
+        updated = await self.notif_repo.requeue_outbox_job(
+            db,
+            job_or_id=job,
+            actor_user_id=user.id,
+            reason=f"Super Admin {user.email} manually requeued dead-letter job {job.id}",
+        )
         await db.commit()
         return OutboxRetryResponse(
             job_id=updated.id,

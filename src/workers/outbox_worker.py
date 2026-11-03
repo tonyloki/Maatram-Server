@@ -3,7 +3,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import or_, select, update
+from sqlalchemy import CursorResult, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
@@ -42,13 +42,16 @@ class OutboxWorker:
         return val
 
     async def claim_batch(self, db: AsyncSession, batch_size: int = 10) -> list[CommunicationJob]:
-        """Claim a batch of eligible jobs using SELECT ... FOR UPDATE SKIP LOCKED with leased locks."""
+        """Claim a batch of eligible jobs using SELECT ... FOR UPDATE SKIP LOCKED with leased locks.
+
+        Eligible jobs include:
+        1. status == 'PENDING' and scheduled_at <= now
+        2. status == 'FAILED' and attempts <= max_retries and scheduled_at <= now and (locked_at is null or locked_at < lease_cutoff)
+        3. status == 'PROCESSING' and (locked_at is null or locked_at < lease_cutoff) [Expired lease reclamation]
+        """
         now = datetime.now(UTC)
         lease_cutoff = now - timedelta(seconds=self.lease_timeout_seconds)
 
-        # Eligible condition:
-        # 1. status == 'PENDING' and scheduled_at <= now
-        # 2. status == 'FAILED' and attempts <= max_retries and scheduled_at <= now and (locked_at is null or locked_at < lease_cutoff)
         stmt = (
             select(CommunicationJob)
             .where(
@@ -57,6 +60,11 @@ class OutboxWorker:
                     (CommunicationJob.status == "FAILED")
                     & (CommunicationJob.attempts <= CommunicationJob.max_retries)
                     & (CommunicationJob.scheduled_at <= now)
+                    & (
+                        (CommunicationJob.locked_at.is_(None))
+                        | (CommunicationJob.locked_at < lease_cutoff)
+                    ),
+                    (CommunicationJob.status == "PROCESSING")
                     & (
                         (CommunicationJob.locked_at.is_(None))
                         | (CommunicationJob.locked_at < lease_cutoff)
@@ -71,19 +79,50 @@ class OutboxWorker:
         result = await db.execute(stmt)
         jobs = list(result.scalars().all())
 
+        claimed_jobs: list[CommunicationJob] = []
         for job in jobs:
+            # If an expired processing job has already exhausted retries, transition to DEAD_LETTER
+            if job.status == "PROCESSING" and (job.attempts >= 4 or job.attempts > job.max_retries):
+                job.status = "DEAD_LETTER"
+                job.locked_at = None
+                job.worker_id = None
+                job.last_error = (job.last_error or "") + " [Lease expired on maximum attempts]"
+                logger.error(
+                    "Outbox job %s exceeded attempts during lease expiration; transitioned to DEAD_LETTER",
+                    str(job.id),
+                )
+                continue
+
             job.status = "PROCESSING"
             job.attempts += 1
             job.locked_at = now
             job.worker_id = self.worker_id
+            claimed_jobs.append(job)
 
         if jobs:
             await db.flush()
 
-        return jobs
+        return claimed_jobs
+
+    async def renew_lease(self, db: AsyncSession, job_id: uuid.UUID) -> bool:
+        """Extend/renew active processing lease for long-running jobs held by this worker."""
+        now = datetime.now(UTC)
+        stmt = (
+            update(CommunicationJob)
+            .where(
+                CommunicationJob.id == job_id,
+                CommunicationJob.worker_id == self.worker_id,
+                CommunicationJob.status == "PROCESSING",
+            )
+            .values(locked_at=now)
+        )
+        res = await db.execute(stmt)
+        if isinstance(res, CursorResult):
+            return res.rowcount > 0
+        return False
 
     async def process_job(self, db: AsyncSession, job: CommunicationJob) -> bool:
-        """Process an individual claimed job and record delivery audit log."""
+        """Process an individual claimed job and record delivery audit log with ownership verification."""
         now = datetime.now(UTC)
         success = False
         provider = "RESEND" if job.channel == "EMAIL" else "FCM"
@@ -132,45 +171,61 @@ class OutboxWorker:
             success = False
             error_msg = f"Worker unexpected error: {exc}"
 
-        # Update job outcome
+        # Ownership-aware check: Lock current row in DB and verify this worker still holds the lease
+        current_stmt = (
+            select(CommunicationJob).where(CommunicationJob.id == job.id).with_for_update()
+        )
+        current_job = (await db.execute(current_stmt)).scalar_one_or_none()
+        if not current_job:
+            logger.warning(
+                "Outbox job %s no longer exists in DB. Skipping outcome update.", str(job.id)
+            )
+            return False
+
+        if current_job.worker_id != self.worker_id or current_job.status != "PROCESSING":
+            logger.warning(
+                "Worker %s lost lease ownership for job %s (current worker=%s, status=%s). Aborting outcome update.",
+                self.worker_id,
+                str(job.id),
+                current_job.worker_id,
+                current_job.status,
+            )
+            return False
+
+        # Update job outcome on verified owned record
         if success:
-            job.status = "SENT"
-            job.sent_at = now
-            job.locked_at = None
-            job.last_error = None
+            current_job.status = "SENT"
+            current_job.sent_at = now
+            current_job.locked_at = None
+            current_job.last_error = None
         else:
-            job.last_error = error_msg
-            job.locked_at = None
-            # Max retries = 3 means:
-            # Attempt 1 (initial): failed -> retry 1
-            # Attempt 2 (retry 1): failed -> retry 2
-            # Attempt 3 (retry 2): failed -> retry 3
-            # Attempt 4 (retry 3): failed -> DEAD_LETTER
-            if job.attempts >= 4 or job.attempts > job.max_retries:
-                job.status = "DEAD_LETTER"
+            current_job.last_error = error_msg
+            current_job.locked_at = None
+            if current_job.attempts >= 4 or current_job.attempts > current_job.max_retries:
+                current_job.status = "DEAD_LETTER"
                 logger.error(
                     "Outbox job %s transitioned to DEAD_LETTER after %d attempts: %s",
-                    str(job.id),
-                    job.attempts,
+                    str(current_job.id),
+                    current_job.attempts,
                     error_msg,
                 )
             else:
-                job.status = "FAILED"
-                backoff_delay = self.calculate_backoff_seconds(job.attempts)
-                job.scheduled_at = now + timedelta(seconds=backoff_delay)
+                current_job.status = "FAILED"
+                backoff_delay = self.calculate_backoff_seconds(current_job.attempts)
+                current_job.scheduled_at = now + timedelta(seconds=backoff_delay)
                 logger.warning(
                     "Outbox job %s failed on attempt %d (next retry in %ds): %s",
-                    str(job.id),
-                    job.attempts,
+                    str(current_job.id),
+                    current_job.attempts,
                     backoff_delay,
                     error_msg,
                 )
 
         # Permanent delivery audit archive
         audit_log = CommunicationLog(
-            job_id=job.id,
-            channel=job.channel,
-            recipient=job.recipient,
+            job_id=current_job.id,
+            channel=current_job.channel,
+            recipient=current_job.recipient,
             provider=provider,
             provider_message_id=provider_message_id,
             status="DELIVERED" if success else "FAILED",

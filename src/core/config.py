@@ -95,6 +95,7 @@ class Settings(BaseSettings):
         "EXACT_DECIMAL_2"
     )
     EVENT_QUALIFICATION_MIN_MINUTES: int = 60
+    # Inactivity threshold: Provisional technical default (180 days) pending formal Maatram governance ratification (Question 4 in OPEN_QUESTIONS.md).
     INACTIVE_VOLUNTEER_DAYS_THRESHOLD: int = 180
     REGISTRATION_WITHDRAWAL_DEADLINE_HOURS_PRIOR: int = 24
     WAITLIST_PROMOTION_MODE: Literal["MANUAL", "FIFO_AUTOMATIC", "HYBRID"] = "MANUAL"

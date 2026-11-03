@@ -261,6 +261,7 @@ async def retry_outbox_job(
     return await notification_service.requeue_job(
         db=db,
         job_id=job_id,
+        actor_user_id=current_user.id,
     )
 
 

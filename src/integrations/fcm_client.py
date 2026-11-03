@@ -24,9 +24,14 @@ class FCMResponse:
 # Confirmed invalid registration token error indicators
 INVALID_TOKEN_CODES = {
     "UNREGISTERED",
+    "UNREGISTEREDERROR",
     "REGISTRATION_TOKEN_NOT_REGISTERED",
+    "REGISTRATIONTOKENNOTREGISTERED",
     "NOT_FOUND",
+    "NOTFOUNDERROR",
     "INVALID_REGISTRATION",
+    "INVALID_REGISTRATION_TOKEN",
+    "INVALIDREGISTRATIONTOKENERROR",
     "MESSAGING/REGISTRATION-TOKEN-NOT-REGISTERED",
     "MESSAGING/INVALID-REGISTRATION-TOKEN",
 }
@@ -50,20 +55,56 @@ class FCMClient:
         """Classify whether an FCM error indicates the device token is permanently invalid.
 
         Token invalidation rule:
-        - TRUE only on confirmed unregistration or missing token errors.
-        - FALSE on generic invalid-argument, payload errors, or server quotas.
+        - TRUE only on confirmed unregistration or missing token errors (UnregisteredError,
+          RegistrationTokenNotRegistered).
+        - FALSE on generic invalid-argument, payload errors, sender-id mismatch, network
+          failures, or server quotas (InvalidArgumentError, SenderIdMismatchError, UnavailableError).
         """
         if not error_code and not error_message:
             return False
 
-        norm_code = (error_code or "").strip().upper()
+        norm_code = (error_code or "").strip().upper().replace("_", "").replace("-", "")
+        raw_code = (error_code or "").strip().upper()
         norm_msg = (error_message or "").strip().lower()
 
+        # Explicit non-token error exclusion (network, payload, credentials, quota, server downtime)
+        if any(
+            non_tok in raw_code
+            for non_tok in (
+                "INVALID_ARGUMENT",
+                "INVALIDARGUMENT",
+                "SENDER_ID_MISMATCH",
+                "SENDERIDMISMATCH",
+                "UNAVAILABLE",
+                "QUOTA_EXCEEDED",
+                "QUOTAEXCEEDED",
+                "INTERNAL",
+                "AUTH",
+            )
+        ):
+            return False
+
+        if any(
+            non_msg in norm_msg
+            for non_msg in (
+                "invalid argument",
+                "senderidmismatch",
+                "sender id mismatch",
+                "unavailable",
+                "quota exceeded",
+                "internal server error",
+                "payload structure",
+                "payload exceeds",
+            )
+        ):
+            return False
+
+        # Positive match on confirmed invalid registration tokens
         if (
-            norm_code in INVALID_TOKEN_CODES
-            or "UNREGISTERED" in norm_code
-            or "REGISTRATION_TOKEN_NOT_REGISTERED" in norm_code
-            or "INVALID_REGISTRATION" in norm_code
+            raw_code in INVALID_TOKEN_CODES
+            or norm_code in {c.replace("_", "").replace("-", "") for c in INVALID_TOKEN_CODES}
+            or "UNREGISTERED" in raw_code
+            or "REGISTRATIONTOKENNOTREGISTERED" in norm_code
         ):
             return True
 
@@ -74,6 +115,7 @@ class FCMClient:
             or "token not registered" in norm_msg
             or "not registered" in norm_msg
             or "token not found" in norm_msg
+            or "requested entity was not found" in norm_msg
         ):
             return True
 
