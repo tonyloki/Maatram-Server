@@ -464,7 +464,7 @@ async def test_outbox_lease_expiry_and_stale_worker_rejection(
     job = CommunicationJob(
         id=uuid.uuid4(),
         channel="EMAIL",
-        recipient="lease_test@maatram.org",
+        recipient="delivered@resend.dev",
         template_name="VERIFY_EMAIL",
         payload={"first_name": "CrashTest", "verify_url": "https://maatram.org"},
         status="PENDING",

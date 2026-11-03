@@ -20,6 +20,7 @@ dependencies = [
     "pyjwt>=2.9.0",
     "cryptography>=43.0.0",
     "openpyxl>=3.1.5",
+    "firebase-admin>=6.5.0",
 ]
 
 [project.optional-dependencies]
@@ -50,6 +51,7 @@ ignore = ["E501", "N818", "B008"]
 "alembic/*" = ["E501", "UP007", "UP035", "I001"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]

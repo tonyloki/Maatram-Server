@@ -88,10 +88,11 @@ The backend is decomposed into distinct, unidirectional layers:
 ```
 
 ### Architectural Invariants:
-1. **No Skip-Level Calls**: Routers must never call Repositories or raw SQLAlchemy models directly. Routers interact exclusively with Services.
-2. **Encapsulated Data Access**: Only Repositories may construct SQL queries or inspect ORM session state.
-3. **Stateless Services**: Services do not hold per-request instance state; they operate on injected sessions and parameters.
-4. **Isolated Integrations**: External SDKs (Resend, Firebase Admin, Cloudinary) are isolated inside `src/integrations/` behind clean abstraction interfaces. If an external vendor changes, only the adapter in `src/integrations/` is modified.
+1. **Monorepo Layout**: The codebase is organized as a monorepo with `server/` (FastAPI backend), `web/` (Next.js web portal), and `mobile/` (Flutter mobile client).
+2. **No Skip-Level Calls**: Routers must never call Repositories or raw SQLAlchemy models directly. Routers interact exclusively with Services.
+3. **Encapsulated Data Access**: Only Repositories may construct SQL queries or inspect ORM session state.
+4. **Stateless Services**: Services do not hold per-request instance state; they operate on injected sessions and parameters.
+5. **Isolated Integrations**: External SDKs (Resend, Firebase Admin, Cloudinary) are isolated inside `server/src/integrations/` behind clean abstraction interfaces. If an external vendor changes, only the adapter in `server/src/integrations/` is modified.
 
 ---
 

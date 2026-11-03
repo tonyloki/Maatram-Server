@@ -35,11 +35,7 @@ class ResendClient:
         self.is_mock = (
             is_mock
             if is_mock is not None
-            else (
-                settings.ENVIRONMENT in ("development", "staging")
-                or not self.api_key
-                or self.api_key.startswith("re_test")
-            )
+            else (not self.api_key or self.api_key.startswith("re_test"))
         )
         self.sent_emails: list[dict[str, Any]] = []
 

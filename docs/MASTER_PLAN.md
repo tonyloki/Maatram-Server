@@ -253,7 +253,8 @@ Phase 14: Security Hardening, Browser Topology Tests & Render Deployment
 ---
 
 ### Phase 13: Client API Stabilization & Web/Flutter Integration
-- **Objective**: OpenAPI contract freeze, client SDK/type generation support, CORS optimization, and unified error mapping for Next.js and Flutter teams.
+- **Objective**: Monorepo client integration, OpenAPI contract freeze, client SDK/type generation support, CORS optimization, and unified error mapping for Next.js (`web/`) and Flutter (`mobile/`) applications.
+- **Repository Context**: Backend isolated to `server/`; application directories `web/` and `mobile/` ready for client development.
 - **Scope**: OpenAPI specification export, end-to-end integration test suite, API documentation polishing, integration guide for frontend teams.
 - **Dependencies**: Phase 12 completed.
 - **Implementation Tasks**: Export `openapi.json`, verify all schemas match frontend requirements, implement cross-platform integration tests covering complete volunteer journey (Register -> Verify -> Approve -> Register Event -> Check-in -> Check-out -> Complete Event -> Verify Points & Leaderboard).

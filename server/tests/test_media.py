@@ -8,6 +8,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.security import get_password_hash
+from src.integrations.cloudinary_client import cloudinary_client
 from src.models.attendance import AttendanceRecord
 from src.models.consent import ConsentRecord
 from src.models.events import Event, EventRegistration
@@ -141,7 +142,7 @@ async def test_media_asset_registration_and_bola(
         "/api/v1/media/assets",
         json={
             "public_id": forged_prefix_id,
-            "secure_url": f"https://res.cloudinary.com/maatram/image/upload/{forged_prefix_id}.jpg",
+            "secure_url": f"https://res.cloudinary.com/{cloudinary_client.cloud_name}/image/upload/{forged_prefix_id}.jpg",
             "asset_type": "AVATAR",
             "format": "jpg",
             "bytes": 250000,
@@ -170,7 +171,7 @@ async def test_media_asset_registration_and_bola(
         "/api/v1/media/assets",
         json={
             "public_id": valid_pub_id,
-            "secure_url": "https://res.cloudinary.com/maatram/image/upload/other_file.jpg",
+            "secure_url": f"https://res.cloudinary.com/{cloudinary_client.cloud_name}/image/upload/other_file.jpg",
             "asset_type": "AVATAR",
             "format": "jpg",
             "bytes": 250000,
@@ -184,7 +185,7 @@ async def test_media_asset_registration_and_bola(
         "/api/v1/media/assets",
         json={
             "public_id": valid_pub_id,
-            "secure_url": f"https://res.cloudinary.com/maatram/image/upload/{valid_pub_id}.jpg",
+            "secure_url": f"https://res.cloudinary.com/{cloudinary_client.cloud_name}/image/upload/{valid_pub_id}.jpg",
             "asset_type": "AVATAR",
             "format": "jpg",
             "bytes": 250000,
@@ -199,7 +200,7 @@ async def test_media_asset_registration_and_bola(
         "/api/v1/media/assets",
         json={
             "public_id": valid_pub_id,
-            "secure_url": f"https://res.cloudinary.com/maatram/image/upload/{valid_pub_id}.jpg",
+            "secure_url": f"https://res.cloudinary.com/{cloudinary_client.cloud_name}/image/upload/{valid_pub_id}.jpg",
             "asset_type": "AVATAR",
             "format": "jpg",
             "bytes": 250000,

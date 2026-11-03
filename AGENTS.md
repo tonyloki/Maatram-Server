@@ -29,39 +29,32 @@ As an AI engineer or human developer working on the Maatram Volunteering & Gamif
 
 ## 2. Codebase Organization & Module Boundaries
 
-The backend adheres to a **Layered Modular Monolith** pattern:
-
+The project is structured as a unified monorepo:
 ```
-src/
-├── api/                  # API routing, request validation schemas, response formatting
-│   ├── v1/
-│   │   ├── auth.py
-│   │   ├── users.py
-│   │   ├── volunteers.py
-│   │   ├── applications.py
-│   │   ├── consent.py
-│   │   ├── events.py
-│   │   ├── registrations.py
-│   │   ├── attendance.py
-│   │   ├── gamification.py
-│   │   ├── notifications.py
-│   │   ├── media.py
-│   │   ├── communications.py
-│   │   ├── reports.py
-│   │   └── admin.py
-│   └── deps.py           # Dependency injection (db sessions, current user, rbac)
-├── core/                 # Cross-cutting foundational modules
-│   ├── config.py         # Pydantic Settings (environment variables)
-│   ├── security.py       # Argon2id hashing, token signing & verification
-│   ├── database.py       # SQLAlchemy engine & async session factories
-│   ├── exceptions.py     # Custom domain exceptions & global error handlers
-│   └── logging.py        # Structured logging configuration
-├── models/               # SQLAlchemy 2.0 declarative database models
-├── schemas/              # Pydantic 2.0 request & response DTOs
-├── repositories/         # Database persistence abstractions (CRUD & specialized queries)
-├── services/             # Core business logic & transactional orchestrations
-├── integrations/         # Third-party clients (Resend, Cloudinary, Firebase FCM)
-└── workers/              # Transactional outbox background processor
+Maatram-Portal/
+├── server/               # FastAPI backend application, PostgreSQL ORM, Alembic & tests
+│   ├── src/              # Backend source code (Layered Modular Monolith)
+│   │   ├── api/          # API routing, request validation schemas, response formatting
+│   │   │   ├── v1/       # Modular endpoints (auth, users, events, gamification, etc.)
+│   │   │   └── deps.py   # Dependency injection (db sessions, current user, rbac)
+│   │   ├── core/         # Cross-cutting foundational modules (config, security, db, rate limiting)
+│   │   ├── models/       # SQLAlchemy 2.0 declarative database models (29 tables)
+│   │   ├── schemas/      # Pydantic 2.0 request & response DTOs
+│   │   ├── repositories/ # Database persistence abstractions (CRUD & specialized queries)
+│   │   ├── services/     # Core business logic & transactional orchestrations
+│   │   ├── integrations/ # Third-party clients (Resend, Cloudinary, Firebase FCM)
+│   │   └── workers/      # Transactional outbox background processor
+│   ├── tests/            # Pytest test suites (concurrency, domain, security, migrations)
+│   ├── alembic/          # Database schema migrations
+│   ├── alembic.ini       # Alembic migration configuration
+│   ├── pyproject.toml    # Server configuration, dependencies, ruff, mypy, pytest
+│   ├── requirements.txt  # Python requirements specification
+│   └── .env.example      # Backend environment template
+├── web/                  # Next.js web application (Phase 13 / Frontend)
+├── mobile/               # Flutter mobile application (Phase 13 / Frontend)
+└── docs/                 # Project architecture, master plan, decision log, & specifications
+    ├── phases/           # 15 canonical phase specifications (Phase 00 - Phase 14)
+    └── execution-groups/ # Verified execution group reports (Groups 01 - 07)
 ```
 
 ### Layer Interaction Rules
