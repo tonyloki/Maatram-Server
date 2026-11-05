@@ -10,6 +10,7 @@ interface LogoProps {
   href?: string;
   className?: string;
   priority?: boolean;
+  unoptimized?: boolean;
 }
 
 /**
@@ -23,6 +24,7 @@ export function Logo({
   href,
   className,
   priority = false,
+  unoptimized = true,
 }: LogoProps) {
   const src =
     variant === "transparent"
@@ -38,6 +40,7 @@ export function Logo({
         height={height}
         className="object-contain"
         priority={priority}
+        unoptimized={unoptimized}
       />
     </div>
   );

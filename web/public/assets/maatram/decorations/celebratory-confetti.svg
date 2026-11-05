@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%" fill="none">
+  <!-- Celebratory golden confetti sparkles for leaderboard & milestones -->
+  <g>
+    <!-- Big Sparkles / 4-point stars -->
+    <g fill="#F5B817">
+      <polygon points="120,60 124,72 136,76 124,80 120,92 116,80 104,76 116,72"/>
+      <polygon points="480,70 483,80 493,83 483,86 480,96 477,86 467,83 477,80"/>
+      <polygon points="300,40 305,55 320,60 305,65 300,80 295,65 280,60 295,55"/>
+      <polygon points="80,180 83,190 93,193 83,196 80,206 77,196 67,193 77,190"/>
+      <polygon points="520,200 523,208 531,211 523,214 520,222 517,214 509,211 517,208"/>
+      <polygon points="220,120 223,128 231,131 223,134 220,142 217,134 209,131 217,128"/>
+      <polygon points="380,110 383,118 391,121 383,124 380,132 377,124 369,121 377,118"/>
+    </g>
+
+    <!-- Floating Confetti Ribbons -->
+    <g stroke-linecap="round" fill="none">
+      <path d="M150 120 Q170 140 160 170" stroke="#F5B817" stroke-width="4.5"/>
+      <path d="M440 110 Q420 130 435 160" stroke="#E5A800" stroke-width="4"/>
+      <path d="M260 80 Q280 95 275 115" stroke="#FDE047" stroke-width="3.5"/>
+      <path d="M340 75 Q325 90 330 110" stroke="#F5B817" stroke-width="4"/>
+      <path d="M100 240 Q120 260 115 280" stroke="#FBBF24" stroke-width="3.5"/>
+      <path d="M500 250 Q480 270 490 290" stroke="#E5A800" stroke-width="3.5"/>
+    </g>
+
+    <!-- Geometric Confetti Rectangles (rotated) -->
+    <g fill="#F5B817" opacity="0.85">
+      <rect x="180" y="80" width="8" height="14" rx="2" transform="rotate(25 180 80)"/>
+      <rect x="420" y="85" width="8" height="14" rx="2" transform="rotate(-30 420 85)" fill="#E5A800"/>
+      <rect x="250" y="150" width="10" height="6" rx="2" transform="rotate(45 250 150)" fill="#FDE047"/>
+      <rect x="350" y="160" width="10" height="6" rx="2" transform="rotate(-40 350 160)"/>
+      <rect x="140" y="210" width="8" height="12" rx="2" transform="rotate(15 140 210)" fill="#F5B817"/>
+      <rect x="460" y="190" width="8" height="12" rx="2" transform="rotate(-20 460 190)" fill="#FBBF24"/>
+      <rect x="290" y="180" width="7" height="11" rx="2" transform="rotate(60 290 180)" fill="#E5A800"/>
+    </g>
+
+    <!-- Small Circular Dots -->
+    <g fill="#F5B817" opacity="0.75">
+      <circle cx="160" cy="50" r="3.5"/>
+      <circle cx="440" cy="55" r="4"/>
+      <circle cx="210" cy="90" r="3"/>
+      <circle cx="390" cy="85" r="3.5"/>
+      <circle cx="280" cy="130" r="4" fill="#FDE047"/>
+      <circle cx="320" cy="125" r="3.5"/>
+      <circle cx="130" cy="150" r="3"/>
+      <circle cx="470" cy="140" r="3"/>
+      <circle cx="70" cy="120" r="4"/>
+      <circle cx="530" cy="110" r="4"/>
+    </g>
+  </g>
+</svg>
+

@@ -27,7 +27,7 @@ export default function AboutPage() {
     {
       title: "Ethical Safeguarding",
       description:
-        "Strict background verification, parental consent for young scholars, and full DPDP compliance ensure a safe environment.",
+        "Strict background verification, parental consent for young scholars, and voluntary privacy & safeguarding standards ensure a safe, respectful environment.",
       icon: ShieldCheck,
     },
     {

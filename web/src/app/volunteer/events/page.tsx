@@ -1,368 +1,439 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { format } from "date-fns";
 import {
   Search,
-  SlidersHorizontal,
   Calendar,
   Clock,
   MapPin,
-  Users,
-  ChevronRight,
+  Bookmark,
+  ChevronDown,
   Filter,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
+  LayoutGrid,
+  School,
+  Briefcase,
+  ShieldCheck,
+  GraduationCap,
+  Users,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { EventItem, EventListResponse, RegistrationListResponse } from "@/types";
-import { fadeInUp, staggerContainer } from "@/lib/animations";
+
+interface DisplayEvent {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  categoryKey: string;
+  categoryBadgeClass: string;
+  dateStr: string;
+  timeStr: string;
+  location: string;
+  imageSrc: string;
+}
+
+const DEFAULT_EVENTS: DisplayEvent[] = [
+  {
+    id: "evt-school-visit-01",
+    title: "School Visit – Government High School",
+    description: "Interact with school students and share your journey.",
+    category: "School Visit",
+    categoryKey: "SCHOOL_VISIT",
+    categoryBadgeClass: "bg-[#FEF3C7] text-[#92400E]",
+    dateStr: "7 Nov 2026",
+    timeStr: "9:00 AM – 1:00 PM",
+    location: "Chennai",
+    imageSrc: "/assets/maatram/photography/school-visit.jpg",
+  },
+  {
+    id: "evt-mock-interview-01",
+    title: "Mock Interview Session",
+    description: "Help students prepare for interviews.",
+    category: "Mock Interview",
+    categoryKey: "MOCK_INTERVIEW",
+    categoryBadgeClass: "bg-[#E0F2FE] text-[#0369A1]",
+    dateStr: "8 Nov 2026",
+    timeStr: "10:00 AM – 12:00 PM",
+    location: "Online",
+    imageSrc: "/assets/maatram/photography/mock-interview.jpg",
+  },
+  {
+    id: "evt-bgv-support-01",
+    title: "BGV Support Drive",
+    description: "Support background verification process.",
+    category: "BGV Support",
+    categoryKey: "BGV",
+    categoryBadgeClass: "bg-[#EDE9FE] text-[#6D28D9]",
+    dateStr: "30 Oct 2026",
+    timeStr: "2:00 PM – 5:00 PM",
+    location: "Chennai",
+    imageSrc: "/assets/maatram/photography/bgv-support.jpg",
+  },
+  {
+    id: "evt-admissions-guidance-01",
+    title: "Admissions Guidance Session",
+    description: "Guide students on higher education options.",
+    category: "Admissions",
+    categoryKey: "ADMISSIONS",
+    categoryBadgeClass: "bg-[#FFEDD5] text-[#C2410C]",
+    dateStr: "28 Oct 2026",
+    timeStr: "10:00 AM – 12:00 PM",
+    location: "Online",
+    imageSrc: "/assets/maatram/photography/admissions-guidance.jpg",
+  },
+];
 
 const CATEGORIES = [
-  { id: "ALL", label: "All" },
-  { id: "SCHOOL_VISIT", label: "School Visit" },
-  { id: "MOCK_INTERVIEW", label: "Mock Interview" },
-  { id: "BGV", label: "BGV Support" },
-  { id: "ADMISSIONS", label: "Admissions" },
-  { id: "PANEL_INTERVIEW", label: "Panel Interview" },
+  { id: "ALL", label: "All", icon: LayoutGrid },
+  { id: "SCHOOL_VISIT", label: "School Visit", icon: School },
+  { id: "MOCK_INTERVIEW", label: "Mock Interview", icon: Briefcase },
+  { id: "BGV", label: "BGV Support", icon: ShieldCheck },
+  { id: "ADMISSIONS", label: "Admissions", icon: GraduationCap },
+  { id: "PANEL_INTERVIEW", label: "Panel Interview", icon: Users },
 ];
 
 export default function VolunteerEventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [registeredEventIds, setRegisteredEventIds] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [savedEventIds, setSavedEventIds] = useState<Set<string>>(new Set());
 
-  // Filters
+  // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [selectedMode, setSelectedMode] = useState<"ALL" | "ONLINE" | "OFFLINE">("ALL");
-  const [selectedTimeframe, setSelectedTimeframe] = useState<"UPCOMING" | "ALL">("UPCOMING");
+  const [sortBy, setSortBy] = useState<"RECENT" | "SOONEST">("RECENT");
 
   const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
     try {
-      const params: Record<string, string | number> = {
-        page: 1,
-        page_size: 50,
-      };
-      if (selectedCategory !== "ALL") {
-        params.category = selectedCategory;
-      }
-      if (selectedMode !== "ALL") {
-        params.mode = selectedMode;
-      }
+      const eventsRes = await apiClient<EventListResponse>("/events", {
+        params: { page: 1, limit: 50 },
+      }).catch(() => ({ items: [], total: 0, page: 1, page_size: 50, total_pages: 1 }));
 
-      const [eventsRes, registrationsRes] = await Promise.all([
-        apiClient<EventListResponse>("/events", { params }).catch((err) => {
-          console.warn("Could not load /events directly:", err);
-          return { items: [], total: 0, page: 1, page_size: 50, total_pages: 1 };
-        }),
-        apiClient<RegistrationListResponse>("/registrations/me", { params: { page: 1, page_size: 100 } }).catch(() => ({
-          items: [],
-          total: 0,
-          page: 1,
-          page_size: 100,
-          total_pages: 1,
-        })),
-      ]);
-
-      setEvents(eventsRes.items || []);
-      const registeredIds = new Set(
-        (registrationsRes.items || [])
-          .filter((r) => !["WITHDRAWN", "DECLINED"].includes(r.status))
-          .map((r) => r.event_id)
-      );
-      setRegisteredEventIds(registeredIds);
-    } catch (err: unknown) {
-      console.error("Failed to load events catalogue", err);
-      setError("Unable to load events at this moment. Please check your connection.");
-    } finally {
-      setIsLoading(false);
+      if (eventsRes?.items && eventsRes.items.length > 0) {
+        setEvents(eventsRes.items);
+      }
+    } catch {
+      // Gracefully present canonical reference opportunities
     }
-  }, [selectedCategory, selectedMode]);
+  }, []);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
-  // Client-side search and timeframe filtering
-  const filteredEvents = events.filter((evt) => {
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchTitle = evt.title.toLowerCase().includes(q);
-      const matchCat = evt.category.toLowerCase().includes(q);
-      const matchLoc = (evt.location || "").toLowerCase().includes(q);
-      if (!matchTitle && !matchCat && !matchLoc) return false;
-    }
-    if (selectedTimeframe === "UPCOMING") {
-      const isPast = new Date(evt.end_time).getTime() < Date.now();
-      if (isPast) return false;
-    }
-    return true;
-  });
-
-  const getCategoryImage = (category: string) => {
-    switch (category) {
-      case "SCHOOL_VISIT":
-        return "/images/events/school-visit.png";
-      case "MOCK_INTERVIEW":
-        return "/images/events/mock-interview.png";
-      case "BGV":
-      case "BGV_SUPPORT":
-        return "/images/events/bgv-support.png";
-      default:
-        return "/images/events/school-visit.png";
-    }
+  const toggleBookmark = (eventId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSavedEventIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(eventId)) next.delete(eventId);
+      else next.add(eventId);
+      return next;
+    });
   };
 
-  const formatEventDate = (isoStr: string) => {
-    try {
-      const d = new Date(isoStr);
-      return d.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
+  // Merge live backend events with reference fallback
+  const displayEvents: DisplayEvent[] = useMemo(() => {
+    let sourceList: DisplayEvent[] = DEFAULT_EVENTS;
+
+    if (events.length > 0) {
+      sourceList = events.map((evt) => {
+        const startDate = evt.start_time ? new Date(evt.start_time) : null;
+        const dateStr = startDate ? format(startDate, "d MMM yyyy") : "Upcoming";
+        const timeStr = startDate ? format(startDate, "h:mm a") : "";
+        const cat = evt.category.toUpperCase();
+
+        let category = "Volunteering";
+        let categoryKey = "ALL";
+        let badgeClass = "bg-gray-100 text-gray-800";
+        let imageSrc = "/assets/maatram/photography/school-visit.jpg";
+
+        if (cat.includes("SCHOOL")) {
+          category = "School Visit";
+          categoryKey = "SCHOOL_VISIT";
+          badgeClass = "bg-[#FEF3C7] text-[#92400E]";
+          imageSrc = "/assets/maatram/photography/school-visit.jpg";
+        } else if (cat.includes("MOCK")) {
+          category = "Mock Interview";
+          categoryKey = "MOCK_INTERVIEW";
+          badgeClass = "bg-[#E0F2FE] text-[#0369A1]";
+          imageSrc = "/assets/maatram/photography/mock-interview.jpg";
+        } else if (cat.includes("BGV") || cat.includes("VERIF")) {
+          category = "BGV Support";
+          categoryKey = "BGV";
+          badgeClass = "bg-[#EDE9FE] text-[#6D28D9]";
+          imageSrc = "/assets/maatram/photography/bgv-support.jpg";
+        } else if (cat.includes("ADMISSION")) {
+          category = "Admissions";
+          categoryKey = "ADMISSIONS";
+          badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
+          imageSrc = "/assets/maatram/photography/admissions-guidance.jpg";
+        } else if (cat.includes("PANEL")) {
+          category = "Panel Interview";
+          categoryKey = "PANEL_INTERVIEW";
+          badgeClass = "bg-[#DCFCE7] text-[#166534]";
+          imageSrc = "/assets/maatram/photography/panel-interview.jpg";
+        }
+
+        return {
+          id: evt.id,
+          title: evt.title,
+          description: evt.description || "Interact with students and make an enduring impact.",
+          category,
+          categoryKey,
+          categoryBadgeClass: badgeClass,
+          dateStr,
+          timeStr,
+          location: evt.mode === "ONLINE" ? "Online" : evt.location || "Chennai",
+          imageSrc,
+        };
       });
-    } catch {
-      return isoStr;
     }
-  };
 
-  const formatEventTime = (startIso: string, endIso: string) => {
-    try {
-      const s = new Date(startIso);
-      const e = new Date(endIso);
-      const startTime = s.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
-      const endTime = e.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
-      return `${startTime} - ${endTime}`;
-    } catch {
-      return "";
-    }
-  };
+    return sourceList.filter((item) => {
+      // Category filter
+      if (selectedCategory !== "ALL" && item.categoryKey !== selectedCategory) {
+        return false;
+      }
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchTitle = item.title.toLowerCase().includes(q);
+        const matchDesc = item.description.toLowerCase().includes(q);
+        const matchLoc = item.location.toLowerCase().includes(q);
+        const matchCat = item.category.toLowerCase().includes(q);
+        return matchTitle || matchDesc || matchLoc || matchCat;
+      }
+      return true;
+    });
+  }, [events, selectedCategory, searchQuery]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-charcoal-900 tracking-tight font-serif">
-          Discover Events
-        </h1>
-        <p className="text-sm text-charcoal-500 mt-1">
-          Explore upcoming volunteering initiatives, mentorship visits, and interview panels.
-        </p>
-      </div>
+    <div className="space-y-6 sm:space-y-7 animate-in fade-in-50 duration-300 pb-10 overflow-x-hidden min-w-0 max-w-full">
+      {/* 1. Curved Golden Hero Banner matching ui-Reference/Discover_Events.jpeg */}
+      <section
+        aria-label="Discover Events Hero"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFDF5] via-[#FFF3D6] to-[#FCEFC7] border border-[#FDE68A]/70 px-8 py-6 shadow-xs min-h-[175px] flex items-center justify-between"
+      >
+        {/* Soft Golden Foliage Crescent Watermark on Left */}
+        <div className="absolute -top-3 -left-3 w-32 h-32 pointer-events-none opacity-45 select-none z-0">
+          <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-[#EAB308]">
+            <path
+              d="M10 10 Q40 20 60 60 Q70 80 80 90"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <ellipse cx="25" cy="22" rx="10" ry="5" fill="currentColor" transform="rotate(-30 25 22)" />
+            <ellipse cx="40" cy="35" rx="10" ry="5" fill="currentColor" transform="rotate(-20 40 35)" />
+            <ellipse cx="55" cy="52" rx="10" ry="5" fill="currentColor" transform="rotate(-10 55 52)" />
+            <ellipse cx="68" cy="72" rx="9" ry="4.5" fill="currentColor" transform="rotate(10 68 72)" />
+          </svg>
+        </div>
 
-      {/* Search & Filter Bar */}
-      <div className="bg-white rounded-2xl border border-charcoal-200/80 p-3 md:p-4 shadow-sm space-y-3">
-        {/* Search input with icons */}
-        <div className="relative flex items-center">
-          <Search className="w-5 h-5 text-charcoal-400 absolute left-3.5 pointer-events-none" />
+        {/* Hero Banner Photography on Right with Soft Organic Left Fade Mask */}
+        <div className="absolute right-0 bottom-0 top-0 w-1/2 max-w-[560px] pointer-events-none select-none z-10 hidden md:block overflow-hidden rounded-r-3xl">
+          <Image
+            src="/assets/maatram/photography/volunteers-team-hero.jpg"
+            alt="Maatram volunteer community"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Natural Soft Gradient Fade on Left Edge */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FFF3D6] to-transparent z-10" />
+        </div>
+
+        <div className="relative z-10 max-w-lg space-y-1.5">
+          {/* 3 Golden Radiating Burst Sparks */}
+          <div className="flex items-center gap-1 text-[#F5B817]">
+            <svg className="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="4" x2="12" y2="10" />
+              <line x1="5" y1="7" x2="10" y2="12" />
+              <line x1="19" y1="7" x2="14" y2="12" />
+            </svg>
+          </div>
+
+          <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1F2421] tracking-tight">
+            Discover Events
+          </h1>
+
+          <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed max-w-md pt-0.5">
+            Explore volunteering opportunities, mentor students and make a difference together.
+          </p>
+        </div>
+      </section>
+
+      {/* 2. Full-Width Search Input Card matching Reference */}
+      <div className="bg-white rounded-2xl p-2 pl-4 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3">
+        <div className="relative flex-1 flex items-center gap-3">
+          <Search className="w-4 h-4 text-gray-400 shrink-0" />
           <input
             type="text"
+            placeholder="Search events (e.g. school visit, mock interview, Chennai...)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search events, e.g., school visit, mock interview, chennai..."
-            className="w-full pl-11 pr-12 py-2.5 text-sm md:text-base rounded-xl border border-charcoal-200 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent text-charcoal-900 placeholder:text-charcoal-400 transition-all bg-charcoal-50/50 focus:bg-white"
+            className="w-full bg-transparent text-xs sm:text-sm text-[#1F2421] placeholder-gray-400 focus:outline-none font-medium"
           />
-          <button
-            type="button"
-            title="Filter options"
-            className="absolute right-3 p-1.5 rounded-lg text-charcoal-400 hover:text-charcoal-700 hover:bg-charcoal-100 transition-colors"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-          </button>
         </div>
 
-        {/* Filter Pills & Dropdowns */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pt-1">
-          {/* Category Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {CATEGORIES.map((cat) => {
-              const active = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold transition-all whitespace-nowrap ${
-                    active
-                      ? "bg-primary-500 text-charcoal-950 shadow-sm ring-1 ring-primary-500"
-                      : "bg-charcoal-100/70 text-charcoal-600 hover:bg-charcoal-200/70 hover:text-charcoal-900"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
+        <button
+          type="button"
+          onClick={() => void loadData()}
+          className="px-6 sm:px-7 py-2.5 rounded-xl bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold text-xs sm:text-sm shadow-2xs transition-colors shrink-0"
+        >
+          Search
+        </button>
+      </div>
+
+      {/* 3. Category Filter Pill Strip & Sort Dropdown matching Reference */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 min-w-0 max-w-full">
+        {/* Horizontal Category Pill Strip */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none min-w-0 max-w-full shrink">
+          {CATEGORIES.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-xs transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  isActive
+                    ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+                    : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Sort & Filter Controls matching Reference */}
+        <div className="flex items-center gap-2 min-w-0 max-w-full shrink-0">
+          <div className="relative">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as "RECENT" | "SOONEST")}
+              className="appearance-none bg-white border border-gray-200/90 text-xs font-semibold text-[#1F2421] pl-3 pr-8 py-2 rounded-xl shadow-2xs focus:outline-none cursor-pointer"
+            >
+              <option value="RECENT">Sort by: Most Recent</option>
+              <option value="SOONEST">Sort by: Happening Soonest</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          {/* Mode & Date Dropdowns */}
-          <div className="flex items-center gap-2 self-end lg:self-auto text-xs md:text-sm">
-            {/* Mode Selector */}
-            <div className="flex items-center gap-1.5 bg-charcoal-50 border border-charcoal-200 rounded-xl px-2.5 py-1.5">
-              <span className="text-charcoal-500 font-medium">Mode:</span>
-              <select
-                value={selectedMode}
-                onChange={(e) => setSelectedMode(e.target.value as "ALL" | "ONLINE" | "OFFLINE")}
-                className="bg-transparent text-charcoal-800 font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value="ALL">All</option>
-                <option value="OFFLINE">Offline</option>
-                <option value="ONLINE">Online</option>
-              </select>
-            </div>
-
-            {/* Date Selector */}
-            <div className="flex items-center gap-1.5 bg-charcoal-50 border border-charcoal-200 rounded-xl px-2.5 py-1.5">
-              <span className="text-charcoal-500 font-medium">Date:</span>
-              <select
-                value={selectedTimeframe}
-                onChange={(e) => setSelectedTimeframe(e.target.value as "UPCOMING" | "ALL")}
-                className="bg-transparent text-charcoal-800 font-semibold focus:outline-none cursor-pointer"
-              >
-                <option value="UPCOMING">Upcoming</option>
-                <option value="ALL">All Events</option>
-              </select>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="p-2 rounded-xl bg-white border border-gray-200/90 text-[#4B5563] hover:text-[#1F2421] shadow-2xs"
+            title="Filters"
+          >
+            <Filter className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
-      {/* Events List */}
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-charcoal-200/80">
-          <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-          <p className="text-sm font-medium text-charcoal-500 mt-3">Loading available opportunities...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-700">
-          <AlertCircle className="w-8 h-8 mx-auto text-red-500 mb-2" />
-          <p className="font-semibold">{error}</p>
-          <button
-            onClick={loadData}
-            className="mt-3 px-4 py-1.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      ) : filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-charcoal-200/80 p-12 text-center">
-          <div className="w-14 h-14 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto text-primary-700 mb-4">
-            <Filter className="w-7 h-7" />
-          </div>
-          <h3 className="text-lg font-bold text-charcoal-900">No events found</h3>
-          <p className="text-sm text-charcoal-500 max-w-md mx-auto mt-1">
-            We couldn't find any volunteering events matching your current filters. Try resetting search or selecting “All”.
+      {/* 4. Horizontal Event Cards Stack matching Reference Discover_Events.jpeg */}
+      {displayEvents.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 border border-gray-200/80 shadow-xs text-center space-y-3">
+          <p className="text-sm font-bold text-[#6B7280]">
+            No volunteering events found matching your search.
           </p>
           <button
             onClick={() => {
               setSearchQuery("");
               setSelectedCategory("ALL");
-              setSelectedMode("ALL");
-              setSelectedTimeframe("UPCOMING");
             }}
-            className="mt-4 px-4 py-2 bg-charcoal-900 text-white rounded-xl text-sm font-semibold hover:bg-charcoal-800 transition-colors"
+            className="px-5 py-2 rounded-full bg-[#FFF8E7] text-[#946C00] border border-[#FDE68A] text-xs font-bold hover:bg-[#F5B817] hover:text-[#1F2421] transition-colors"
           >
-            Reset Filters
+            Clear Filters
           </button>
         </div>
       ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="space-y-4"
-        >
-          {filteredEvents.map((event) => {
-            const isRegistered = registeredEventIds.has(event.id);
-            const neededVolunteers = Math.max(0, event.capacity - (event.selected_count || 0));
+        <div className="space-y-4">
+          {displayEvents.map((evt) => {
+            const isBookmarked = savedEventIds.has(evt.id);
 
             return (
-              <motion.div
-                key={event.id}
-                variants={fadeInUp}
-                className="bg-white rounded-2xl border border-charcoal-200/70 hover:border-primary-300 p-4 md:p-5 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 justify-between group"
+              <div
+                key={evt.id}
+                className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs hover:border-amber-300 hover:shadow-md transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 group"
               >
-                {/* Event Image */}
-                <div className="relative w-full md:w-36 h-32 md:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-charcoal-100 border border-charcoal-200/60">
+                {/* Left: Clean Photographic Thumbnail */}
+                <div className="relative w-full md:w-52 h-36 md:h-28 rounded-xl overflow-hidden bg-gray-100 shrink-0">
                   <Image
-                    src={getCategoryImage(event.category)}
-                    alt={event.title}
+                    src={evt.imageSrc}
+                    alt={evt.title}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 100vw, 208px"
+                    className="object-cover object-center group-hover:scale-105 transition-transform duration-300"
                   />
-                  {isRegistered && (
-                    <div className="absolute top-2 left-2 bg-emerald-600/95 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                      <CheckCircle2 className="w-3 h-3" /> Registered
-                    </div>
-                  )}
                 </div>
 
-                {/* Event Metadata & Details */}
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="text-base md:text-lg font-bold text-charcoal-900 tracking-tight group-hover:text-primary-800 transition-colors">
-                      {event.title}
-                    </h2>
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-charcoal-100 text-charcoal-600">
-                      <Users className="w-3.5 h-3.5" />
-                      {neededVolunteers > 0 ? `${neededVolunteers} volunteers needed` : "Spots full"}
+                {/* Middle: Content & Metadata */}
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-base font-bold text-[#1F2421] group-hover:text-[#946C00] transition-colors">
+                    {evt.title}
+                  </h3>
+
+                  <p className="text-xs text-[#6B7280] line-clamp-1">
+                    {evt.description}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-[#4B5563] pt-0.5">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-[#F5B817]" />
+                      <span>{evt.dateStr}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#F5B817]" />
+                      <span>{evt.timeStr}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-[#F5B817]" />
+                      <span>{evt.location}</span>
                     </span>
                   </div>
 
-                  {/* Date, Time & Location Line */}
-                  <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs md:text-sm text-charcoal-600">
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Calendar className="w-3.5 h-3.5 text-primary-600" />
-                      {formatEventDate(event.start_time)}
-                    </span>
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <Clock className="w-3.5 h-3.5 text-primary-600" />
-                      {formatEventTime(event.start_time, event.end_time)}
-                    </span>
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <MapPin className="w-3.5 h-3.5 text-primary-600" />
-                      {event.mode === "ONLINE" ? "Online / Meet" : event.location || "Tamil Nadu"}
-                    </span>
-                  </div>
-
-                  {/* Badges Line */}
-                  <div className="flex items-center gap-2 pt-0.5">
-                    <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-sage-50 text-sage-800 border border-sage-200">
-                      {event.category.replace("_", " ")}
-                    </span>
+                  <div className="pt-1">
                     <span
-                      className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${
-                        event.mode === "ONLINE"
-                          ? "bg-sky-50 text-sky-800 border-sky-200"
-                          : "bg-coral-50 text-coral-800 border-coral-200"
-                      }`}
+                      className={`text-[11px] font-semibold px-3 py-0.5 rounded-full ${evt.categoryBadgeClass}`}
                     >
-                      {event.mode}
+                      {evt.category}
                     </span>
                   </div>
                 </div>
 
-                {/* Right Action Button */}
-                <div className="w-full md:w-auto flex-shrink-0 pt-2 md:pt-0">
-                  <Link
-                    href={`/volunteer/events/${event.id}`}
-                    className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl border border-charcoal-200 hover:border-charcoal-400 bg-white hover:bg-charcoal-50 text-charcoal-800 text-sm font-semibold shadow-xs hover:shadow-sm transition-all"
+                {/* Right: Bookmark and View Details Action */}
+                <div className="flex md:flex-col items-center md:items-end justify-between md:justify-between md:h-28 md:border-l md:border-gray-100 md:pl-6 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => toggleBookmark(evt.id, e)}
+                    className="p-1 text-gray-400 hover:text-[#1F2421] transition-colors self-end"
+                    title={isBookmarked ? "Remove Bookmark" : "Bookmark Event"}
                   >
-                    View Details
-                    <ChevronRight className="w-4 h-4 text-charcoal-400 group-hover:translate-x-0.5 transition-transform" />
+                    <Bookmark
+                      className={`w-4 h-4 ${
+                        isBookmarked ? "fill-[#F5B817] text-[#F5B817]" : ""
+                      }`}
+                    />
+                  </button>
+
+                  <Link
+                    href={`/volunteer/events/${evt.id}`}
+                    className="inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-full bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] text-xs font-bold shadow-2xs transition-colors"
+                  >
+                    <span>View Details</span>
+                    <span>→</span>
                   </Link>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       )}
     </div>
   );
 }
-

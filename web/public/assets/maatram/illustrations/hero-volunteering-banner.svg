@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="skyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFDF5"/>
+      <stop offset="50%" stop-color="#FEF3C7"/>
+      <stop offset="100%" stop-color="#FDE68A"/>
+    </linearGradient>
+    <linearGradient id="goldRibbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5B817" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#E5A800" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="sunGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#F5B817" stop-opacity="0.2"/>
+    </linearGradient>
+    <linearGradient id="fieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#BBF7D0"/>
+      <stop offset="60%" stop-color="#86EFAC"/>
+      <stop offset="100%" stop-color="#4ADE80"/>
+    </linearGradient>
+    <filter id="bannerShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#1F2421" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Sky Canvas -->
+  <rect width="960" height="300" rx="24" fill="url(#skyGrad)"/>
+
+  <!-- Radiant Golden Sun -->
+  <circle cx="780" cy="80" r="90" fill="url(#sunGlow)"/>
+  <circle cx="780" cy="80" r="50" fill="#FFFBEB" opacity="0.8"/>
+
+  <!-- Gentle Rolling Green Hills Landscape -->
+  <path d="M0 240 Q300 200 550 235 T960 210 L960 300 L0 300 Z" fill="url(#fieldGrad)" opacity="0.85"/>
+  <path d="M0 260 Q400 220 700 250 T960 240 L960 300 L0 300 Z" fill="#22C55E" opacity="0.4"/>
+
+  <!-- Silhouetted Majestic Banyan / Shade Tree on the Right -->
+  <g transform="translate(730, 90)">
+    <!-- Tree Trunk -->
+    <path d="M90 150 C88 120 75 90 60 70 C75 95 85 110 88 150 Z" fill="#4B382A"/>
+    <path d="M92 150 C95 115 110 85 130 65 C115 90 102 110 98 150 Z" fill="#3D2E22"/>
+    <!-- Canopy Foliage Clusters -->
+    <ellipse cx="65" cy="55" rx="55" ry="42" fill="#15803D" opacity="0.9"/>
+    <ellipse cx="120" cy="50" rx="50" ry="38" fill="#166534"/>
+    <ellipse cx="90" cy="30" rx="60" ry="40" fill="#22C55E" opacity="0.85"/>
+    <ellipse cx="140" cy="75" rx="42" ry="32" fill="#15803D" opacity="0.95"/>
+    <ellipse cx="40" cy="70" rx="38" ry="30" fill="#166534" opacity="0.9"/>
+  </g>
+
+  <!-- Silhouetted Birds in Flight (Flock rising toward the sun) -->
+  <g fill="#4B5563" opacity="0.75">
+    <!-- Bird 1 -->
+    <path d="M540 70 Q548 62 556 68 Q564 62 572 70 Q564 66 556 71 Q548 66 540 70 Z"/>
+    <!-- Bird 2 -->
+    <path d="M575 52 Q581 46 587 50 Q593 46 599 52 Q593 49 587 53 Q581 49 575 52 Z"/>
+    <!-- Bird 3 -->
+    <path d="M605 65 Q610 60 615 63 Q620 60 625 65 Q620 62 615 66 Q610 62 605 65 Z"/>
+    <!-- Bird 4 -->
+    <path d="M635 45 Q640 40 645 43 Q650 40 655 45 Q650 42 645 46 Q640 42 635 45 Z"/>
+    <!-- Bird 5 -->
+    <path d="M660 58 Q664 54 668 56 Q672 54 676 58 Q672 56 668 59 Q664 56 660 58 Z"/>
+  </g>
+
+  <!-- Group of Volunteers Facing Right Toward the Tree (Silhouettes with Black Maatram Shirts & Yellow Logo Detail) -->
+  <g transform="translate(520, 160)">
+    <!-- Volunteer 1 (Female mentor, hair tied, pointing forward) -->
+    <g>
+      <!-- Head -->
+      <circle cx="28" cy="22" r="11" fill="#78350F"/>
+      <!-- Ponytail -->
+      <path d="M19 22 Q12 28 15 36 Q22 30 23 25 Z" fill="#78350F"/>
+      <!-- Black Maatram T-Shirt -->
+      <path d="M12 40 C12 34 20 32 28 32 C36 32 44 34 44 40 L48 85 L8 85 Z" fill="#1F2421"/>
+      <!-- Yellow Emblem Badge on Back/Chest -->
+      <ellipse cx="28" cy="46" rx="5" ry="4" fill="#F5B817"/>
+      <!-- Arm pointing toward tree -->
+      <path d="M38 42 Q55 35 70 30" stroke="#F6D5B8" stroke-width="6" stroke-linecap="round"/>
+    </g>
+
+    <!-- Volunteer 2 (Male volunteer standing attentively) -->
+    <g transform="translate(42, 5)">
+      <circle cx="28" cy="20" r="12" fill="#451A03"/>
+      <path d="M10 38 C10 32 19 30 28 30 C37 30 46 32 46 38 L50 85 L6 85 Z" fill="#16171A"/>
+      <ellipse cx="28" cy="45" rx="5" ry="4" fill="#F5B817"/>
+    </g>
+
+    <!-- Volunteer 3 (Volunteer with notepad/binder) -->
+    <g transform="translate(82, 10)">
+      <circle cx="28" cy="22" r="11" fill="#78350F"/>
+      <path d="M12 40 C12 34 20 32 28 32 C36 32 44 34 44 40 L46 80 L10 80 Z" fill="#1F2421"/>
+      <ellipse cx="28" cy="46" rx="5" ry="4" fill="#F5B817"/>
+      <!-- Clipboard -->
+      <rect x="36" y="44" width="14" height="20" rx="3" fill="#FFF8E7" stroke="#F5B817" stroke-width="1.5"/>
+    </g>
+
+    <!-- Volunteer 4 (Student volunteer raising hand enthusiastically) -->
+    <g transform="translate(120, 2)">
+      <circle cx="28" cy="20" r="11" fill="#451A03"/>
+      <path d="M10 38 C10 32 19 30 28 30 C37 30 46 32 46 38 L50 85 L6 85 Z" fill="#262626"/>
+      <ellipse cx="28" cy="45" rx="5" ry="4" fill="#F5B817"/>
+      <!-- Raised arm waving -->
+      <path d="M40 38 Q52 20 50 8" stroke="#E2A782" stroke-width="6" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Left Side: Subtle Golden Wave Flourish & Framing Curve -->
+  <path d="M0 0 L400 0 Q320 150 420 300 L0 300 Z" fill="url(#goldRibbon)" opacity="0.08"/>
+  <path d="M0 0 L320 0 Q260 150 340 300 L0 300 Z" fill="#F5B817" opacity="0.04"/>
+
+  <!-- Border Frame -->
+  <rect x="0.5" y="0.5" width="959" height="299" rx="23.5" stroke="#EFECE6" stroke-width="1"/>
+</svg>
+

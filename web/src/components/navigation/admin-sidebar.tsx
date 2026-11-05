@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 
 const ADMIN_NAV_ITEMS = [
@@ -68,7 +69,12 @@ interface AdminSidebarProps {
   adminRole?: string;
 }
 
-export function AdminSidebar({ onNavigate, className }: AdminSidebarProps) {
+export function AdminSidebar({
+  onNavigate,
+  className,
+  adminName,
+  adminRole,
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
@@ -77,14 +83,25 @@ export function AdminSidebar({ onNavigate, className }: AdminSidebarProps) {
     await logout();
   };
 
+  const displayName = adminName || (user?.email ? user.email.split("@")[0] : "Administrator");
+  const displayRole = adminRole || user?.role || "ADMIN";
+  const displayInitials = displayName.slice(0, 2).toUpperCase();
+
   return (
-    <aside className="w-full h-full bg-[#16171A] text-white flex flex-col justify-between border-r border-charcoal-800 shadow-xl select-none">
+    <aside
+      className={cn(
+        "w-full h-full bg-[#16171A] text-white flex flex-col justify-between border-r border-charcoal-800 shadow-xl select-none min-h-screen",
+        className
+      )}
+    >
       {/* Top Section: Brand Header & Navigation Items */}
       <div className="flex flex-col flex-1 min-h-0">
         {/* Brand Header */}
         <div className="p-6 border-b border-charcoal-800/80 flex flex-col gap-1.5">
           <div className="flex items-center gap-3">
-            <Logo width={110} height={50} href="/admin/dashboard" />
+            <div className="bg-white rounded-xl px-2.5 py-1.5 inline-flex items-center justify-center shadow-xs">
+              <Logo width={110} height={45} href="/admin/dashboard" priority unoptimized />
+            </div>
           </div>
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs font-black uppercase tracking-wider text-[#F5B817] flex items-center gap-1">
@@ -92,7 +109,7 @@ export function AdminSidebar({ onNavigate, className }: AdminSidebarProps) {
               Admin Portal
             </span>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-charcoal-800 text-charcoal-300 border border-charcoal-700">
-              {user?.role || "ADMIN"}
+              {displayRole}
             </span>
           </div>
         </div>
@@ -133,14 +150,14 @@ export function AdminSidebar({ onNavigate, className }: AdminSidebarProps) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 rounded-full bg-[#F5B817]/20 border border-[#F5B817]/40 text-[#F5B817] font-bold text-xs flex items-center justify-center flex-shrink-0">
-              {user?.email ? user.email.slice(0, 2).toUpperCase() : "AD"}
+              {displayInitials}
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-white truncate">
-                {user?.email?.split("@")[0] || "Administrator"}
+                {displayName}
               </p>
               <p className="text-[10px] text-charcoal-400 uppercase tracking-wider font-semibold">
-                {user?.role || "STAFF"}
+                {displayRole}
               </p>
             </div>
           </div>

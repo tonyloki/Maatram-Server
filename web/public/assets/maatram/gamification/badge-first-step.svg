@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="100%" height="100%" fill="none">
+  <defs>
+    <radialGradient id="badgeGlow1" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#FEF08A"/>
+      <stop offset="60%" stop-color="#F5B817"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </radialGradient>
+    <filter id="badgeShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#1F2421" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Hanging Ribbon Straps (Mint & Gold) -->
+  <polygon points="50,45 42,95 58,85 70,95 62,45" fill="#10B981"/>
+  <polygon points="78,45 70,95 82,85 98,95 90,45" fill="#059669"/>
+
+  <!-- Circular Outer Medallion -->
+  <g filter="url(#badgeShadow)">
+    <circle cx="70" cy="55" r="42" fill="url(#badgeGlow1)" stroke="#B45309" stroke-width="2"/>
+    <circle cx="70" cy="55" r="36" fill="#FFFDF5" stroke="#F5B817" stroke-width="2"/>
+    <circle cx="70" cy="55" r="32" fill="#FFF8E7"/>
+
+    <!-- Compass / Footprint / First Step Icon Motif -->
+    <!-- Stylized 4-point compass star representing starting the journey -->
+    <polygon points="70,32 74,48 90,52 74,56 70,72 66,56 50,52 66,48" fill="#F5B817"/>
+    <polygon points="70,32 70,52 50,52" fill="#E5A800"/>
+    <polygon points="70,72 70,52 90,52" fill="#D97706"/>
+    <circle cx="70" cy="52" r="4" fill="#1F2421"/>
+  </g>
+
+  <!-- Title Pill Banner -->
+  <rect x="25" y="105" width="90" height="22" rx="11" fill="#1F2421" stroke="#F5B817" stroke-width="1.5"/>
+  <text x="70" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="800" fill="#F5B817" letter-spacing="0.5">
+    FIRST STEP
+  </text>
+</svg>
+

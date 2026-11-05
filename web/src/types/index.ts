@@ -14,6 +14,8 @@ export type UserStatus =
   | "PENDING";
 export type VolunteerCategory = "STUDENT" | "ALUMNI" | "CORPORATE";
 export type EventMode = "ONLINE" | "OFFLINE";
+export type EventCategory = string;
+export type EventResponse = EventItem;
 export type EventStatus =
   | "DRAFT"
   | "PUBLISHED"
@@ -185,12 +187,15 @@ export interface VolunteerProfileResponse {
   user_id: string;
   first_name: string;
   last_name: string;
+  email?: string | null;
   mobile_number: string;
   age: number;
   gender: string;
   category: VolunteerCategory;
   avatar_media_id?: string | null;
+  avatar_url?: string | null;
   bio?: string | null;
+  completed_events_count?: number;
   parent_guardian_name?: string | null;
   parent_guardian_relationship?: string | null;
   parent_guardian_contact?: string | null;
@@ -301,6 +306,7 @@ export interface RegistrationResponse {
   created_at: string;
   updated_at: string;
   event?: EventSummary | null;
+  volunteer?: VolunteerProfileResponse | null;
   history_entries?: RegistrationHistoryItem[];
 }
 
@@ -450,6 +456,8 @@ export interface VolunteerStats {
   total_volunteers: number;
   active_volunteers: number;
   by_category: Record<string, number>;
+  total?: number;
+  active?: number;
 }
 
 export interface ApplicationPipelineStats {
@@ -519,6 +527,7 @@ export interface ApplicationReviewResponse {
   reviewer_id: string;
   action: "APPROVED" | "REJECTED";
   reason?: string | null;
+  notes?: string | null;
   created_at: string;
 }
 
@@ -670,6 +679,7 @@ export interface EventCompletionResponse {
   total_hours_credited: string;
   total_points_awarded: string;
   message: string;
+  volunteers_awarded?: number;
 }
 
 // ==========================================
@@ -679,6 +689,7 @@ export interface EventCompletionResponse {
 export interface StudentContributionItem {
   volunteer_id: string;
   student_name: string;
+  volunteer_name?: string;
   college_name: string;
   department: string;
   batch_year?: number | null;
@@ -699,8 +710,11 @@ export interface StudentContributionReportResponse {
 export interface AlumniContributionItem {
   volunteer_id: string;
   alumni_name: string;
+  volunteer_name?: string;
   graduation_batch?: number | null;
+  graduation_year?: number | null;
   employer?: string | null;
+  employer_name?: string | null;
   designation?: string | null;
   events_attended: number;
   hours_credited: string;
@@ -742,10 +756,12 @@ export interface AlumniConsistencyReportResponse {
 export interface InactiveVolunteerItem {
   volunteer_id: string;
   name: string;
+  volunteer_name?: string;
   email: string;
   category: string;
   registration_date: string;
   last_activity_date?: string | null;
+  last_event_title?: string | null;
   days_inactive: number;
 }
 
@@ -761,12 +777,15 @@ export interface InactiveVolunteerReportResponse {
 export interface InterviewAvailabilityItem {
   volunteer_id: string;
   name: string;
+  volunteer_name?: string;
   category: string;
   employer?: string | null;
+  organisation?: string | null;
   designation?: string | null;
   skills: string[];
   experience_years?: number | null;
   phone_number: string;
+  contact_number?: string;
   email: string;
   is_contact_masked: boolean;
 }

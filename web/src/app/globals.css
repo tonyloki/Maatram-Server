@@ -1,20 +1,30 @@
 @import "tailwindcss";
 
 @theme {
+  /* Canonical Brand Palette (Resolved to #F5B817 Maatram Radiant Gold) */
   --color-brand-primary: #F5B817;
   --color-brand-hover: #E5A800;
+  --color-brand-active: #C99200;
   --color-brand-subtle: #FFF8E7;
+  --color-brand-light: #FFFDF5;
   --color-brand-text: #946C00;
-  --color-canvas: #FAF8F3;
+
+  /* Warm Neutral Palette */
+  --color-canvas: #FAF8F5;
+  --color-canvas-subtle: #F5F1EA;
   --color-card-surface: #FFFFFF;
-  --color-border-subtle: #EBE6DD;
+  --color-border-subtle: #EFECE6;
+  --color-border-hover: #E5E0D8;
   --color-text-primary: #1F2421;
-  --color-text-secondary: #6B7280;
+  --color-text-secondary: #4B5563;
   --color-text-muted: #9CA3AF;
+
+  /* Admin Workspace Palette (Density & Separation) */
   --color-admin-sidebar: #16171A;
   --color-admin-active: #212328;
   --color-admin-border: #2A2C33;
 
+  /* Status Semantics */
   --color-status-success-bg: #DEF7EC;
   --color-status-success-text: #03543F;
   --color-status-success-border: #BCF0DA;
@@ -34,10 +44,39 @@
   --color-status-neutral-bg: #F3F4F6;
   --color-status-neutral-text: #374151;
   --color-status-neutral-border: #E5E7EB;
+
+  /* Category & Delivery Mode Tags */
+  --color-tag-onsite-bg: #DCFCE7;
+  --color-tag-onsite-text: #166534;
+  --color-tag-onsite-border: #BBF7D0;
+
+  --color-tag-online-bg: #E0F2FE;
+  --color-tag-online-text: #0369A1;
+  --color-tag-online-border: #BAE6FD;
+
+  --color-tag-school-bg: #FEF3C7;
+  --color-tag-school-text: #92400E;
+  --color-tag-school-border: #FDE68A;
+
+  --color-tag-interview-bg: #E0F2FE;
+  --color-tag-interview-text: #0369A1;
+  --color-tag-interview-border: #BAE6FD;
+
+  --color-tag-bgv-bg: #EDE9FE;
+  --color-tag-bgv-text: #6D28D9;
+  --color-tag-bgv-border: #DDD6FE;
+
+  --color-tag-admissions-bg: #FFEDD5;
+  --color-tag-admissions-text: #C2410C;
+  --color-tag-admissions-border: #FED7AA;
+
+  --color-tag-panel-bg: #CCFBF1;
+  --color-tag-panel-text: #0F766E;
+  --color-tag-panel-border: #99F6E4;
 }
 
 :root {
-  --background: #FAF8F3;
+  --background: #FAF8F5;
   --foreground: #1F2421;
 }
 
@@ -48,6 +87,8 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom smooth scrollbar */
@@ -59,9 +100,21 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #EBE6DD;
+  background: #EFECE6;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
+}
+
+/* Reduced motion accessibility support (WCAG 2.2 AA) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

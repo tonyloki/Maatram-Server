@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 160" width="100%" height="100%" fill="none" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="waveGold1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F5B817" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#E5A800" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#F5B817" stop-opacity="0.05"/>
+    </linearGradient>
+    <linearGradient id="waveGold2" x1="100%" y1="0%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#F5B817" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#FDE047" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FFF8E7" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Deep Organic Wave Layer -->
+  <path d="M0 60 Q200 140 400 70 T800 90 L800 160 L0 160 Z" fill="url(#waveGold1)"/>
+
+  <!-- Foreground Elegant Curvature Ribbon -->
+  <path d="M0 95 Q180 30 380 110 T800 50 L800 160 L0 160 Z" fill="url(#waveGold2)"/>
+
+  <!-- Top Accent Stroke -->
+  <path d="M0 95 Q180 30 380 110 T800 50" stroke="#F5B817" stroke-width="2.5" opacity="0.6"/>
+</svg>
+

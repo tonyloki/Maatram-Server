@@ -133,136 +133,133 @@ export default function HomePage() {
 
       <main className="flex-1">
         {/* ================================================================= */}
-        {/* 1. HERO SECTION (REDESIGNED TWO-COLUMN EDITORIAL COMPOSITION)     */}
+        {/* 1. HERO SECTION (REFERENCE MATCH: Volunteer for a Better Tomorrow)*/}
         {/* ================================================================= */}
-        <section className="relative overflow-hidden pt-8 pb-16 md:pt-14 md:pb-24 lg:pt-20 lg:pb-28">
-          {/* Subtle Warm Background Glows */}
-          <div className="absolute top-0 right-1/4 -mt-20 w-96 h-96 rounded-full bg-[#F5B817]/10 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-[#F5B817]/15 blur-3xl pointer-events-none" />
-
+        <section className="relative overflow-hidden pt-6 pb-12 md:pt-10 md:pb-16 lg:pt-14 lg:pb-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
               {/* LEFT COLUMN: Prominent Headline, Narrative & Call to Actions */}
               <motion.div
-                className="lg:col-span-7 space-y-6"
+                className="lg:col-span-6 space-y-6"
                 initial="hidden"
                 animate="visible"
                 variants={staggerContainer}
               >
-                {/* Community Label */}
-                <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFF8E7] border border-[#F5B817]/40 text-xs font-semibold text-[#946C00]">
-                  <Sparkles className="w-3.5 h-3.5 text-[#F5B817]" />
-                  <span>Maatram Volunteering & Mentorship Community</span>
-                </motion.div>
-
-                {/* Strong Headline */}
+                {/* Headline matching Mentor Reference */}
                 <motion.h1
                   variants={fadeInUp}
-                  className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#1F2421] leading-[1.12]"
+                  className="text-4xl sm:text-5xl lg:text-[56px] font-extrabold tracking-tight text-[#1F2421] leading-[1.12]"
                 >
-                  Transform Education Through{" "}
-                  <span className="relative inline-block text-[#B45309]">
-                    <span>Meaningful Mentorship</span>
-                    <span className="absolute bottom-1 left-0 w-full h-3 bg-[#F5B817]/35 -rotate-1 rounded-sm -z-10" />
+                  Volunteer for a<br />
+                  <span className="relative inline-block pb-3">
+                    <span>Better Tomorrow</span>
+                    {/* Golden Brush Underline Stroke */}
+                    <svg
+                      className="absolute -bottom-0.5 left-0 w-full h-3.5 text-[#F5B817] pointer-events-none select-none"
+                      viewBox="0 0 260 12"
+                      fill="none"
+                      preserveAspectRatio="none"
+                    >
+                      <path
+                        d="M2 9C55 3 160 2 258 7"
+                        stroke="currentColor"
+                        strokeWidth="5.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </span>
                 </motion.h1>
 
-                {/* Description */}
+                {/* Subtitle matching Mentor Reference */}
                 <motion.p
                   variants={fadeInUp}
-                  className="text-base sm:text-lg text-[#4B5563] max-w-xl leading-relaxed"
+                  className="text-base sm:text-lg text-[#4B5563] max-w-lg leading-relaxed"
                 >
-                  Join a passionate community of students, alumni, and industry professionals guiding
-                  first-generation scholars across rural and underserved schools to achieve higher education and career success.
+                  Join Maatram Foundation&apos;s community of students, alumni and professionals to
+                  create meaningful opportunities for students.
                 </motion.p>
 
-                {/* CTAs */}
-                <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-                  <Link href="/register">
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="w-full sm:w-auto px-8 h-12 shadow-lg shadow-[#F5B817]/25 text-base font-bold"
-                    >
-                      <span>Become a Volunteer</span>
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                  <Link href="/events">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full sm:w-auto px-8 h-12 text-base font-semibold border-[#D1D5DB] hover:bg-white"
-                    >
-                      Explore Opportunities
-                    </Button>
-                  </Link>
-                </motion.div>
-
-                {/* Factually Supported Trust Badges */}
+                {/* Action Buttons matching Mentor Reference */}
                 <motion.div
                   variants={fadeInUp}
-                  className="pt-4 border-t border-[#EBE6DD] flex flex-wrap items-center gap-6 text-xs text-[#6B7280]"
+                  className="flex flex-wrap items-center gap-4 pt-1"
                 >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#15803D]" />
-                    <span className="font-medium text-[#374151]">Verified Service Hours</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-[#15803D]" />
-                    <span className="font-medium text-[#374151]">Safe & Ethical Mentorship</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-[#15803D]" />
-                    <span className="font-medium text-[#374151]">Milestone Recognition</span>
-                  </div>
+                  <Link href="/register">
+                    <button
+                      type="button"
+                      className="px-8 py-3.5 rounded-xl bg-[#F5B817] hover:bg-[#E0A714] text-[#1F2421] font-bold text-base transition-all shadow-xs flex items-center gap-2"
+                    >
+                      <span>Get Started</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </Link>
+                  <Link href="/login">
+                    <button
+                      type="button"
+                      className="px-8 py-3.5 rounded-xl bg-white border border-[#D1D5DB] hover:bg-gray-50 text-[#1F2421] font-semibold text-base transition-all shadow-2xs"
+                    >
+                      Login
+                    </button>
+                  </Link>
                 </motion.div>
               </motion.div>
 
-              {/* RIGHT COLUMN: Authentic Photography with Editorial Accent */}
+              {/* RIGHT COLUMN: Iconic Volunteer Group Photo with Golden Swoop Wave */}
               <motion.div
-                className="lg:col-span-5 relative"
+                className="lg:col-span-6 relative flex justify-center lg:justify-end"
                 initial={{ opacity: 1, scale: 1 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                <div className="relative mx-auto max-w-md lg:max-w-none">
-                  {/* Outer Framed Container */}
-                  <div className="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-white/80 bg-white">
-                    {/* Real Education Volunteering Photo */}
-                    <div className="relative w-full h-[340px] sm:h-[400px]">
-                      <Image
-                        src="/assets/images/hero-volunteering.jpg"
-                        alt="Education volunteers mentoring students in a classroom"
-                        fill
-                        priority
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 40vw"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    </div>
-
-                    {/* Editorial Supporting Card at Bottom of Image */}
-                    <div className="absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-4 border border-[#EBE6DD] shadow-lg">
-                      <div className="flex items-start gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-[#FFF8E7] border border-[#F5B817]/40 text-[#B45309] flex items-center justify-center shrink-0 mt-0.5">
-                          <Heart className="w-4 h-4 fill-[#F5B817]" />
-                        </div>
-                        <div className="space-y-0.5">
-                          <h4 className="text-xs font-bold text-[#1F2421]">
-                            Direct Impact on Young Lives
-                          </h4>
-                          <p className="text-[11px] text-[#4B5563] leading-relaxed">
-                            Connecting rural school scholars directly with role models who pave the path to higher education.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                <div className="relative w-full max-w-[540px] aspect-[16/11] rounded-3xl overflow-hidden shadow-xl border-2 border-white/80 bg-white">
+                  <Image
+                    src="/assets/maatram/photography/volunteers-team-hero.jpg"
+                    alt="Maatram volunteers facing nature"
+                    fill
+                    priority
+                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                  />
+                  {/* Dynamic Vector Swoop Wave Accent across the bottom */}
+                  <div className="absolute -bottom-1 inset-x-0 h-24 pointer-events-none select-none z-10">
+                    <Image
+                      src="/assets/maatram/decorations/landing-wave-swoop.svg"
+                      alt="Golden wave swoop"
+                      fill
+                      className="object-fill object-bottom"
+                    />
                   </div>
-
-                  {/* Decorative Background Offset Frame */}
-                  <div className="absolute -bottom-3 -right-3 -z-10 w-full h-full rounded-3xl bg-[#F5B817]/20 border border-[#F5B817]/40" />
                 </div>
               </motion.div>
+            </div>
+
+            {/* 3 Signature Pillar Columns matching Mentor Reference Bottom Strip */}
+            <div className="mt-12 lg:mt-16 pt-8 border-t border-[#EBE6DD]/80 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+              {/* Pillar 1: School Visits */}
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-[#FFF3D6] border border-[#FDE68A] flex items-center justify-center text-[#B45309] shadow-2xs">
+                  <Users className="w-6 h-6 text-[#B45309]" />
+                </div>
+                <h3 className="font-bold text-base text-[#1F2421]">School Visits</h3>
+                <p className="text-xs sm:text-sm text-[#4B5563]">Inspire and guide students</p>
+              </div>
+
+              {/* Pillar 2: Mock Interviews */}
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-[#FFF3D6] border border-[#FDE68A] flex items-center justify-center text-[#B45309] shadow-2xs">
+                  <GraduationCap className="w-6 h-6 text-[#B45309]" />
+                </div>
+                <h3 className="font-bold text-base text-[#1F2421]">Mock Interviews</h3>
+                <p className="text-xs sm:text-sm text-[#4B5563]">Support career readiness</p>
+              </div>
+
+              {/* Pillar 3: BGV Support */}
+              <div className="flex flex-col items-center space-y-2">
+                <div className="w-12 h-12 rounded-2xl bg-[#FFF3D6] border border-[#FDE68A] flex items-center justify-center text-[#B45309] shadow-2xs">
+                  <Briefcase className="w-6 h-6 text-[#B45309]" />
+                </div>
+                <h3 className="font-bold text-base text-[#1F2421]">BGV Support</h3>
+                <p className="text-xs sm:text-sm text-[#4B5563]">Help students take the next step</p>
+              </div>
             </div>
           </div>
         </section>

@@ -10,12 +10,13 @@ import {
   Clock,
   Ban,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import { VolunteerSidebar } from "@/components/navigation/volunteer-sidebar";
 import { Logo } from "@/components/ui/logo";
 import { useAuth } from "@/lib/auth-context";
 import { apiClient } from "@/lib/api-client";
-import { UnreadCountResponse } from "@/types";
+import { UnreadCountResponse, VolunteerProfileResponse } from "@/types";
 
 export function VolunteerShell({
   children,
@@ -27,6 +28,7 @@ export function VolunteerShell({
   const { user, isAuthenticated, isLoading } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [profile, setProfile] = useState<VolunteerProfileResponse | null>(null);
 
   // Authentication check
   useEffect(() => {
@@ -35,21 +37,29 @@ export function VolunteerShell({
     }
   }, [isLoading, isAuthenticated, router, pathname]);
 
-  // Fetch unread count for topbar
+  // Fetch unread count & volunteer profile for topbar
   useEffect(() => {
     let isMounted = true;
-    async function loadUnread() {
+    async function loadShellData() {
       if (!isAuthenticated) return;
       try {
-        const data = await apiClient<UnreadCountResponse>("/notifications/unread-count");
+        const [unreadData, profileData] = await Promise.allSettled([
+          apiClient<UnreadCountResponse>("/notifications/unread-count"),
+          apiClient<VolunteerProfileResponse>("/volunteers/me"),
+        ]);
         if (isMounted) {
-          setUnreadCount(data.unread_count || 0);
+          if (unreadData.status === "fulfilled") {
+            setUnreadCount(unreadData.value.unread_count || 0);
+          }
+          if (profileData.status === "fulfilled") {
+            setProfile(profileData.value);
+          }
         }
       } catch {
         // Silently fail
       }
     }
-    void loadUnread();
+    void loadShellData();
     return () => {
       isMounted = false;
     };
@@ -57,24 +67,33 @@ export function VolunteerShell({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F3]">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-3 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium text-charcoal-600">Loading Maatram Volunteer Portal...</p>
+          <div className="w-10 h-10 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-[#4B5563]">Loading Maatram Volunteer Portal...</p>
         </div>
       </div>
     );
   }
 
-  const isPendingApproval = user?.status === "PENDING_APPROVAL" || user?.status === "PENDING_VERIFICATION";
+  const isPendingApproval =
+    user?.status === "PENDING_APPROVAL" || user?.status === "PENDING_VERIFICATION";
   const isRejected = user?.status === "REJECTED";
   const isSuspended = user?.status === "SUSPENDED" || user?.status === "INACTIVE";
 
+  const displayName = profile
+    ? `${profile.first_name} ${profile.last_name}`.trim()
+    : user?.email?.split("@")[0] || "Volunteer";
+
+  const initials = profile?.first_name
+    ? `${profile.first_name.charAt(0)}${profile.last_name ? profile.last_name.charAt(0) : ""}`.toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || "VL";
+
   return (
-    <div className="min-h-screen bg-[#FAF8F3] text-charcoal-900 flex flex-col md:flex-row antialiased selection:bg-primary-200">
-      {/* Desktop Sidebar Rail */}
-      <div className="hidden md:block w-64 lg:w-72 flex-shrink-0">
-        <div className="fixed top-0 bottom-0 w-64 lg:w-72 h-screen z-30">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#1F2421] flex flex-col md:flex-row antialiased selection:bg-[#FDE68A]">
+      {/* Desktop Sidebar Rail with Floating Card Presentation matching Mentor Reference */}
+      <div className="hidden md:block w-60 lg:w-64 flex-shrink-0 p-3">
+        <div className="fixed top-3 bottom-3 w-[calc(15rem-1.5rem)] lg:w-[calc(16rem-1.5rem)] h-[calc(100vh-1.5rem)] z-30">
           <VolunteerSidebar />
         </div>
       </div>
@@ -82,12 +101,13 @@ export function VolunteerShell({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 md:pl-0">
         {/* Mobile Header */}
-        <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-charcoal-200/80 px-4 py-3 flex items-center justify-between shadow-2xs">
-          <Logo width={110} height={55} />
+        <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#EFECE6] px-4 py-3 flex items-center justify-between shadow-2xs">
+          <Logo width={115} height={48} />
           <div className="flex items-center gap-2">
             <Link
               href="/volunteer/notifications"
-              className="relative p-2 rounded-xl text-charcoal-700 hover:bg-charcoal-100 transition-colors"
+              className="relative p-2 rounded-xl text-[#4B5563] hover:bg-[#FAF8F5] transition-colors"
+              aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -96,7 +116,7 @@ export function VolunteerShell({
             </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-charcoal-700 hover:bg-charcoal-100 transition-colors"
+              className="p-2 rounded-xl text-[#4B5563] hover:bg-[#FAF8F5] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -106,18 +126,19 @@ export function VolunteerShell({
 
         {/* Mobile Slide-over Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 md:hidden bg-charcoal-950/40 backdrop-blur-xs flex">
-            <div className="w-72 max-w-[80vw] h-full bg-white shadow-2xl flex flex-col">
-              <div className="p-4 border-b border-charcoal-100 flex items-center justify-between">
-                <Logo width={110} height={55} />
+          <div className="fixed inset-0 z-50 md:hidden bg-black/40 backdrop-blur-xs flex">
+            <div className="w-72 max-w-[85vw] h-full bg-white shadow-2xl flex flex-col p-3">
+              <div className="p-2 border-b border-[#EFECE6] flex items-center justify-between">
+                <Logo width={115} height={48} />
                 <button
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 rounded-lg text-charcoal-500 hover:bg-charcoal-100"
+                  className="p-1.5 rounded-lg text-[#6B7280] hover:bg-[#FAF8F5]"
+                  aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto pt-2">
                 <VolunteerSidebar onNavigate={() => setMobileMenuOpen(false)} />
               </div>
             </div>
@@ -125,15 +146,16 @@ export function VolunteerShell({
           </div>
         )}
 
-        {/* Desktop Top Header Bar */}
-        <header className="hidden md:flex sticky top-0 z-20 h-16 bg-[#FAF8F3]/90 backdrop-blur-md border-b border-charcoal-200/60 px-6 lg:px-10 items-center justify-between">
-          <div className="text-xs font-semibold text-charcoal-400 uppercase tracking-wider">
-            Maatram Volunteering & Mentorship Portal
+        {/* Desktop Top Header Bar matching Mentor Reference */}
+        <header className="hidden md:flex sticky top-0 z-20 h-14 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EFECE6] px-6 lg:px-8 items-center justify-between">
+          <div className="text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+            MAATRAM VOLUNTEERING & MENTORSHIP PORTAL
           </div>
+
           <div className="flex items-center gap-4">
             <Link
               href="/volunteer/notifications"
-              className="relative p-2 rounded-xl text-charcoal-600 hover:text-charcoal-950 hover:bg-charcoal-100/70 transition-colors"
+              className="relative p-2 rounded-xl text-[#4B5563] hover:text-[#1F2421] hover:bg-white transition-colors"
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
@@ -143,33 +165,37 @@ export function VolunteerShell({
                 </span>
               )}
             </Link>
-            <div className="h-6 w-px bg-charcoal-200" />
+
+            <div className="h-5 w-px bg-[#EFECE6]" />
+
+            {/* Profile Avatar Pill matching Reference */}
             <Link
               href="/volunteer/profile"
-              className="flex items-center gap-2.5 p-1 rounded-full hover:bg-charcoal-100/70 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#EFECE6] hover:border-[#F5B817] shadow-2xs hover:shadow-xs transition-all group"
             >
-              <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-900 border border-primary-300 font-bold text-xs flex items-center justify-center">
-                {user?.email ? user.email.slice(0, 2).toUpperCase() : "VL"}
+              <div className="w-7 h-7 rounded-full bg-[#FFF8E7] text-[#946C00] border border-[#F5B817]/60 font-extrabold text-[11px] flex items-center justify-center shrink-0">
+                {initials}
               </div>
-              <span className="text-xs font-bold text-charcoal-800 pr-2">
-                {user?.email?.split("@")[0] || "Volunteer"}
+              <span className="text-xs font-bold text-[#1F2421] group-hover:text-[#946C00] transition-colors truncate max-w-[130px]">
+                {displayName}
               </span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#9CA3AF] group-hover:text-[#1F2421]" />
             </Link>
           </div>
         </header>
 
         {/* Status Notification Banners for Inactive/Pending/Suspended Profiles */}
         {isPendingApproval && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-amber-900 text-xs md:text-sm font-medium flex items-center justify-between">
+          <div className="bg-[#FEF3C7] border-b border-[#FDE68A] px-4 py-3 text-[#78350F] text-xs md:text-sm font-medium flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <Clock className="w-4 h-4 text-[#D97706] flex-shrink-0" />
               <span>
-                <strong>Application In Review:</strong> Your volunteer application is being reviewed by Maatram administrators. You can browse upcoming events while your verification is in progress.
+                <strong>Application In Review:</strong> Your volunteer application is being reviewed by Maatram administrators. You can browse upcoming opportunities while verification is in progress.
               </span>
             </div>
             <Link
               href="/volunteer/profile"
-              className="hidden sm:inline-flex items-center gap-1 font-bold text-amber-900 underline hover:no-underline ml-4 whitespace-nowrap"
+              className="hidden sm:inline-flex items-center gap-1 font-bold text-[#92400E] underline hover:no-underline ml-4 whitespace-nowrap"
             >
               View Application Status <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -180,7 +206,7 @@ export function VolunteerShell({
           <div className="bg-red-50 border-b border-red-200 px-4 py-3 text-red-900 text-xs md:text-sm font-medium flex items-center gap-2">
             <Ban className="w-4 h-4 text-red-600 flex-shrink-0" />
             <span>
-              <strong>Application Status:</strong> Your volunteering profile was not approved. For questions or to re-apply, please contact support@maatramfoundation.org.
+              <strong>Application Status:</strong> Your volunteering profile was not approved. For questions or to re-apply, please contact volunteers@maatramfoundation.org.
             </span>
           </div>
         )}
@@ -194,8 +220,8 @@ export function VolunteerShell({
           </div>
         )}
 
-        {/* Page Inner Container */}
-        <main className="flex-1 p-4 md:p-6 lg:p-10">{children}</main>
+        {/* Page Inner Container matching Reference proportions */}
+        <main className="flex-1 p-4 sm:p-5 lg:p-6 w-full max-w-[1260px] mx-auto">{children}</main>
       </div>
     </div>
   );

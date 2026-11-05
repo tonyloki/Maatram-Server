@@ -3,22 +3,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { format } from "date-fns";
 import {
   Calendar,
   Clock,
   MapPin,
+  Video,
   CheckCircle2,
-  Hourglass,
-  UserCheck,
-  ChevronRight,
-  Award,
-  Clock3,
-  Coins,
-  History,
-  AlertCircle,
-  Loader2,
-  ArrowUpRight,
+  Star,
+  BarChart2,
+  Search,
+  ArrowRight,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -27,9 +22,7 @@ import {
   AttendanceRecordResponse,
   AttendanceListResponse,
   PointLedgerResponse,
-  PointTransactionResponse,
 } from "@/types";
-import { fadeInUp, staggerContainer } from "@/lib/animations";
 
 type ActivityTab = "UPCOMING" | "ONGOING" | "PAST" | "LEDGER";
 
@@ -39,12 +32,7 @@ export default function VolunteerActivityPage() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecordResponse[]>([]);
   const [ledgerData, setLedgerData] = useState<PointLedgerResponse | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
   const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
     try {
       const [regRes, attRes, ledRes] = await Promise.all([
         apiClient<RegistrationListResponse>("/registrations/me", { params: { page: 1, page_size: 100 } }).catch(
@@ -65,21 +53,17 @@ export default function VolunteerActivityPage() {
       setRegistrations(regRes.items || []);
       setAttendanceRecords(attRes.items || []);
       setLedgerData(ledRes);
-    } catch (err: unknown) {
-      console.error("Failed to load activity", err);
-      setError("Unable to load activity history at this time.");
-    } finally {
-      setIsLoading(false);
+    } catch {
+      // Gracefully show current activity state
     }
   }, []);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, [loadData]);
 
   const now = Date.now();
 
-  // Categorize registrations
   const upcomingRegistrations = registrations.filter((r) => {
     if (["WITHDRAWN", "DECLINED"].includes(r.status)) return false;
     if (!r.event?.start_time) return true;
@@ -91,367 +75,324 @@ export default function VolunteerActivityPage() {
     if (!r.event?.start_time || !r.event?.end_time) return false;
     const start = new Date(r.event.start_time).getTime();
     const end = new Date(r.event.end_time).getTime();
-    return start < now && end > now;
+    return start <= now && end >= now;
   });
 
   const pastRegistrations = registrations.filter((r) => {
     if (["WITHDRAWN", "DECLINED"].includes(r.status)) return false;
     if (!r.event?.end_time) return false;
-    return new Date(r.event.end_time).getTime() <= now;
+    return new Date(r.event.end_time).getTime() < now;
   });
 
-  const getCategoryImage = (category?: string) => {
-    switch (category) {
-      case "SCHOOL_VISIT":
-        return "/images/events/school-visit.png";
-      case "MOCK_INTERVIEW":
-        return "/images/events/mock-interview.png";
-      case "BGV":
-      case "BGV_SUPPORT":
-        return "/images/events/bgv-support.png";
-      default:
-        return "/images/events/school-visit.png";
-    }
-  };
-
-  const formatEventDate = (isoStr?: string) => {
-    if (!isoStr) return "";
-    try {
-      const d = new Date(isoStr);
-      return d.toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      });
-    } catch {
-      return isoStr;
-    }
-  };
-
-  const formatEventTime = (startIso?: string, endIso?: string) => {
-    if (!startIso || !endIso) return "";
-    try {
-      const s = new Date(startIso);
-      const e = new Date(endIso);
-      const startTime = s.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
-      const endTime = e.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
-      return `${startTime} - ${endTime}`;
-    } catch {
-      return "";
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "SELECTED":
-        return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Selected
-          </span>
-        );
-      case "WAITLISTED":
-        return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
-            <Hourglass className="w-3 h-3 text-amber-600" /> Waitlisted
-          </span>
-        );
-      case "SUBSCRIBED":
-        return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-sky-50 text-sky-800 border border-sky-200">
-            <UserCheck className="w-3 h-3 text-sky-600" /> Subscribed
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-charcoal-100 text-charcoal-700">
-            {status}
-          </span>
-        );
-    }
-  };
+  const currentList =
+    activeTab === "UPCOMING"
+      ? upcomingRegistrations
+      : activeTab === "ONGOING"
+      ? ongoingRegistrations
+      : pastRegistrations;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Page Title */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-charcoal-900 tracking-tight font-serif">
-          My Activity
-        </h1>
-        <p className="text-sm text-charcoal-500 mt-1">
-          Review your enrolled events, attendance confirmations, and verified gamification points ledger.
-        </p>
-      </div>
+    <div className="space-y-6 sm:space-y-7 animate-in fade-in-50 duration-300 pb-10 overflow-x-hidden min-w-0 max-w-full">
+      {/* 1. Curved Golden Hero Banner matching ui-Reference/MyActivities.jpeg */}
+      <section
+        aria-label="My Activity Hero"
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFDF5] via-[#FFF3D6] to-[#FCEFC7] border border-[#FDE68A]/70 px-8 py-6 shadow-xs min-h-[175px] flex items-center justify-between"
+      >
+        {/* Soft Golden Foliage Branch Watermark in Top-Left */}
+        <div className="absolute -top-3 -left-3 w-32 h-32 pointer-events-none opacity-45 select-none z-0">
+          <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-[#EAB308]">
+            <path
+              d="M10 10 Q40 20 60 60 Q70 80 80 90"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <ellipse cx="25" cy="22" rx="10" ry="5" fill="currentColor" transform="rotate(-30 25 22)" />
+            <ellipse cx="40" cy="35" rx="10" ry="5" fill="currentColor" transform="rotate(-20 40 35)" />
+            <ellipse cx="55" cy="52" rx="10" ry="5" fill="currentColor" transform="rotate(-10 55 52)" />
+            <ellipse cx="68" cy="72" rx="9" ry="4.5" fill="currentColor" transform="rotate(10 68 72)" />
+          </svg>
+        </div>
 
-      {/* Primary Pill Navigation (Matches Reference Screen 3) */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* Hero Banner Photography on Right with Soft Organic Left Fade Mask */}
+        <div className="absolute right-0 bottom-0 top-0 w-1/2 max-w-[560px] pointer-events-none select-none z-10 hidden md:block overflow-hidden rounded-r-3xl">
+          <Image
+            src="/assets/maatram/photography/volunteers-team-hero.jpg"
+            alt="Maatram volunteer community"
+            fill
+            className="object-cover object-center"
+            priority
+          />
+          {/* Natural Soft Gradient Fade on Left Edge */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FFF3D6] to-transparent z-10" />
+        </div>
+
+        <div className="relative z-10 max-w-lg space-y-2">
+          {/* Rounded Calendar Icon Card */}
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF3D6] border border-[#FDE68A] flex items-center justify-center text-[#1F2421] shadow-2xs">
+            <Calendar className="w-6 h-6 text-[#1F2421]" />
+          </div>
+
+          <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1F2421] tracking-tight">
+            My Activity
+          </h1>
+
+          <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed max-w-md pt-0.5">
+            Track your volunteering journey, view your events and contributions, and monitor your progress in the Maatram community.
+          </p>
+        </div>
+      </section>
+
+      {/* 2. Segmented Pill Tab Bar matching Reference MyActivities.jpeg */}
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none min-w-0 max-w-full">
         <button
           onClick={() => setActiveTab("UPCOMING")}
-          className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
+          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
             activeTab === "UPCOMING"
-              ? "bg-primary-500 text-charcoal-950 shadow-xs ring-1 ring-primary-500"
-              : "bg-white border border-charcoal-200/80 text-charcoal-600 hover:bg-charcoal-50"
+              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
           }`}
         >
-          Upcoming ({upcomingRegistrations.length})
+          <Calendar className="w-3.5 h-3.5" />
+          <span>Upcoming ({upcomingRegistrations.length})</span>
         </button>
+
         <button
           onClick={() => setActiveTab("ONGOING")}
-          className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
+          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
             activeTab === "ONGOING"
-              ? "bg-primary-500 text-charcoal-950 shadow-xs ring-1 ring-primary-500"
-              : "bg-white border border-charcoal-200/80 text-charcoal-600 hover:bg-charcoal-50"
+              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
           }`}
         >
-          Ongoing ({ongoingRegistrations.length})
+          <CheckCircle2 className="w-3.5 h-3.5" />
+          <span>Ongoing ({ongoingRegistrations.length})</span>
         </button>
+
         <button
           onClick={() => setActiveTab("PAST")}
-          className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap ${
+          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
             activeTab === "PAST"
-              ? "bg-primary-500 text-charcoal-950 shadow-xs ring-1 ring-primary-500"
-              : "bg-white border border-charcoal-200/80 text-charcoal-600 hover:bg-charcoal-50"
+              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
           }`}
         >
-          Past ({pastRegistrations.length + attendanceRecords.length})
+          <Star className="w-3.5 h-3.5" />
+          <span>Past ({pastRegistrations.length})</span>
         </button>
+
         <button
           onClick={() => setActiveTab("LEDGER")}
-          className={`px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
             activeTab === "LEDGER"
-              ? "bg-primary-500 text-charcoal-950 shadow-xs ring-1 ring-primary-500"
-              : "bg-white border border-charcoal-200/80 text-charcoal-600 hover:bg-charcoal-50"
+              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
           }`}
         >
-          <Coins className="w-3.5 h-3.5" />
-          Points Ledger
+          <BarChart2 className="w-3.5 h-3.5" />
+          <span>Points Ledger</span>
         </button>
       </div>
 
-      {/* Content Area */}
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-charcoal-200/80">
-          <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-          <p className="text-sm font-medium text-charcoal-500 mt-3">Loading your volunteering activity...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center text-red-700">
-          <AlertCircle className="w-8 h-8 mx-auto text-red-500 mb-2" />
-          <p className="font-semibold">{error}</p>
-          <button
-            onClick={loadData}
-            className="mt-3 px-4 py-1.5 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      ) : activeTab === "LEDGER" ? (
-        /* Financial-Grade Points Ledger View */
+      {/* 3. Main Content Display Area */}
+      {activeTab === "LEDGER" ? (
+        /* POINTS LEDGER VIEW */
         <div className="space-y-6">
-          {/* Summary KPIs */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-charcoal-200/80 shadow-xs">
-              <span className="text-xs font-bold uppercase text-charcoal-400 tracking-wider">Net Points Balance</span>
-              <div className="flex items-center gap-2 mt-2">
-                <Coins className="w-6 h-6 text-amber-500" />
-                <span className="text-3xl font-extrabold text-charcoal-900">{ledgerData?.net_points ?? 0}</span>
-                <span className="text-xs font-semibold text-charcoal-500">pts</span>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-[#1F2421]">
+                  Canonical Gamification Ledger
+                </h3>
+                <p className="text-xs text-[#6B7280]">
+                  Points are computed exclusively from database records: Events × 10 + Approved Hours × 2
+                </p>
+              </div>
+              <div className="px-4 py-2 rounded-2xl bg-[#FFF8E7] border border-[#FDE68A] text-xs font-bold text-[#946C00]">
+                P = (E × 10) + (H × 2)
               </div>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-charcoal-200/80 shadow-xs">
-              <span className="text-xs font-bold uppercase text-charcoal-400 tracking-wider">Verified Events</span>
-              <div className="flex items-center gap-2 mt-2">
-                <Award className="w-6 h-6 text-emerald-600" />
-                <span className="text-3xl font-extrabold text-charcoal-900">
-                  {attendanceRecords.filter((a) => a.status === "ATTENDED").length}
-                </span>
-                <span className="text-xs font-semibold text-charcoal-500">completed</span>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-gray-200/80">
+                <span className="text-xs font-semibold text-[#6B7280]">Total Balance</span>
+                <p className="text-2xl font-black text-[#1F2421] mt-1">
+                  {ledgerData?.net_points ?? "0.00"} pts
+                </p>
               </div>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-charcoal-200/80 shadow-xs">
-              <span className="text-xs font-bold uppercase text-charcoal-400 tracking-wider">Total Verified Hours</span>
-              <div className="flex items-center gap-2 mt-2">
-                <Clock3 className="w-6 h-6 text-primary-600" />
-                <span className="text-3xl font-extrabold text-charcoal-900">
-                  {attendanceRecords.reduce((acc, a) => acc + Number(a.hours_credited || 0), 0)}
-                </span>
-                <span className="text-xs font-semibold text-charcoal-500">hours</span>
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-gray-200/80">
+                <span className="text-xs font-semibold text-[#6B7280]">Events Points (E × 10)</span>
+                <p className="text-2xl font-black text-[#1F2421] mt-1">
+                  {ledgerData?.items?.reduce((sum, tx) => sum + Number(tx.event_points || 0), 0).toFixed(2) ?? "0.00"} pts
+                </p>
+              </div>
+              <div className="p-4 rounded-xl bg-[#FAF8F5] border border-gray-200/80">
+                <span className="text-xs font-semibold text-[#6B7280]">Hours Points (H × 2)</span>
+                <p className="text-2xl font-black text-[#1F2421] mt-1">
+                  {ledgerData?.items?.reduce((sum, tx) => sum + Number(tx.hour_points || 0), 0).toFixed(2) ?? "0.00"} pts
+                </p>
               </div>
             </div>
           </div>
 
-          {/* Ledger Table */}
-          <div className="bg-white rounded-2xl border border-charcoal-200/80 overflow-hidden shadow-xs">
-            <div className="p-4 border-b border-charcoal-200/80 flex items-center justify-between">
-              <h3 className="font-bold text-charcoal-900 text-sm md:text-base flex items-center gap-2">
-                <History className="w-4 h-4 text-primary-600" />
-                Point Transactions & Audit Ledger
-              </h3>
-              <span className="text-xs text-charcoal-400">Strictly append-only canonical ledger</span>
-            </div>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
+            <h4 className="text-sm font-bold text-[#1F2421] uppercase tracking-wider">
+              Point Transaction Ledger
+            </h4>
 
-            {!ledgerData || ledgerData.items.length === 0 ? (
-              <div className="p-12 text-center text-charcoal-500 text-sm">
-                No point transactions recorded yet. Complete volunteering events to earn verified points!
-              </div>
+            {!ledgerData?.items || ledgerData.items.length === 0 ? (
+              <p className="text-xs text-[#6B7280] py-6 text-center">
+                No point transactions recorded yet. Complete an event to earn your first points!
+              </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs md:text-sm text-charcoal-700">
-                  <thead className="bg-charcoal-50 border-b border-charcoal-200 text-charcoal-500 uppercase tracking-wider text-[11px] font-bold">
-                    <tr>
-                      <th className="py-3 px-4">Date</th>
-                      <th className="py-3 px-4">Activity / Reason</th>
-                      <th className="py-3 px-4 text-right">Hours</th>
-                      <th className="py-3 px-4 text-right">Event Pts</th>
-                      <th className="py-3 px-4 text-right">Hour Pts</th>
-                      <th className="py-3 px-4 text-right">Total Net</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-charcoal-100">
-                    {ledgerData.items.map((tx) => (
-                      <tr key={tx.id} className="hover:bg-charcoal-50/50 transition-colors">
-                        <td className="py-3 px-4 whitespace-nowrap text-charcoal-600">
-                          {formatEventDate(tx.created_at)}
-                        </td>
-                        <td className="py-3 px-4 font-semibold text-charcoal-900">
-                          {tx.reason || tx.transaction_type.replace("_", " ")}
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium text-charcoal-600">
-                          {tx.hours_credited ? `${tx.hours_credited} hrs` : "—"}
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium text-emerald-700">
-                          +{Number(tx.event_points || 0)}
-                        </td>
-                        <td className="py-3 px-4 text-right font-medium text-emerald-700">
-                          +{Number(tx.hour_points || 0)}
-                        </td>
-                        <td className="py-3 px-4 text-right font-bold text-charcoal-900">
-                          +{Number(tx.total_points || 0)} pts
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="divide-y divide-gray-100">
+                {ledgerData.items.map((tx) => (
+                  <div key={tx.id} className="py-3.5 flex items-center justify-between text-xs sm:text-sm">
+                    <div>
+                      <p className="font-bold text-[#1F2421]">
+                        {tx.event_id ? "Event Completion Credit" : (tx.reason || "Service Hours Adjustment")}
+                      </p>
+                      <p className="text-[11px] text-[#6B7280]">
+                        {format(new Date(tx.created_at), "d MMM yyyy, h:mm a")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-[#15803D]">
+                        +{Number(tx.total_points || 0)} pts
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
-      ) : (
-        /* Event Cards List (Matching Screen 3) */
-        <div>
-          {(() => {
-            const list =
-              activeTab === "UPCOMING"
-                ? upcomingRegistrations
-                : activeTab === "ONGOING"
-                ? ongoingRegistrations
-                : pastRegistrations;
+      ) : currentList.length === 0 ? (
+        /* 4. The Signature Empty State matching ui-Reference/MyActivities.jpeg */
+        <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-12 sm:p-16 text-center flex flex-col items-center justify-center relative overflow-hidden min-h-[420px]">
+          {/* Subtle Corner Yellow Background Highlights */}
+          <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FFF8E7]/60 pointer-events-none" />
+          <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-[#FFF8E7]/60 pointer-events-none" />
 
-            if (list.length === 0) {
-              return (
-                <div className="bg-white rounded-2xl border border-charcoal-200/80 p-12 text-center">
-                  <div className="w-12 h-12 bg-charcoal-100 rounded-full flex items-center justify-center mx-auto text-charcoal-500 mb-3">
-                    <Calendar className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-base font-bold text-charcoal-900">
-                    No {activeTab.toLowerCase()} activities
-                  </h3>
-                  <p className="text-sm text-charcoal-500 mt-1 max-w-sm mx-auto">
-                    {activeTab === "UPCOMING"
-                      ? "You haven't subscribed to any upcoming events yet. Discover available events and register today!"
-                      : activeTab === "ONGOING"
-                      ? "You do not have any events currently underway right now."
-                      : "You haven't completed any volunteering events yet."}
-                  </p>
-                  {activeTab === "UPCOMING" && (
-                    <Link
-                      href="/volunteer/events"
-                      className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary-500 text-charcoal-950 font-bold rounded-xl text-sm shadow-xs hover:bg-primary-400 transition-colors"
-                    >
-                      Discover Events <ArrowUpRight className="w-4 h-4" />
-                    </Link>
-                  )}
-                </div>
-              );
-            }
+          {/* Calendar & Clock Vector Illustration */}
+          <div className="relative z-10 w-72 h-44 relative mb-4">
+            <Image
+              src="/assets/maatram/illustrations/activity-calendar-clock.svg"
+              alt="No activities recorded"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          <h3 className="relative z-10 text-xl sm:text-2xl font-bold text-[#1F2421] tracking-tight mb-2">
+            {activeTab === "UPCOMING"
+              ? "No upcoming activities"
+              : activeTab === "ONGOING"
+              ? "No ongoing activities"
+              : "No past activities"}
+          </h3>
+
+          <p className="relative z-10 text-xs sm:text-sm text-[#6B7280] max-w-md mb-6 leading-relaxed">
+            {activeTab === "UPCOMING"
+              ? "You haven't registered for any upcoming events yet. Discover events and start volunteering today!"
+              : activeTab === "ONGOING"
+              ? "There are no volunteer drives in progress right now. Check back when your scheduled events begin."
+              : "You have not completed any volunteering events yet. Your service history will be recorded here."}
+          </p>
+
+          <Link
+            href="/volunteer/events"
+            className="relative z-10 inline-flex items-center gap-2 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold text-xs sm:text-sm px-6 py-2.5 rounded-full shadow-2xs transition-all transform hover:-translate-y-0.5"
+          >
+            <Search className="w-4 h-4" />
+            <span>Discover Events</span>
+            <span>→</span>
+          </Link>
+        </div>
+      ) : (
+        /* 5. Registered Activity Cards */
+        <div className="space-y-4">
+          {currentList.map((reg) => {
+            const evt = reg.event;
+            const startDate = evt?.start_time ? new Date(evt.start_time) : null;
+            const dateStr = startDate ? format(startDate, "d MMM yyyy") : "Scheduled";
+            const timeStr = startDate ? format(startDate, "h:mm a") : "";
+            const isOnline = evt?.mode === "ONLINE";
+            const attendance = attendanceRecords.find((a) => a.event_id === reg.event_id);
 
             return (
-              <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-                className="space-y-4"
+              <div
+                key={reg.id}
+                className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs hover:border-[#F5B817]/60 hover:shadow-md transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 group"
               >
-                {list.map((reg) => {
-                  const event = reg.event;
-                  const eventTitle = event?.title || "Volunteering Initiative";
-                  const eventCategory = event?.category || "OTHER";
-                  const eventLocation = event?.location || "Chennai";
-
-                  return (
-                    <motion.div
-                      key={reg.id}
-                      variants={fadeInUp}
-                      className="bg-white rounded-2xl border border-charcoal-200/70 hover:border-primary-300 p-4 md:p-5 shadow-xs hover:shadow-sm transition-all flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 justify-between group"
+                <div className="space-y-2.5 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A]">
+                      {evt?.category || "VOLUNTEERING"}
+                    </span>
+                    <span
+                      className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
+                        isOnline
+                          ? "bg-[#EDE9FE] text-[#6D28D9] border-[#DDD6FE]"
+                          : "bg-[#DCFCE7] text-[#166534] border-[#BBF7D0]"
+                      }`}
                     >
-                      {/* Left Thumbnail */}
-                      <div className="relative w-full md:w-36 h-32 md:h-24 rounded-xl overflow-hidden flex-shrink-0 bg-charcoal-100 border border-charcoal-200/60">
-                        <Image
-                          src={getCategoryImage(eventCategory)}
-                          alt={eventTitle}
-                          fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
+                      {isOnline ? "Online" : "Onsite"}
+                    </span>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      Registration: {reg.status}
+                    </span>
+                    {attendance && (
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200">
+                        Attendance: {attendance.status} ({attendance.hours_credited} hrs)
+                      </span>
+                    )}
+                  </div>
 
-                      {/* Middle Details */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <h2 className="text-base md:text-lg font-bold text-charcoal-900 tracking-tight group-hover:text-primary-800 transition-colors">
-                            {eventTitle}
-                          </h2>
-                        </div>
+                  <h3 className="text-base sm:text-lg font-bold text-[#1F2421] group-hover:text-[#946C00] transition-colors">
+                    {evt?.title || "Volunteering Drive"}
+                  </h3>
 
-                        {/* Date, Time & Location Line */}
-                        <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs md:text-sm text-charcoal-600">
-                          <span className="flex items-center gap-1.5 font-medium">
-                            <Calendar className="w-3.5 h-3.5 text-primary-600" />
-                            {formatEventDate(event?.start_time)}
-                          </span>
-                          <span className="flex items-center gap-1.5 font-medium">
-                            <Clock className="w-3.5 h-3.5 text-primary-600" />
-                            {formatEventTime(event?.start_time, event?.end_time)}
-                          </span>
-                          <span className="flex items-center gap-1.5 font-medium">
-                            <MapPin className="w-3.5 h-3.5 text-primary-600" />
-                            {eventLocation}
-                          </span>
-                        </div>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-[#6B7280]">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-[#F5B817]" />
+                      {dateStr}
+                    </span>
+                    {timeStr && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-[#F5B817]" />
+                        {timeStr}
+                      </span>
+                    )}
+                    <span className="flex items-center gap-1 truncate max-w-[220px]">
+                      {isOnline ? (
+                        <>
+                          <Video className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span>Google Meet</span>
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <span>{evt?.location || "Chennai Venue"}</span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                </div>
 
-                        {/* Status Badge */}
-                        <div className="pt-0.5">{getStatusBadge(reg.status)}</div>
-                      </div>
-
-                      {/* Right Action */}
-                      <div className="w-full md:w-auto flex-shrink-0 pt-2 md:pt-0">
-                        <Link
-                          href={`/volunteer/events/${reg.event_id}`}
-                          className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl border border-charcoal-200 hover:border-charcoal-400 bg-white hover:bg-charcoal-50 text-charcoal-800 text-sm font-semibold shadow-xs hover:shadow-sm transition-all"
-                        >
-                          View Details
-                          <ChevronRight className="w-4 h-4 text-charcoal-400 group-hover:translate-x-0.5 transition-transform" />
-                        </Link>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
+                <Link
+                  href={`/volunteer/events/${reg.event_id}`}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] text-xs font-bold shadow-2xs transition-colors shrink-0"
+                >
+                  <span>View Details</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             );
-          })()}
+          })}
         </div>
       )}
     </div>
   );
 }
-

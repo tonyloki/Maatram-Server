@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 400" width="100%" height="100%" fill="none">
+  <defs>
+    <radialGradient id="trophyGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.8"/>
+      <stop offset="50%" stop-color="#FDE047" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="goldCup" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="30%" stop-color="#FDE047"/>
+      <stop offset="70%" stop-color="#F5B817"/>
+      <stop offset="100%" stop-color="#C99200"/>
+    </linearGradient>
+    <linearGradient id="marbleBase" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#16171A"/>
+      <stop offset="50%" stop-color="#2D3748"/>
+      <stop offset="100%" stop-color="#16171A"/>
+    </linearGradient>
+    <filter id="trophyShadow" x="-20%" y="-10%" width="140%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#1F2421" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Golden Halo -->
+  <circle cx="180" cy="180" r="160" fill="url(#trophyGlow)"/>
+
+  <!-- Silhouetted Cheering Crowd in Background (Monochrome Amber) -->
+  <g fill="#F5B817" opacity="0.35" transform="translate(0, 240)">
+    <!-- Raised hands and heads of volunteers celebrating -->
+    <circle cx="40" cy="40" r="12"/>
+    <path d="M28 55 C28 48 34 45 40 45 C46 45 52 48 52 55 L58 100 L22 100 Z"/>
+    <path d="M22 60 Q10 40 5 25" stroke="#F5B817" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M58 60 Q70 40 75 25" stroke="#F5B817" stroke-width="4.5" stroke-linecap="round"/>
+
+    <circle cx="95" cy="50" r="10"/>
+    <path d="M85 62 C85 55 90 52 95 52 C100 52 105 55 105 62 L110 100 L80 100 Z"/>
+    <path d="M105 65 Q120 45 125 30" stroke="#F5B817" stroke-width="4" stroke-linecap="round"/>
+
+    <circle cx="265" cy="50" r="10"/>
+    <path d="M255 62 C255 55 260 52 265 52 C270 52 275 55 275 62 L280 100 L250 100 Z"/>
+    <path d="M255 65 Q240 45 235 30" stroke="#F5B817" stroke-width="4" stroke-linecap="round"/>
+
+    <circle cx="320" cy="40" r="12"/>
+    <path d="M308 55 C308 48 314 45 320 45 C326 45 332 48 332 55 L338 100 L302 100 Z"/>
+    <path d="M302 60 Q290 40 285 25" stroke="#F5B817" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M338 60 Q350 40 355 25" stroke="#F5B817" stroke-width="4.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Golden Trophy Structure -->
+  <g filter="url(#trophyShadow)">
+    <!-- Ornate Left Handle -->
+    <path d="M120 100 C70 100 65 170 120 190" stroke="url(#goldCup)" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M120 100 C70 100 65 170 120 190" stroke="#FFFDF5" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+    <!-- Ornate Right Handle -->
+    <path d="M240 100 C290 100 295 170 240 190" stroke="url(#goldCup)" stroke-width="14" stroke-linecap="round" fill="none"/>
+    <path d="M240 100 C290 100 295 170 240 190" stroke="#FFFDF5" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+    <!-- Trophy Cup Body -->
+    <path d="M110 70 L250 70 C250 160 215 200 180 205 C145 200 110 160 110 70 Z" fill="url(#goldCup)"/>
+    <!-- Specular Highlight on Left Rim of Cup -->
+    <path d="M125 80 C125 140 145 180 170 195 C145 175 130 135 130 80 Z" fill="#FFFFFF" opacity="0.45"/>
+
+    <!-- Cup Rim Lip -->
+    <ellipse cx="180" cy="70" rx="70" ry="12" fill="#FFFBEB" stroke="#C99200" stroke-width="2"/>
+    <ellipse cx="180" cy="70" rx="60" ry="7" fill="#E5A800"/>
+
+    <!-- Star Medallion Emblem on Cup Face -->
+    <circle cx="180" cy="130" r="28" fill="#FFFDF5" stroke="#F5B817" stroke-width="2"/>
+    <circle cx="180" cy="130" r="24" fill="#F5B817"/>
+    <!-- 5-Point Star -->
+    <polygon points="180,112 185,124 198,124 187,132 191,145 180,137 169,145 173,132 162,124 175,124" fill="#FFFDF5"/>
+
+    <!-- Stem / Column -->
+    <path d="M170 205 L190 205 L195 245 L165 245 Z" fill="url(#goldCup)"/>
+    <ellipse cx="180" cy="245" rx="35" ry="8" fill="#C99200"/>
+
+    <!-- Riser Node -->
+    <rect x="155" y="248" width="50" height="12" rx="4" fill="#E5A800"/>
+
+    <!-- Marble Plinth Base -->
+    <rect x="120" y="260" width="120" height="65" rx="10" fill="url(#marbleBase)"/>
+    <!-- Golden Plaque on Plinth -->
+    <rect x="135" y="275" width="90" height="35" rx="6" fill="#F5B817" stroke="#FFFBEB" stroke-width="1.5"/>
+    <text x="180" y="291" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="900" fill="#1F2421" letter-spacing="1">
+      MAATRAM
+    </text>
+    <text x="180" y="303" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="8" font-weight="700" fill="#78350F">
+      LEADERBOARD
+    </text>
+  </g>
+
+  <!-- Celebratory Confetti & Radiance -->
+  <g fill="#F5B817">
+    <polygon points="60,60 63,68 71,71 63,74 60,82 57,74 49,71 57,68"/>
+    <polygon points="300,50 302,56 308,58 302,60 300,66 298,60 292,58 298,56"/>
+    <polygon points="315,140 317,145 322,147 317,149 315,154 313,149 308,147 313,145"/>
+  </g>
+</svg>
+

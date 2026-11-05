@@ -341,7 +341,7 @@ function RegisterWizard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
                 label="First Name"
-                placeholder="Priya"
+                placeholder="First Name (e.g. Anand)"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 error={stepErrors.firstName}
@@ -349,7 +349,7 @@ function RegisterWizard() {
               />
               <Input
                 label="Last Name"
-                placeholder="Sundaram"
+                placeholder="Last Name (e.g. Kumar)"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 error={stepErrors.lastName}
@@ -361,7 +361,7 @@ function RegisterWizard() {
               <Input
                 label="Email Address"
                 type="email"
-                placeholder="priya@example.com"
+                placeholder="volunteer@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 error={stepErrors.email}
@@ -370,7 +370,7 @@ function RegisterWizard() {
               />
               <Input
                 label="Mobile Phone Number"
-                placeholder="+919876543210"
+                placeholder="+91 98000 00000"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value)}
                 error={stepErrors.mobileNumber}
@@ -530,7 +530,7 @@ function RegisterWizard() {
               <div className="space-y-4">
                 <Input
                   label="College / Institution Name"
-                  placeholder="Sathyabama Institute of Science and Technology"
+                  placeholder="e.g. College / University Name"
                   value={studentCollege}
                   onChange={(e) => setStudentCollege(e.target.value)}
                   error={stepErrors.studentCollege}
@@ -744,7 +744,7 @@ function RegisterWizard() {
             <div className="space-y-1">
               <h2 className="text-xl font-bold text-[#1F2421]">Affirmative Privacy & Consents</h2>
               <p className="text-xs text-[#6B7280]">
-                Under India&apos;s DPDP regulations, every consent below is optional, independent, and defaults to disabled.
+                Every voluntary consent below is optional, independent, and defaults to disabled until you explicitly enable it.
               </p>
             </div>
 

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80" width="100%" height="100%" fill="none">
+  <defs>
+    <linearGradient id="crownBronzeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFEDD5"/>
+      <stop offset="50%" stop-color="#FED7AA"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+  </defs>
+  <!-- 5-Point Bronze Crown -->
+  <path d="M10 65 L20 28 L45 42 L60 12 L75 42 L100 28 L110 65 Z" fill="url(#crownBronzeGrad)" stroke="#9A3412" stroke-width="2"/>
+  <rect x="10" y="60" width="100" height="14" rx="4" fill="#FDBA74" stroke="#9A3412" stroke-width="2"/>
+  <!-- Amber Jewels on Peaks -->
+  <circle cx="20" cy="28" r="4.5" fill="#D97706" stroke="#92400E" stroke-width="1"/>
+  <circle cx="60" cy="12" r="6" fill="#D97706" stroke="#92400E" stroke-width="1.5"/>
+  <circle cx="100" cy="28" r="4.5" fill="#D97706" stroke="#92400E" stroke-width="1"/>
+  <!-- Band Jewels -->
+  <circle cx="25" cy="67" r="3" fill="#FFF7ED"/>
+  <circle cx="48" cy="67" r="3" fill="#F59E0B"/>
+  <circle cx="72" cy="67" r="3" fill="#FFF7ED"/>
+  <circle cx="95" cy="67" r="3" fill="#F59E0B"/>
+</svg>
+

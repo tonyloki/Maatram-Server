@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%" fill="none">
+  <!-- Symmetrical Circular Laurel Wreath Framing Avatar Portraits -->
+  <g fill="#F5B817" stroke="#C99200" stroke-width="1.2">
+    <!-- Center Tie Bow / Ribbon -->
+    <path d="M96 175 C94 170 106 170 104 175 C102 178 98 178 96 175 Z" fill="#E5A800"/>
+    <path d="M97 175 L85 192 L93 190 L98 178 Z" fill="#E5A800"/>
+    <path d="M103 175 L115 192 L107 190 L102 178 Z" fill="#E5A800"/>
+
+    <!-- Left Wreath Branch -->
+    <path d="M95 175 C50 170 25 130 25 90 C25 60 45 35 70 25" stroke="#C99200" stroke-width="2.5" fill="none"/>
+    <!-- Left Leaves -->
+    <ellipse cx="25" cy="115" rx="12" ry="6" transform="rotate(-70 25 115)"/>
+    <ellipse cx="28" cy="95" rx="12" ry="6" transform="rotate(-50 28 95)"/>
+    <ellipse cx="36" cy="75" rx="12" ry="6" transform="rotate(-30 36 75)"/>
+    <ellipse cx="48" cy="58" rx="12" ry="6" transform="rotate(-10 48 58)"/>
+    <ellipse cx="64" cy="42" rx="12" ry="6" transform="rotate(10 64 42)"/>
+    <ellipse cx="80" cy="30" rx="12" ry="6" transform="rotate(30 80 30)"/>
+    <!-- Left Inner Leaves -->
+    <ellipse cx="36" cy="125" rx="10" ry="5" transform="rotate(-45 36 125)"/>
+    <ellipse cx="40" cy="105" rx="10" ry="5" transform="rotate(-25 40 105)"/>
+    <ellipse cx="48" cy="88" rx="10" ry="5" transform="rotate(-5 48 88)"/>
+    <ellipse cx="60" cy="72" rx="10" ry="5" transform="rotate(15 60 72)"/>
+    <ellipse cx="76" cy="58" rx="10" ry="5" transform="rotate(35 76 58)"/>
+
+    <!-- Right Wreath Branch -->
+    <path d="M105 175 C150 170 175 130 175 90 C175 60 155 35 130 25" stroke="#C99200" stroke-width="2.5" fill="none"/>
+    <!-- Right Leaves -->
+    <ellipse cx="175" cy="115" rx="12" ry="6" transform="rotate(70 175 115)"/>
+    <ellipse cx="172" cy="95" rx="12" ry="6" transform="rotate(50 172 95)"/>
+    <ellipse cx="164" cy="75" rx="12" ry="6" transform="rotate(30 164 75)"/>
+    <ellipse cx="152" cy="58" rx="12" ry="6" transform="rotate(10 152 58)"/>
+    <ellipse cx="136" cy="42" rx="12" ry="6" transform="rotate(-10 136 42)"/>
+    <ellipse cx="120" cy="30" rx="12" ry="6" transform="rotate(-30 120 30)"/>
+    <!-- Right Inner Leaves -->
+    <ellipse cx="164" cy="125" rx="10" ry="5" transform="rotate(45 164 125)"/>
+    <ellipse cx="160" cy="105" rx="10" ry="5" transform="rotate(25 160 105)"/>
+    <ellipse cx="152" cy="88" rx="10" ry="5" transform="rotate(5 152 88)"/>
+    <ellipse cx="140" cy="72" rx="10" ry="5" transform="rotate(-15 140 72)"/>
+    <ellipse cx="124" cy="58" rx="10" ry="5" transform="rotate(-35 124 58)"/>
+  </g>
+</svg>
+

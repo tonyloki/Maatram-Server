@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 140" width="100%" height="100%" fill="none">
+  <defs>
+    <radialGradient id="centuryGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="50%" stop-color="#FDE047"/>
+      <stop offset="100%" stop-color="#F5B817"/>
+    </radialGradient>
+    <filter id="centuryShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#1F2421" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Hanging Ribbons (Purple & Gold) -->
+  <polygon points="50,45 42,95 58,85 70,95 62,45" fill="#8B5CF6"/>
+  <polygon points="78,45 70,95 82,85 98,95 90,45" fill="#6D28D9"/>
+
+  <!-- Shield Medallion -->
+  <g filter="url(#centuryShadow)">
+    <!-- Scalloped Outer Edge -->
+    <circle cx="70" cy="55" r="42" fill="url(#centuryGlow)" stroke="#B45309" stroke-width="2"/>
+    
+    <!-- Inner Shield -->
+    <path d="M42 38 L98 38 C98 62 82 80 70 86 C58 80 42 62 42 38 Z" fill="#1F2421" stroke="#F5B817" stroke-width="2"/>
+    
+    <!-- Bold "100" Text -->
+    <text x="70" y="65" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" font-weight="900" fill="#F5B817">
+      100
+    </text>
+    <text x="70" y="76" text-anchor="middle" font-family="system-ui, sans-serif" font-size="7" font-weight="800" fill="#FFFDF5" letter-spacing="1">
+      POINTS
+    </text>
+  </g>
+
+  <!-- Title Pill Banner -->
+  <rect x="18" y="105" width="104" height="22" rx="11" fill="#1F2421" stroke="#F5B817" stroke-width="1.5"/>
+  <text x="70" y="120" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" font-weight="800" fill="#F5B817" letter-spacing="0.5">
+    CENTURY CLUB
+  </text>
+</svg>
+

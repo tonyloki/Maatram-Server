@@ -37,12 +37,22 @@ export function PublicHeader({ activeNav = "home" }: PublicHeaderProps) {
               key={link.key}
               href={link.href}
               className={`text-sm font-medium transition-colors hover:text-[#1F2421] ${
-                activeNav === link.key ? "text-[#1F2421] font-semibold" : "text-[#6B7280]"
+                activeNav === link.key ? "text-[#1F2421] font-semibold" : "text-[#4B5563]"
               }`}
             >
               {link.label}
             </Link>
           ))}
+          {!isAuthenticated && (
+            <Link
+              href="/login"
+              className={`text-sm font-medium transition-colors hover:text-[#1F2421] ${
+                activeNav === "login" ? "text-[#1F2421] font-semibold" : "text-[#4B5563]"
+              }`}
+            >
+              Login
+            </Link>
+          )}
         </nav>
 
         {/* Desktop Action Buttons */}
@@ -63,18 +73,14 @@ export function PublicHeader({ activeNav = "home" }: PublicHeaderProps) {
               </Button>
             </div>
           ) : (
-            <>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button variant="primary" size="sm">
-                  Get Started
-                </Button>
-              </Link>
-            </>
+            <Link href="/register">
+              <button
+                type="button"
+                className="px-6 py-2.5 rounded-xl bg-[#F5B817] hover:bg-[#E0A714] text-[#1F2421] font-bold text-sm transition-all shadow-xs"
+              >
+                Get Started
+              </button>
+            </Link>
           )}
         </div>
 
