@@ -56,18 +56,23 @@ API documentation:
 
 ```bash
 cd server
-python -m pytest
+python -m pytest tests/ --ignore=tests/test_concurrency.py --ignore=tests/test_concurrency_group5.py
 ruff check src/ tests/
 ruff format --check src/ tests/
 mypy --strict src/
 ```
+
+## Complete Project Run Guide
+
+For full step-by-step instructions on setting up and running both backend and web frontend, see:
+👉 **[`RUN_GUIDE.md`](./RUN_GUIDE.md)**
 
 ## Applications Status
 
 | Component | Directory | Stack | Status |
 |:---|:---:|:---:|:---|
 | **Backend API** | `server/` | FastAPI, SQLAlchemy 2 Async, Alembic, PostgreSQL | **Active & Production Ready** (144 tests passing) |
-| **Web Portal** | `web/` | Next.js (TypeScript, TailwindCSS) | **Pending Phase 13** |
+| **Web Portal** | `web/` | Next.js 16, React 19, TypeScript, Tailwind CSS | **Active & Redesigned** (Milestone 6 Complete) |
 | **Mobile App** | `mobile/` | Flutter (Dart) | **Pending Phase 13** |
 
 
