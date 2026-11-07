@@ -51,7 +51,7 @@ export default function AdminVolunteerProfilePage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[#F5B817] border-t-transparent rounded-full animate-spin" />
         <p className="text-sm font-medium text-charcoal-500">Loading volunteer profile...</p>
       </div>
     );
@@ -67,7 +67,7 @@ export default function AdminVolunteerProfilePage({ params }: PageProps) {
         <p className="text-charcoal-600 mb-6">{error || "Could not retrieve the requested volunteer profile."}</p>
         <Link
           href="/admin/volunteers"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-charcoal-900 font-semibold rounded-lg hover:bg-amber-400"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F5B817] text-[#1F2421] font-semibold rounded-lg hover:bg-[#E5A800]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Directory

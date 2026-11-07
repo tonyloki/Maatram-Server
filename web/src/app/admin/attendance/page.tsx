@@ -46,7 +46,7 @@ export default function AdminAttendanceOverviewPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-          <Clock className="w-7 h-7 text-amber-500" />
+          <Clock className="w-7 h-7 text-[#F5B817]" />
           Attendance & Verified Hours Central
         </h1>
         <p className="text-sm text-charcoal-500 mt-1">
@@ -62,7 +62,7 @@ export default function AdminAttendanceOverviewPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by event title or venue..."
-            className="w-full text-xs pl-9 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+            className="w-full text-xs pl-9 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
           />
           <Search className="w-4 h-4 text-stone-400 absolute left-2.5 top-2.5 pointer-events-none" />
         </div>
@@ -74,7 +74,7 @@ export default function AdminAttendanceOverviewPage() {
       {/* Events Roster */}
       {loading ? (
         <div className="py-20 text-center bg-white rounded-xl border border-stone-200">
-          <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-8 h-8 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-xs text-charcoal-500">Loading events roster...</p>
         </div>
       ) : error ? (
@@ -129,7 +129,7 @@ export default function AdminAttendanceOverviewPage() {
                   </span>
                   <Link
                     href={`/admin/events/${ev.id}?tab=attendance`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold rounded-lg text-xs transition"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold rounded-lg text-xs transition"
                   >
                     Open Roster
                     <ArrowRight className="w-3.5 h-3.5" />

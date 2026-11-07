@@ -84,7 +84,7 @@ export default function CreateEventPage() {
           Back to Events List
         </Link>
         <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-          <Calendar className="w-7 h-7 text-amber-500" />
+          <Calendar className="w-7 h-7 text-[#F5B817]" />
           Create New Volunteering Event
         </h1>
         <p className="text-sm text-charcoal-500 mt-1">
@@ -112,7 +112,7 @@ export default function CreateEventPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Government High School Visit - Science Fair Mentoring"
-            className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+            className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
           />
         </div>
 
@@ -125,7 +125,7 @@ export default function CreateEventPage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as EventCategory)}
-              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
             >
               <option value="SCHOOL_VISIT">School Visit</option>
               <option value="MOCK_INTERVIEW">Mock Interview Session</option>
@@ -142,7 +142,7 @@ export default function CreateEventPage() {
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value as EventMode)}
-              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
             >
               <option value="OFFLINE">Offline (In-Person)</option>
               <option value="ONLINE">Online (Virtual)</option>
@@ -161,7 +161,7 @@ export default function CreateEventPage() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Chennai Higher Secondary School, T. Nagar, Chennai"
-              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
             />
           </div>
         ) : (
@@ -174,7 +174,7 @@ export default function CreateEventPage() {
               value={meetingUrl}
               onChange={(e) => setMeetingUrl(e.target.value)}
               placeholder="e.g. https://meet.google.com/abc-defg-hij"
-              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+              className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
             />
           </div>
         )}
@@ -191,7 +191,7 @@ export default function CreateEventPage() {
             required
             value={capacity}
             onChange={(e) => setCapacity(Number(e.target.value))}
-            className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+            className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
           />
         </div>
 
@@ -284,7 +284,7 @@ export default function CreateEventPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe the volunteering objectives, dress code, mentor roles, and orientation instructions..."
-            className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+            className="w-full text-sm p-3 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
           />
         </div>
 
@@ -299,7 +299,7 @@ export default function CreateEventPage() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold rounded-lg text-xs shadow-xs transition flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold rounded-lg text-xs shadow-xs transition flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             {loading ? "Creating Draft..." : "Create Event Draft"}

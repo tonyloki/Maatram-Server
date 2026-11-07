@@ -67,7 +67,7 @@ export default function AdminVolunteersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-            <Users className="w-7 h-7 text-amber-500" />
+            <Users className="w-7 h-7 text-[#F5B817]" />
             Volunteer Directory
           </h1>
           <p className="text-sm text-charcoal-500 mt-1">
@@ -95,7 +95,7 @@ export default function AdminVolunteersPage() {
               }}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                 category === cat
-                  ? "bg-amber-500 text-charcoal-950 shadow-xs"
+                  ? "bg-[#F5B817] text-[#1F2421] shadow-xs"
                   : "bg-stone-100 text-charcoal-600 hover:bg-stone-200/70"
               }`}
             >
@@ -111,7 +111,7 @@ export default function AdminVolunteersPage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by name, email, or college..."
-            className="w-full text-xs pl-9 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+            className="w-full text-xs pl-9 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
           />
           <Search className="w-4 h-4 text-stone-400 absolute left-2.5 top-2.5 pointer-events-none" />
         </form>
@@ -121,7 +121,7 @@ export default function AdminVolunteersPage() {
       <div className="bg-white border border-stone-200 rounded-xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-20 text-center">
-            <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-xs text-charcoal-500 font-medium">Loading volunteer records...</p>
           </div>
         ) : error ? (
@@ -139,12 +139,12 @@ export default function AdminVolunteersPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-stone-50 border-b border-stone-200 text-[11px] font-bold text-charcoal-500 uppercase tracking-wider">
-                  <th className="py-3.5 px-4">Volunteer</th>
-                  <th className="py-3.5 px-4">Category</th>
-                  <th className="py-3.5 px-4">Affiliation / Organisation</th>
-                  <th className="py-3.5 px-4">Skills & Interests</th>
-                  <th className="py-3.5 px-4">Safeguarding</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th scope="col" className="py-3.5 px-4">Volunteer</th>
+                  <th scope="col" className="py-3.5 px-4">Category</th>
+                  <th scope="col" className="py-3.5 px-4">Affiliation / Organisation</th>
+                  <th scope="col" className="py-3.5 px-4">Skills & Interests</th>
+                  <th scope="col" className="py-3.5 px-4">Safeguarding</th>
+                  <th scope="col" className="py-3.5 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100 text-xs">
@@ -225,7 +225,7 @@ export default function AdminVolunteersPage() {
                     <td className="py-3.5 px-4 text-right">
                       <Link
                         href={`/admin/volunteers/${vol.id}`}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-amber-500 hover:text-charcoal-950 text-charcoal-700 font-semibold rounded-lg text-xs transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 hover:bg-[#F5B817] hover:text-[#1F2421] text-charcoal-700 font-semibold rounded-lg text-xs transition"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         View Dossier

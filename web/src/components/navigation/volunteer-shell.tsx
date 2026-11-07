@@ -221,7 +221,7 @@ export function VolunteerShell({
         )}
 
         {/* Page Inner Container matching Reference proportions */}
-        <main className="flex-1 p-4 sm:p-5 lg:p-6 w-full max-w-[1260px] mx-auto">{children}</main>
+        <main id="main-content" tabIndex={-1} className="flex-1 p-4 sm:p-5 lg:p-6 w-full max-w-[1260px] mx-auto focus:outline-none">{children}</main>
       </div>
     </div>
   );

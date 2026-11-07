@@ -267,7 +267,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[#F5B817] border-t-transparent rounded-full animate-spin" />
         <p className="text-sm font-medium text-charcoal-500">Loading event dashboard...</p>
       </div>
     );
@@ -283,7 +283,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
         <p className="text-charcoal-600 mb-6">{error || "Could not retrieve the event dossier."}</p>
         <Link
           href="/admin/events"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-charcoal-900 font-semibold rounded-lg hover:bg-amber-400"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F5B817] text-[#1F2421] font-semibold rounded-lg hover:bg-[#E5A800]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Events List
@@ -379,7 +379,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                   }
                   setCompleteModalOpen(true);
                 }}
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-2"
+                className="px-5 py-2.5 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-2"
               >
                 <Award className="w-4 h-4" />
                 Mark as Completed
@@ -435,7 +435,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
           onClick={() => setActiveTab("subscribed")}
           className={`pb-3 transition relative ${
             activeTab === "subscribed"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -446,7 +446,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
           onClick={() => setActiveTab("selected")}
           className={`pb-3 transition relative ${
             activeTab === "selected"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -457,7 +457,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
           onClick={() => setActiveTab("attendance")}
           className={`pb-3 transition relative ${
             activeTab === "attendance"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -468,7 +468,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
           onClick={() => setActiveTab("completion")}
           className={`pb-3 transition relative ${
             activeTab === "completion"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -494,7 +494,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                     setSelectedRegIds([]);
                   }
                 }}
-                className="w-4 h-4 rounded border-stone-300 text-amber-500 focus:ring-amber-500"
+                className="w-4 h-4 rounded border-stone-300 text-[#F5B817] focus:ring-[#F5B817]"
               />
               <span className="text-charcoal-600 font-medium">
                 {selectedRegIds.length} of {subscribedList.length} applicants selected
@@ -506,7 +506,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                 type="button"
                 disabled={actionLoading}
                 onClick={handleBatchSelect}
-                className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold rounded-lg transition text-xs shadow-xs"
+                className="px-4 py-1.5 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold rounded-lg transition text-xs shadow-xs"
               >
                 {actionLoading ? "Processing..." : `Confirm Selection (${selectedRegIds.length})`}
               </button>
@@ -522,12 +522,12 @@ export default function AdminEventDetailPage({ params }: PageProps) {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200 text-[11px] font-bold text-charcoal-500 uppercase tracking-wider">
-                    <th className="py-3 px-4 w-10"></th>
-                    <th className="py-3 px-4">Volunteer</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Skills / Notes</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Action</th>
+                    <th scope="col" className="py-3 px-4 w-10"></th>
+                    <th scope="col" className="py-3 px-4">Volunteer</th>
+                    <th scope="col" className="py-3 px-4">Category</th>
+                    <th scope="col" className="py-3 px-4">Skills / Notes</th>
+                    <th scope="col" className="py-3 px-4">Status</th>
+                    <th scope="col" className="py-3 px-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
@@ -548,7 +548,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                                 setSelectedRegIds((prev) => prev.filter((id) => id !== reg.id));
                               }
                             }}
-                            className="w-4 h-4 rounded border-stone-300 text-amber-500 focus:ring-amber-500"
+                            className="w-4 h-4 rounded border-stone-300 text-[#F5B817] focus:ring-[#F5B817]"
                           />
                         </td>
                         <td className="py-3 px-4">
@@ -591,7 +591,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                               type="button"
                               disabled={actionLoading}
                               onClick={() => handleSingleSelect(reg.id)}
-                              className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold rounded text-[11px] transition"
+                              className="px-3 py-1 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold rounded text-[11px] transition"
                             >
                               Select
                             </button>
@@ -738,7 +738,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                             type="button"
                             disabled={actionLoading}
                             onClick={() => handleQuickCheckOut(att.volunteer_profile_id)}
-                            className="px-2 py-0.5 bg-amber-500 text-charcoal-950 font-bold rounded text-[11px]"
+                            className="px-2 py-0.5 bg-[#F5B817] text-[#1F2421] font-bold rounded text-[11px]"
                           >
                             Check Out Now
                           </button>
@@ -792,12 +792,12 @@ export default function AdminEventDetailPage({ params }: PageProps) {
           <div className="flex items-center justify-between border-b border-stone-100 pb-4">
             <div>
               <h3 className="text-base font-bold text-charcoal-900 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-500" />
+                <Sparkles className="w-5 h-5 text-[#F5B817]" />
                 Gamification & Exactly-Once Award Dry-Run
               </h3>
               <p className="text-xs text-charcoal-500 mt-0.5">
                 Calculate points formula:{" "}
-                <code className="bg-stone-100 px-1 py-0.5 rounded text-amber-800">
+                <code className="bg-stone-100 px-1 py-0.5 rounded text-[#92400E]">
                   Total Points = (10 × Event) + (2 × Verified Hours)
                 </code>
               </p>
@@ -807,7 +807,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                 type="button"
                 disabled={actionLoading}
                 onClick={() => setCompleteModalOpen(true)}
-                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold text-xs rounded-xl shadow-xs transition"
+                className="px-5 py-2.5 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold text-xs rounded-xl shadow-xs transition"
               >
                 Execute Completion & Award
               </button>
@@ -968,7 +968,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                 type="button"
                 disabled={actionLoading}
                 onClick={handleCompleteAndAward}
-                className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold rounded-lg text-xs transition"
+                className="px-5 py-2 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold rounded-lg text-xs transition"
               >
                 {actionLoading ? "Finalizing..." : "Confirm & Award Points"}
               </button>

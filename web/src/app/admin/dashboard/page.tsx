@@ -146,7 +146,7 @@ export default function AdminDashboardPage() {
             {/* Pending Approvals */}
             <Link
               href="/admin/applications?status=PENDING"
-              className="bg-white rounded-3xl border border-charcoal-200/80 hover:border-amber-400 p-6 shadow-2xs hover:shadow-xs transition-all group"
+              className="bg-white rounded-3xl border border-charcoal-200/80 hover:border-[#F5B817] p-6 shadow-2xs hover:shadow-xs transition-all group"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-charcoal-500">

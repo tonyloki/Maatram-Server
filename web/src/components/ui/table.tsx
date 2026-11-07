@@ -68,10 +68,12 @@ export function TableRow({
 export function TableHead({
   className,
   children,
+  scope = "col",
   ...props
 }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
+      scope={scope}
       className={cn(
         "px-4 py-3 text-xs font-bold uppercase tracking-wider text-[#4B5563] select-none",
         className

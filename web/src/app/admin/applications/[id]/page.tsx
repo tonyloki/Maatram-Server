@@ -122,7 +122,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <div className="w-10 h-10 border-4 border-amber-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[#F5B817] border-t-transparent rounded-full animate-spin" />
         <p className="text-sm font-medium text-charcoal-500">Loading application dossier...</p>
       </div>
     );
@@ -138,7 +138,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
         <p className="text-charcoal-600 mb-6">{error || "Could not retrieve the requested application."}</p>
         <Link
           href="/admin/applications"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-charcoal-900 font-semibold rounded-lg hover:bg-amber-400"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F5B817] text-[#1F2421] font-semibold rounded-lg hover:bg-[#E5A800]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Applications
@@ -215,7 +215,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                   setApproveNotes("");
                   setApproveModalOpen(true);
                 }}
-                className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-charcoal-950 rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2"
+                className="px-5 py-2 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] rounded-lg text-sm font-bold shadow-sm transition flex items-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 Approve Volunteer
@@ -541,7 +541,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 onChange={(e) => setApproveNotes(e.target.value)}
                 placeholder="e.g., Interview completed; assigned to Chennai School Visit mentor team"
                 rows={3}
-                className="w-full text-xs p-2.5 rounded-lg border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                className="w-full text-xs p-2.5 rounded-lg border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
               />
             </div>
             <div className="flex items-center justify-end gap-3">
@@ -557,7 +557,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 type="button"
                 disabled={actionLoading}
                 onClick={handleApprove}
-                className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold text-xs rounded-lg transition"
+                className="px-5 py-2 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold text-xs rounded-lg transition"
               >
                 {actionLoading ? "Approving..." : "Confirm Approval"}
               </button>
@@ -631,7 +631,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
               <select
                 value={consentStatus}
                 onChange={(e) => setConsentStatus(e.target.value as "VERIFIED" | "REJECTED")}
-                className="w-full text-xs p-2.5 rounded-lg border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                className="w-full text-xs p-2.5 rounded-lg border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
               >
                 <option value="VERIFIED">VERIFIED — Signed Consent Form Received & Checked</option>
                 <option value="REJECTED">REJECTED — Consent Refused or Invalid Document</option>
@@ -646,7 +646,7 @@ export default function ApplicationDetailPage({ params }: PageProps) {
                 onChange={(e) => setConsentNotes(e.target.value)}
                 placeholder="e.g., Parent signed letter verified via phone confirmation"
                 rows={3}
-                className="w-full text-xs p-2.5 rounded-lg border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+                className="w-full text-xs p-2.5 rounded-lg border border-stone-300 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
               />
             </div>
             <div className="flex items-center justify-end gap-3">

@@ -92,7 +92,7 @@ export default function AdminEventsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-            <Calendar className="w-7 h-7 text-amber-500" />
+            <Calendar className="w-7 h-7 text-[#F5B817]" />
             Manage Events & Operations
           </h1>
           <p className="text-sm text-charcoal-500 mt-1">
@@ -101,7 +101,7 @@ export default function AdminEventsPage() {
         </div>
         <Link
           href="/admin/events/create"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold text-xs rounded-xl shadow-xs transition"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold text-xs rounded-xl shadow-xs transition"
         >
           <Plus className="w-4 h-4" />
           Create New Event
@@ -120,7 +120,7 @@ export default function AdminEventsPage() {
                 onClick={() => setStatusFilter(st)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                   statusFilter === st
-                    ? "bg-amber-500 text-charcoal-950 shadow-xs"
+                    ? "bg-[#F5B817] text-[#1F2421] shadow-xs"
                     : "bg-stone-100 text-charcoal-600 hover:bg-stone-200/70"
                 }`}
               >
@@ -140,7 +140,7 @@ export default function AdminEventsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search event title or location..."
-              className="w-full text-xs pl-9 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+              className="w-full text-xs pl-9 pr-3 py-2 bg-stone-50 border border-stone-300 rounded-lg text-charcoal-900 focus:outline-hidden focus:ring-2 focus:ring-[#F5B817]"
             />
             <Search className="w-4 h-4 text-stone-400 absolute left-2.5 top-2.5 pointer-events-none" />
           </div>
@@ -176,7 +176,7 @@ export default function AdminEventsPage() {
       {/* Events Listing */}
       {loading ? (
         <div className="py-20 text-center bg-white rounded-xl border border-stone-200">
-          <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <div className="w-8 h-8 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-xs text-charcoal-500 font-medium">Loading events catalogue...</p>
         </div>
       ) : error ? (

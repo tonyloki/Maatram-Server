@@ -44,10 +44,15 @@ const CATEGORIES = [
 ];
 
 export default function VolunteerLeaderboardPage() {
+  const currentYear = new Date().getFullYear();
   const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardResponse | null>(null);
   const [currentVolunteer, setCurrentVolunteer] = useState<VolunteerProfileResponse | null>(null);
+
+  const availableYears = React.useMemo(() => {
+    return [currentYear - 1, currentYear, currentYear + 1];
+  }, [currentYear]);
 
   const loadLeaderboard = useCallback(async () => {
     try {
@@ -84,15 +89,19 @@ export default function VolunteerLeaderboardPage() {
       const isSelf = Boolean(
         currentVolunteer && item.volunteer_profile_id === currentVolunteer.id
       );
+      const displayName = item.is_anonymous && !isSelf
+        ? "Anonymous Volunteer"
+        : item.volunteer_name;
+
       return {
         rank: item.rank || idx + 1,
-        name: item.volunteer_name,
+        name: displayName,
         category: item.category || "STUDENT",
         points: Number(item.total_points),
         hours: Number(item.total_hours),
         trend: idx === 0 || idx === 3 ? "up" : idx === 4 ? "down" : "same",
         isYou: isSelf,
-        avatarSrc: item.avatar_url || undefined,
+        avatarSrc: item.is_anonymous && !isSelf ? undefined : (item.avatar_url || undefined),
       };
     });
   }, [leaderboardData, currentVolunteer]);
@@ -144,8 +153,11 @@ export default function VolunteerLeaderboardPage() {
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               className="bg-transparent text-xs font-bold text-[#1F2421] focus:outline-none cursor-pointer pr-1"
             >
-              <option value={2025}>2025</option>
-              <option value={2026}>2026</option>
+              {availableYears.map((yr) => (
+                <option key={yr} value={yr}>
+                  {yr}
+                </option>
+              ))}
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" />
           </div>
@@ -178,11 +190,10 @@ export default function VolunteerLeaderboardPage() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-xs transition-all flex items-center gap-2 ${
-                isActive
-                  ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
-                  : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
-              }`}
+              className={`px-4 py-2 rounded-full text-xs transition-all flex items-center gap-2 ${isActive
+                ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+                : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
+                }`}
             >
               <Icon className="w-3.5 h-3.5" />
               <span>{cat.label}</span>
@@ -393,23 +404,22 @@ export default function VolunteerLeaderboardPage() {
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-[#FAF8F5] text-[#6B7280] font-bold uppercase text-[11px] tracking-wider border-b border-gray-200/80">
               <tr>
-                <th className="px-6 py-3.5 w-16 text-center">#</th>
-                <th className="px-6 py-3.5">VOLUNTEER</th>
-                <th className="px-6 py-3.5">CATEGORY</th>
-                <th className="px-6 py-3.5 text-center">POINTS</th>
-                <th className="px-6 py-3.5 text-center">HOURS</th>
-                <th className="px-6 py-3.5 text-center w-24">TREND</th>
+                <th scope="col" className="px-6 py-3.5 w-16 text-center">#</th>
+                <th scope="col" className="px-6 py-3.5">VOLUNTEER</th>
+                <th scope="col" className="px-6 py-3.5">CATEGORY</th>
+                <th scope="col" className="px-6 py-3.5 text-center">POINTS</th>
+                <th scope="col" className="px-6 py-3.5 text-center">HOURS</th>
+                <th scope="col" className="px-6 py-3.5 text-center w-24">TREND</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {displayRows.map((row) => (
                 <tr
                   key={row.rank + row.name}
-                  className={`transition-colors ${
-                    row.isYou
-                      ? "bg-[#FEF9C3] font-bold text-[#1F2421]"
-                      : "hover:bg-slate-50/70 text-[#1F2421]"
-                  }`}
+                  className={`transition-colors ${row.isYou
+                    ? "bg-[#FEF9C3] font-bold text-[#1F2421]"
+                    : "hover:bg-slate-50/70 text-[#1F2421]"
+                    }`}
                 >
                   {/* Rank Column Badge */}
                   <td className="px-6 py-4 text-center">

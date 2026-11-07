@@ -157,7 +157,7 @@ export function AdminShell({
         </header>
 
         {/* Page Inner Container */}
-        <main className="flex-1 p-4 md:p-6 lg:p-10">{children}</main>
+        <main id="main-content" tabIndex={-1} className="flex-1 p-4 md:p-6 lg:p-10 focus:outline-none">{children}</main>
       </div>
     </div>
   );

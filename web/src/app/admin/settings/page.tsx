@@ -18,7 +18,7 @@ export default function AdminSettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-          <Settings className="w-7 h-7 text-amber-500" />
+          <Settings className="w-7 h-7 text-[#F5B817]" />
           Governance & System Directives
         </h1>
         <p className="text-sm text-charcoal-500 mt-1">
@@ -31,7 +31,7 @@ export default function AdminSettingsPage() {
         {/* Gamification Policies */}
         <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
-            <Sparkles className="w-5 h-5 text-amber-500" />
+            <Sparkles className="w-5 h-5 text-[#F5B817]" />
             <h3 className="text-base font-bold text-charcoal-900">Gamification Ledger Directives</h3>
           </div>
           <div className="space-y-3 text-xs text-charcoal-700">
@@ -41,7 +41,7 @@ export default function AdminSettingsPage() {
                 <strong>Point Calculation Formula:</strong>
                 <p className="text-charcoal-500 mt-0.5">
                   Points awarded are exactly computed as{" "}
-                  <code className="bg-stone-100 px-1 py-0.5 rounded text-amber-800 font-mono">
+                  <code className="bg-stone-100 px-1 py-0.5 rounded text-[#92400E] font-mono">
                     (10 × Event) + (2 × Verified Hours)
                   </code>
                   .
@@ -76,7 +76,7 @@ export default function AdminSettingsPage() {
         {/* Safeguarding & Compliance */}
         <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
-            <Shield className="w-5 h-5 text-amber-500" />
+            <Shield className="w-5 h-5 text-[#F5B817]" />
             <h3 className="text-base font-bold text-charcoal-900">Safeguarding & Data Protection</h3>
           </div>
           <div className="space-y-3 text-xs text-charcoal-700">
@@ -118,7 +118,7 @@ export default function AdminSettingsPage() {
         {/* Event Operations & Attendance */}
         <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
-            <Clock className="w-5 h-5 text-amber-500" />
+            <Clock className="w-5 h-5 text-[#F5B817]" />
             <h3 className="text-base font-bold text-charcoal-900">Event Execution Directives</h3>
           </div>
           <div className="space-y-3 text-xs text-charcoal-700">
@@ -139,7 +139,7 @@ export default function AdminSettingsPage() {
                 <strong>Decimal Precision & Rounding:</strong>
                 <p className="text-charcoal-500 mt-0.5">
                   Volunteering hours are recorded with half-hour granularity using arithmetic{" "}
-                  <code className="bg-stone-100 px-1 py-0.5 rounded text-amber-800 font-mono">ROUND_HALF_UP</code>.
+                  <code className="bg-stone-100 px-1 py-0.5 rounded text-[#92400E] font-mono">ROUND_HALF_UP</code>.
                 </p>
               </div>
             </div>
@@ -149,7 +149,7 @@ export default function AdminSettingsPage() {
         {/* System Architecture */}
         <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-stone-100 pb-3">
-            <Database className="w-5 h-5 text-amber-500" />
+            <Database className="w-5 h-5 text-[#F5B817]" />
             <h3 className="text-base font-bold text-charcoal-900">Infrastructure & Single Backend</h3>
           </div>
           <div className="space-y-3 text-xs text-charcoal-700">

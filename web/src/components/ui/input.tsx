@@ -1,4 +1,4 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useId } from "react";
 import { cn } from "@/lib/utils";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -11,7 +11,10 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, type = "text", error, label, helperText, leftIcon, rightIcon, id, ...props }, ref) => {
-    const inputId = id || props.name;
+    const generatedId = useId();
+    const inputId = id || props.name || generatedId;
+    const errorId = error ? `${inputId}-error` : undefined;
+    const helperId = helperText ? `${inputId}-helper` : undefined;
 
     return (
       <div className="w-full flex flex-col space-y-1.5">
@@ -31,6 +34,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             type={type}
+            aria-invalid={error ? "true" : undefined}
+            aria-describedby={errorId || helperId}
             className={cn(
               "w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#1F2421] placeholder-[#9CA3AF] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#F5B817] focus:border-transparent disabled:opacity-50 disabled:bg-[#FAF8F5]",
               leftIcon && "pl-10",
@@ -46,8 +51,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
         </div>
-        {error && <span className="text-xs text-[#9B1C1C] font-semibold">{error}</span>}
-        {helperText && !error && <span className="text-xs text-[#4B5563]">{helperText}</span>}
+        {error && (
+          <span id={errorId} role="alert" className="text-xs text-[#9B1C1C] font-semibold">
+            {error}
+          </span>
+        )}
+        {helperText && !error && (
+          <span id={helperId} className="text-xs text-[#4B5563]">
+            {helperText}
+          </span>
+        )}
       </div>
     );
   }
@@ -65,7 +78,10 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, error, label, helperText, maxLength, currentLength, id, ...props }, ref) => {
-    const textareaId = id || props.name;
+    const generatedId = useId();
+    const textareaId = id || props.name || generatedId;
+    const errorId = error ? `${textareaId}-error` : undefined;
+    const helperId = helperText ? `${textareaId}-helper` : undefined;
 
     return (
       <div className="w-full flex flex-col space-y-1.5">
@@ -87,6 +103,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           maxLength={maxLength}
           rows={props.rows || 3}
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={errorId || helperId}
           className={cn(
             "w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#1F2421] placeholder-[#9CA3AF] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#F5B817] focus:border-transparent disabled:opacity-50 disabled:bg-[#FAF8F5] resize-y",
             error && "border-[#F8B4B4] focus:ring-[#9B1C1C]/30 focus:border-[#9B1C1C]",
@@ -94,8 +112,16 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           )}
           {...props}
         />
-        {error && <span className="text-xs text-[#9B1C1C] font-semibold">{error}</span>}
-        {helperText && !error && <span className="text-xs text-[#4B5563]">{helperText}</span>}
+        {error && (
+          <span id={errorId} role="alert" className="text-xs text-[#9B1C1C] font-semibold">
+            {error}
+          </span>
+        )}
+        {helperText && !error && (
+          <span id={helperId} className="text-xs text-[#4B5563]">
+            {helperText}
+          </span>
+        )}
       </div>
     );
   }
@@ -112,7 +138,10 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, error, label, helperText, id, children, options, ...props }, ref) => {
-    const selectId = id || props.name;
+    const generatedId = useId();
+    const selectId = id || props.name || generatedId;
+    const errorId = error ? `${selectId}-error` : undefined;
+    const helperId = helperText ? `${selectId}-helper` : undefined;
 
     return (
       <div className="w-full flex flex-col space-y-1.5">
@@ -126,6 +155,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <select
             id={selectId}
             ref={ref}
+            aria-invalid={error ? "true" : undefined}
+            aria-describedby={errorId || helperId}
             className={cn(
               "w-full rounded-xl border border-[#E5E7EB] bg-white px-4 py-2.5 text-sm text-[#1F2421] transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#F5B817] focus:border-transparent disabled:opacity-50 appearance-none pr-10 cursor-pointer",
               error && "border-[#F8B4B4] focus:ring-[#9B1C1C]/30 focus:border-[#9B1C1C]",
@@ -147,8 +178,16 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             </svg>
           </div>
         </div>
-        {error && <span className="text-xs text-[#9B1C1C] font-semibold">{error}</span>}
-        {helperText && !error && <span className="text-xs text-[#4B5563]">{helperText}</span>}
+        {error && (
+          <span id={errorId} role="alert" className="text-xs text-[#9B1C1C] font-semibold">
+            {error}
+          </span>
+        )}
+        {helperText && !error && (
+          <span id={helperId} className="text-xs text-[#4B5563]">
+            {helperText}
+          </span>
+        )}
       </div>
     );
   }

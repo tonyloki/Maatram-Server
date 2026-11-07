@@ -26,15 +26,68 @@ export function Dialog({
   footer,
   maxWidth = "md",
 }: DialogProps) {
-  // Close on Escape key press
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const previousActiveElementRef = React.useRef<HTMLElement | null>(null);
+
+  // Manage focus trapping, Escape key, and focus restoration
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && open) {
-        onClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    if (open) {
+      previousActiveElementRef.current = document.activeElement as HTMLElement | null;
+
+      // Focus first interactive element inside dialog
+      const timer = setTimeout(() => {
+        if (dialogRef.current) {
+          const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusable.length > 0) {
+            focusable[0].focus();
+          } else {
+            dialogRef.current.focus();
+          }
+        }
+      }, 50);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          onClose();
+          return;
+        }
+
+        if (e.key === "Tab" && dialogRef.current) {
+          const focusable = Array.from(
+            dialogRef.current.querySelectorAll<HTMLElement>(
+              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
+
+          if (focusable.length === 0) {
+            e.preventDefault();
+            return;
+          }
+
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("keydown", handleKeyDown);
+        if (previousActiveElementRef.current) {
+          previousActiveElementRef.current.focus();
+        }
+      };
+    }
   }, [open, onClose]);
 
   const maxWidthStyles = {
@@ -60,6 +113,8 @@ export function Dialog({
 
           {/* Modal Panel */}
           <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
             variants={modalContentVariants}
             initial="hidden"
             animate="visible"
@@ -69,7 +124,7 @@ export function Dialog({
             aria-labelledby="dialog-title"
             aria-describedby={description ? "dialog-desc" : undefined}
             className={cn(
-              "relative w-full rounded-3xl bg-white p-6 shadow-2xl border border-[#EFECE6] z-10 overflow-hidden",
+              "relative w-full rounded-3xl bg-white p-6 shadow-2xl border border-[#EFECE6] z-10 overflow-hidden focus:outline-none",
               maxWidthStyles[maxWidth]
             )}
           >

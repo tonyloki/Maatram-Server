@@ -33,8 +33,9 @@ type ReportTab =
   | "inactive";
 
 export default function AdminReportsPage() {
+  const currentYear = new Date().getFullYear();
   const [activeTab, setActiveTab] = useState<ReportTab>("overview");
-  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
   const [dashboardData, setDashboardData] = useState<AdminDashboardResponse | null>(null);
   const [studentReport, setStudentReport] = useState<StudentContributionReportResponse | null>(null);
@@ -138,7 +139,7 @@ export default function AdminReportsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-            <BarChart3 className="w-7 h-7 text-amber-500" />
+            <BarChart3 className="w-7 h-7 text-[#F5B817]" />
             Reports & Analytics
           </h1>
           <p className="text-sm text-charcoal-500 mt-1">
@@ -155,8 +156,11 @@ export default function AdminReportsPage() {
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               className="bg-transparent font-bold text-charcoal-900 focus:outline-hidden cursor-pointer"
             >
-              <option value={2025}>2025</option>
-              <option value={2024}>2024</option>
+              {[currentYear - 1, currentYear, currentYear + 1].map((yr) => (
+                <option key={yr} value={yr}>
+                  {yr}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -166,7 +170,7 @@ export default function AdminReportsPage() {
             onClick={() => handleExport(activeTab === "overview" ? "student-contributions" : activeTab === "students" ? "student-contributions" : activeTab === "alumni" ? "alumni-contributions" : activeTab === "organisations" ? "organisation-contributions" : "interview-availability")}
             className="px-4 py-2 bg-charcoal-900 hover:bg-charcoal-800 text-white rounded-lg text-xs font-bold transition flex items-center gap-2 shadow-xs"
           >
-            <Download className="w-3.5 h-3.5 text-amber-400" />
+            <Download className="w-3.5 h-3.5 text-[#F5B817]" />
             {exporting ? "Generating..." : "Export Excel (.xlsx)"}
           </button>
         </div>
@@ -179,7 +183,7 @@ export default function AdminReportsPage() {
           onClick={() => setActiveTab("overview")}
           className={`pb-3 transition whitespace-nowrap ${
             activeTab === "overview"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -190,7 +194,7 @@ export default function AdminReportsPage() {
           onClick={() => setActiveTab("students")}
           className={`pb-3 transition whitespace-nowrap ${
             activeTab === "students"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -201,7 +205,7 @@ export default function AdminReportsPage() {
           onClick={() => setActiveTab("alumni")}
           className={`pb-3 transition whitespace-nowrap ${
             activeTab === "alumni"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -212,7 +216,7 @@ export default function AdminReportsPage() {
           onClick={() => setActiveTab("organisations")}
           className={`pb-3 transition whitespace-nowrap ${
             activeTab === "organisations"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -223,7 +227,7 @@ export default function AdminReportsPage() {
           onClick={() => setActiveTab("interviews")}
           className={`pb-3 transition whitespace-nowrap ${
             activeTab === "interviews"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -234,7 +238,7 @@ export default function AdminReportsPage() {
           onClick={() => setActiveTab("inactive")}
           className={`pb-3 transition whitespace-nowrap ${
             activeTab === "inactive"
-              ? "text-charcoal-900 border-b-2 border-amber-500 font-extrabold"
+              ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
               : "hover:text-charcoal-800"
           }`}
         >
@@ -434,7 +438,7 @@ export default function AdminReportsPage() {
                     <span className="font-bold text-charcoal-900 ml-auto">{studentPct}%</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
+                    <span className="w-3 h-3 rounded-full bg-[#F5B817] shrink-0" />
                     <span className="text-charcoal-700 font-medium">Alumni</span>
                     <span className="font-bold text-charcoal-900 ml-auto">{alumniPct}%</span>
                   </div>

@@ -78,7 +78,7 @@ export default function AdminOperationsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-charcoal-900 tracking-tight flex items-center gap-2.5">
-            <Activity className="w-7 h-7 text-amber-500" />
+            <Activity className="w-7 h-7 text-[#F5B817]" />
             Transactional Outbox & Dispatch Operations
           </h1>
           <p className="text-sm text-charcoal-500 mt-1">
@@ -117,7 +117,7 @@ export default function AdminOperationsPage() {
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap ${
                 statusFilter === st
-                  ? "bg-amber-500 text-charcoal-950 shadow-xs"
+                  ? "bg-[#F5B817] text-[#1F2421] shadow-xs"
                   : "bg-stone-100 text-charcoal-600 hover:bg-stone-200/70"
               }`}
             >
@@ -153,7 +153,7 @@ export default function AdminOperationsPage() {
       <div className="bg-white border border-stone-200 rounded-xl shadow-xs overflow-hidden">
         {loading ? (
           <div className="py-20 text-center">
-            <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-xs text-charcoal-500">Inspecting transactional outbox...</p>
           </div>
         ) : error ? (
@@ -170,13 +170,13 @@ export default function AdminOperationsPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-stone-50 border-b border-stone-200 text-[11px] font-bold text-charcoal-500 uppercase tracking-wider">
-                  <th className="py-3 px-4">Job ID & Channel</th>
-                  <th className="py-3 px-4">Recipient</th>
-                  <th className="py-3 px-4">Template / Payload</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Attempts</th>
-                  <th className="py-3 px-4">Created / Scheduled</th>
-                  <th className="py-3 px-4 text-right">Recovery Action</th>
+                  <th scope="col" className="py-3 px-4">Job ID & Channel</th>
+                  <th scope="col" className="py-3 px-4">Recipient</th>
+                  <th scope="col" className="py-3 px-4">Template / Payload</th>
+                  <th scope="col" className="py-3 px-4">Status</th>
+                  <th scope="col" className="py-3 px-4">Attempts</th>
+                  <th scope="col" className="py-3 px-4">Created / Scheduled</th>
+                  <th scope="col" className="py-3 px-4 text-right">Recovery Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -235,7 +235,7 @@ export default function AdminOperationsPage() {
                           type="button"
                           disabled={retryingId === job.id}
                           onClick={() => handleRetryJob(job.id)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500 hover:bg-amber-400 text-charcoal-950 font-bold rounded text-[11px] shadow-xs transition"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F5B817] hover:bg-[#E5A800] text-[#1F2421] font-bold rounded text-[11px] shadow-xs transition"
                         >
                           <RotateCcw className="w-3 h-3" />
                           {retryingId === job.id ? "Retrying..." : "Retry Job"}

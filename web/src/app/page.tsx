@@ -32,7 +32,7 @@ export default function HomePage() {
       categoryTag: "School Education",
       description:
         "Travel to rural and semi-urban higher secondary schools to guide 11th and 12th standard students on college admissions, entrance exams, and scholarship opportunities.",
-      image: "/assets/images/school-visit.jpg",
+      image: "/assets/maatram/photography/school-visit.jpg",
       icon: GraduationCap,
       format: "In-person school workshops",
       focus: "Career awareness & peer inspiration",
@@ -44,7 +44,7 @@ export default function HomePage() {
       categoryTag: "Career Readiness",
       description:
         "Conduct realistic technical, behavioral, and HR practice interviews with graduating scholars. Provide constructive resume critiques and confidence-building coaching.",
-      image: "/assets/images/mock-interview.jpg",
+      image: "/assets/maatram/photography/mock-interview.jpg",
       icon: Briefcase,
       format: "Online & weekend hybrid",
       focus: "Placement coaching & communication",
@@ -56,7 +56,7 @@ export default function HomePage() {
       categoryTag: "Community Outreach",
       description:
         "Participate in home visits and community interactions to verify socio-economic eligibility for students applying for 100% free higher education scholarships.",
-      image: "/assets/images/bgv-support.jpg",
+      image: "/assets/maatram/photography/bgv-support.jpg",
       icon: Users,
       format: "Field visits & documentation",
       focus: "Integrity & ethical candidate selection",
@@ -131,7 +131,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-[#FAF8F3] text-[#1F2421]">
       <PublicHeader activeNav="home" />
 
-      <main className="flex-1">
+      <main id="main-content" tabIndex={-1} className="flex-1 focus:outline-none">
         {/* ================================================================= */}
         {/* 1. HERO SECTION (REFERENCE MATCH: Volunteer for a Better Tomorrow)*/}
         {/* ================================================================= */}
@@ -373,7 +373,7 @@ export default function HomePage() {
                   className="bg-white rounded-3xl p-6 border border-[#EBE6DD] shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow relative"
                 >
                   <div>
-                    <span className="text-3xl font-black text-[#F5B817] block mb-3">
+                    <span className="text-3xl font-black text-[#B45309] block mb-3">
                       {step.step}
                     </span>
                     <h3 className="text-base font-bold text-[#1F2421] mb-2">{step.title}</h3>
