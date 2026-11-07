@@ -14,6 +14,8 @@ import {
   BarChart2,
   Search,
   ArrowRight,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -32,29 +34,27 @@ export default function VolunteerActivityPage() {
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecordResponse[]>([]);
   const [ledgerData, setLedgerData] = useState<PointLedgerResponse | null>(null);
 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const [regRes, attRes, ledRes] = await Promise.all([
-        apiClient<RegistrationListResponse>("/registrations/me", { params: { page: 1, page_size: 100 } }).catch(
-          () => ({ items: [], total: 0, page: 1, page_size: 100, total_pages: 1 })
-        ),
-        apiClient<AttendanceListResponse>("/attendance/me", { params: { page: 1, page_size: 100 } }).catch(() => ({
-          items: [],
-          total: 0,
-          page: 1,
-          page_size: 100,
-          total_pages: 1,
-        })),
-        apiClient<PointLedgerResponse>("/gamification/ledger", { params: { page: 1, page_size: 50 } }).catch(
-          () => null
-        ),
+        apiClient<RegistrationListResponse>("/registrations/me", { params: { page: 1, page_size: 100 } }),
+        apiClient<AttendanceListResponse>("/attendance/me", { params: { page: 1, page_size: 100 } }),
+        apiClient<PointLedgerResponse>("/gamification/ledger", { params: { page: 1, page_size: 50 } }),
       ]);
 
       setRegistrations(regRes.items || []);
       setAttendanceRecords(attRes.items || []);
       setLedgerData(ledRes);
-    } catch {
-      // Gracefully show current activity state
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unable to retrieve your volunteering activity.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -93,12 +93,11 @@ export default function VolunteerActivityPage() {
 
   return (
     <div className="space-y-6 sm:space-y-7 animate-in fade-in-50 duration-300 pb-10 overflow-x-hidden min-w-0 max-w-full">
-      {/* 1. Curved Golden Hero Banner matching ui-Reference/MyActivities.jpeg */}
+      {/* 1. Curved Golden Hero Banner */}
       <section
         aria-label="My Activity Hero"
         className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFDF5] via-[#FFF3D6] to-[#FCEFC7] border border-[#FDE68A]/70 px-8 py-6 shadow-xs min-h-[175px] flex items-center justify-between"
       >
-        {/* Soft Golden Foliage Branch Watermark in Top-Left */}
         <div className="absolute -top-3 -left-3 w-32 h-32 pointer-events-none opacity-45 select-none z-0">
           <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-[#EAB308]">
             <path
@@ -114,7 +113,6 @@ export default function VolunteerActivityPage() {
           </svg>
         </div>
 
-        {/* Hero Banner Photography on Right with Soft Organic Left Fade Mask */}
         <div className="absolute right-0 bottom-0 top-0 w-1/2 max-w-[560px] pointer-events-none select-none z-10 hidden md:block overflow-hidden rounded-r-3xl">
           <Image
             src="/assets/maatram/photography/volunteers-team-hero.jpg"
@@ -123,14 +121,16 @@ export default function VolunteerActivityPage() {
             className="object-cover object-center"
             priority
           />
-          {/* Natural Soft Gradient Fade on Left Edge */}
           <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FFF3D6] to-transparent z-10" />
         </div>
 
-        <div className="relative z-10 max-w-lg space-y-2">
-          {/* Rounded Calendar Icon Card */}
-          <div className="w-12 h-12 rounded-2xl bg-[#FFF3D6] border border-[#FDE68A] flex items-center justify-center text-[#1F2421] shadow-2xs">
-            <Calendar className="w-6 h-6 text-[#1F2421]" />
+        <div className="relative z-10 max-w-lg space-y-1.5">
+          <div className="flex items-center gap-1 text-[#F5B817]">
+            <svg className="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <line x1="12" y1="4" x2="12" y2="10" />
+              <line x1="5" y1="7" x2="10" y2="12" />
+              <line x1="19" y1="7" x2="14" y2="12" />
+            </svg>
           </div>
 
           <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1F2421] tracking-tight">
@@ -138,64 +138,107 @@ export default function VolunteerActivityPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-[#4B5563] leading-relaxed max-w-md pt-0.5">
-            Track your volunteering journey, view your events and contributions, and monitor your progress in the Maatram community.
+            Track your registered volunteering drives, service attendance records and points history.
           </p>
         </div>
       </section>
 
-      {/* 2. Segmented Pill Tab Bar matching Reference MyActivities.jpeg */}
-      <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none min-w-0 max-w-full">
-        <button
-          onClick={() => setActiveTab("UPCOMING")}
-          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
-            activeTab === "UPCOMING"
-              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
-              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
-          }`}
-        >
-          <Calendar className="w-3.5 h-3.5" />
-          <span>Upcoming ({upcomingRegistrations.length})</span>
-        </button>
+      {/* 2. Horizontal Activity Tabs */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            onClick={() => setActiveTab("UPCOMING")}
+            className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
+              activeTab === "UPCOMING"
+                ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+                : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            <span>Upcoming {!isLoading && `(${upcomingRegistrations.length})`}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("ONGOING")}
+            className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
+              activeTab === "ONGOING"
+                ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+                : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
+            }`}
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Ongoing {!isLoading && `(${ongoingRegistrations.length})`}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("PAST")}
+            className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
+              activeTab === "PAST"
+                ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+                : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
+            }`}
+          >
+            <Star className="w-3.5 h-3.5" />
+            <span>Past {!isLoading && `(${pastRegistrations.length})`}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("LEDGER")}
+            className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
+              activeTab === "LEDGER"
+                ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
+                : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
+            }`}
+          >
+            <BarChart2 className="w-3.5 h-3.5" />
+            <span>Points Ledger</span>
+          </button>
+        </div>
 
         <button
-          onClick={() => setActiveTab("ONGOING")}
-          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
-            activeTab === "ONGOING"
-              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
-              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
-          }`}
+          onClick={() => void loadData()}
+          disabled={isLoading}
+          className="p-2.5 rounded-full bg-white border border-gray-200/90 text-charcoal-700 hover:text-charcoal-900 shadow-2xs transition-all"
+          title="Refresh activities"
         >
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          <span>Ongoing ({ongoingRegistrations.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("PAST")}
-          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
-            activeTab === "PAST"
-              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
-              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
-          }`}
-        >
-          <Star className="w-3.5 h-3.5" />
-          <span>Past ({pastRegistrations.length})</span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab("LEDGER")}
-          className={`px-5 py-2.5 rounded-full text-xs transition-all flex items-center gap-2 ${
-            activeTab === "LEDGER"
-              ? "bg-[#F5B817] text-[#1F2421] font-extrabold shadow-2xs"
-              : "bg-white text-[#1F2421] font-semibold border border-gray-200/90 hover:bg-[#FFFDF5] hover:border-amber-200"
-          }`}
-        >
-          <BarChart2 className="w-3.5 h-3.5" />
-          <span>Points Ledger</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
         </button>
       </div>
 
-      {/* 3. Main Content Display Area */}
-      {activeTab === "LEDGER" ? (
+      {/* 3. Main Content Display Area: Loading / Error / Empty / Populated */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl p-6 border border-gray-200/80 animate-pulse space-y-3"
+            >
+              <div className="flex gap-2">
+                <div className="h-5 w-24 bg-gray-200 rounded-full" />
+                <div className="h-5 w-20 bg-gray-200 rounded-full" />
+              </div>
+              <div className="h-6 w-1/2 bg-gray-200 rounded" />
+              <div className="h-4 w-1/3 bg-gray-100 rounded" />
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="bg-white rounded-2xl p-8 border border-rose-200 text-center space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h3 className="text-base font-bold text-charcoal-900">Failed to Load Activity</h3>
+            <p className="text-xs text-charcoal-600">{error}</p>
+          </div>
+          <button
+            onClick={() => void loadData()}
+            className="px-5 py-2 rounded-xl bg-[#F5B817] text-charcoal-950 font-bold text-xs hover:bg-[#E5AA10] transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      ) : activeTab === "LEDGER" ? (
         /* POINTS LEDGER VIEW */
         <div className="space-y-6">
           <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-4">
@@ -268,14 +311,12 @@ export default function VolunteerActivityPage() {
           </div>
         </div>
       ) : currentList.length === 0 ? (
-        /* 4. The Signature Empty State matching ui-Reference/MyActivities.jpeg */
+        /* Empty State */
         <div className="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-12 sm:p-16 text-center flex flex-col items-center justify-center relative overflow-hidden min-h-[420px]">
-          {/* Subtle Corner Yellow Background Highlights */}
           <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-[#FFF8E7]/60 pointer-events-none" />
           <div className="absolute -bottom-16 -right-16 w-56 h-56 rounded-full bg-[#FFF8E7]/60 pointer-events-none" />
 
-          {/* Calendar & Clock Vector Illustration */}
-          <div className="relative z-10 w-72 h-44 relative mb-4">
+          <div className="relative z-10 w-72 h-44 mb-4">
             <Image
               src="/assets/maatram/illustrations/activity-calendar-clock.svg"
               alt="No activities recorded"
@@ -311,7 +352,7 @@ export default function VolunteerActivityPage() {
           </Link>
         </div>
       ) : (
-        /* 5. Registered Activity Cards */
+        /* Registered Activity Cards */
         <div className="space-y-4">
           {currentList.map((reg) => {
             const evt = reg.event;

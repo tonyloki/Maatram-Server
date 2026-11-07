@@ -11,6 +11,7 @@ import {
   Clock,
   BarChart3,
   Send,
+  ScrollText,
   Settings,
   LogOut,
   ShieldCheck,
@@ -54,6 +55,11 @@ const ADMIN_NAV_ITEMS = [
     label: "Operations & Outbox",
     href: "/admin/operations",
     icon: Send,
+  },
+  {
+    label: "Audit Logs",
+    href: "/admin/audit-logs",
+    icon: ScrollText,
   },
   {
     label: "Settings",

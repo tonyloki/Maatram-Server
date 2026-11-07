@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user, get_db
+from src.api.deps import get_current_user, get_db, verify_csrf
 from src.models.users import User
 from src.schemas.consent import (
     ConsentHistoryResponse,
@@ -37,6 +37,7 @@ async def get_my_consent(
     status_code=status.HTTP_200_OK,
     response_model=ConsentResponse,
     summary="Update affirmative consent settings with differential audit logging",
+    dependencies=[Depends(verify_csrf)],
 )
 async def update_my_consent(
     request: Request,

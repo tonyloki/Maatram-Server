@@ -1,8 +1,9 @@
 """Authentication & Session endpoints."""
 
+import hmac
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, Request, Response, status
+from fastapi import APIRouter, Cookie, Depends, Header, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.deps import (
@@ -14,7 +15,7 @@ from src.api.deps import (
     verify_csrf,
 )
 from src.core.config import settings
-from src.core.exceptions import RateLimitExceededException
+from src.core.exceptions import CSRFValidationException, RateLimitExceededException
 from src.core.rate_limiter import pg_rate_limiter, rate_limiter
 from src.models.users import User, UserSession
 from src.schemas.auth import (
@@ -157,8 +158,27 @@ async def refresh_token(
     db: Annotated[AsyncSession, Depends(get_db)],
     data: RefreshRequest | None = None,
     refresh_token_cookie: Annotated[str | None, Cookie(alias="refresh_token")] = None,
+    csrf_token_cookie: Annotated[str | None, Cookie(alias="csrf_token")] = None,
+    x_csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
 ) -> TokenResponse:
     """Rotate refresh token. Detects token reuse (theft) and invalidates session lineage."""
+    # Origin & Referer Validation on Cookie-Based Refresh to prevent cross-site token rotation
+    if refresh_token_cookie:
+        origin = request.headers.get("origin")
+        if origin and origin not in settings.BACKEND_CORS_ORIGINS:
+            raise CSRFValidationException("Origin not permitted.")
+
+        referer = request.headers.get("referer")
+        if referer and not any(
+            referer.startswith(allowed) for allowed in settings.BACKEND_CORS_ORIGINS
+        ):
+            raise CSRFValidationException("Referer origin not permitted.")
+
+        # If double-submit CSRF token is presented, verify match with cookie
+        if csrf_token_cookie and x_csrf_token:
+            if not hmac.compare_digest(x_csrf_token.strip(), csrf_token_cookie.strip()):
+                raise CSRFValidationException("CSRF token mismatch between header and cookie.")
+
     client_ip = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
 

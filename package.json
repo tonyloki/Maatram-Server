@@ -1,0 +1,28 @@
+{
+  "name": "maatram-gamification-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Maatram Volunteering & Gamification Portal — Unified Full-Stack Repository",
+  "scripts": {
+    "setup:env": "node -e \"const fs = require('fs'); if (!fs.existsSync('server/.env') && fs.existsSync('server/.env.example')) fs.copyFileSync('server/.env.example', 'server/.env'); if (!fs.existsSync('web/.env.local') && fs.existsSync('web/.env.example')) fs.copyFileSync('web/.env.example', 'web/.env.local'); console.log('Environment files initialized successfully.');\"",
+    "install:web": "npm --prefix web install",
+    "install:server": "pip install -r server/requirements.txt",
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "start:web": "npm --prefix web run start",
+    "lint:web": "npm --prefix web run lint",
+    "typecheck:web": "npm --prefix web run typecheck",
+    "dev:server": "python -m uvicorn src.main:app --app-dir server --reload --port 8000",
+    "test:server": "pytest server/tests",
+    "lint:server": "ruff check server/src server/tests"
+  },
+  "keywords": [
+    "maatram",
+    "volunteering",
+    "gamification",
+    "fastapi",
+    "nextjs"
+  ],
+  "author": "Maatram Educational and Charitable Trust",
+  "license": "UNLICENSED"
+}

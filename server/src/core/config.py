@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BeforeValidator, Field
+from pydantic import BeforeValidator, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -21,7 +21,7 @@ def parse_cors(v: Any) -> list[str]:
                 return [str(i) for i in parsed]
         except Exception:
             pass
-    return ["http://localhost:3000", "http://localhost:8000"]
+    return ["http://localhost:3000", "http://localhost:3001", "http://localhost:8000"]
 
 
 def parse_bool(v: Any) -> bool:
@@ -81,12 +81,58 @@ class Settings(BaseSettings):
     # CORS & Cookies
     BACKEND_CORS_ORIGINS: Annotated[list[str], BeforeValidator(parse_cors)] = [
         "http://localhost:3000",
+        "http://localhost:3001",
         "http://localhost:8000",
     ]
     COOKIE_DOMAIN: str | None = None
     COOKIE_PATH: str = "/api/v1/auth"
     COOKIE_SECURE: bool = False
     COOKIE_SAMESITE: Literal["lax", "strict", "none"] = "lax"
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Strictly prevent server startup with insecure configurations."""
+        if self.COOKIE_SAMESITE == "none" and not self.COOKIE_SECURE:
+            raise ValueError(
+                "FATAL: COOKIE_SAMESITE='none' requires COOKIE_SECURE=True."
+            )
+
+        if self.ENVIRONMENT in ("staging", "production"):
+            if self.DEBUG:
+                raise ValueError("FATAL: DEBUG cannot be True in staging/production environments.")
+
+            if not self.COOKIE_SECURE:
+                raise ValueError(
+                    "FATAL: COOKIE_SECURE cannot be False in staging/production environments."
+                )
+
+            insecure_secrets = {
+                "dev-secret-key-change-in-production",
+                "secret",
+                "changeme",
+                "test",
+                "supersecret",
+                "your-secret-key-here",
+            }
+            if self.SECRET_KEY in insecure_secrets or len(self.SECRET_KEY) < 32:
+                raise ValueError(
+                    "FATAL: Insecure or default SECRET_KEY in staging/production environment. "
+                    "Must be a secure random secret of at least 32 characters."
+                )
+
+            if self.ENVIRONMENT == "production":
+                for origin in self.BACKEND_CORS_ORIGINS:
+                    if "*" in origin:
+                        raise ValueError(
+                            "FATAL: Wildcard CORS origin ('*') is strictly prohibited in production."
+                        )
+                    if "localhost" in origin.lower() or "127.0.0.1" in origin:
+                        raise ValueError(
+                            f"FATAL: Localhost origin '{origin}' is strictly prohibited in production. "
+                            "Specify explicit production domains in BACKEND_CORS_ORIGINS."
+                        )
+
+        return self
 
     # Configurable Business Policies (Pending Maatram Approval)
     LEADERBOARD_CYCLE_TYPE: Literal["CALENDAR_YEAR", "FINANCIAL_YEAR", "ACADEMIC_YEAR"] = (

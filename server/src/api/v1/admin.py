@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_db, require_role
+from src.api.deps import get_db, require_role, verify_csrf
 from src.models.users import User
 from src.schemas.admin import AdminDashboardResponse, AuditLogListResponse
 from src.schemas.notification import (
@@ -246,11 +246,13 @@ async def list_dead_letter_jobs(
     "/outbox/jobs/{job_id}/retry",
     response_model=OutboxRetryResponse,
     summary="Manually retry an outbox job (Admin only)",
+    dependencies=[Depends(verify_csrf)],
 )
 @router.post(
     "/outbox/{job_id}/requeue",
     response_model=OutboxRetryResponse,
     include_in_schema=False,
+    dependencies=[Depends(verify_csrf)],
 )
 async def retry_outbox_job(
     job_id: uuid.UUID,

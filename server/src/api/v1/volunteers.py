@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user, get_db, require_role
+from src.api.deps import get_current_user, get_db, require_role, verify_csrf
 from src.models.users import User
 from src.schemas.registration import RegistrationListResponse
 from src.schemas.volunteer import (
@@ -40,6 +40,7 @@ async def get_my_profile(
     status_code=status.HTTP_200_OK,
     response_model=VolunteerProfileResponse,
     summary="Update authenticated volunteer profile",
+    dependencies=[Depends(verify_csrf)],
 )
 async def update_my_profile(
     request: Request,

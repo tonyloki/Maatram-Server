@@ -121,21 +121,16 @@ export default function AdminReportsPage() {
     }
   };
 
-  // Monthly data for Screen 9 Verified Hours Bar Chart
-  const monthlyHours = [
-    { month: "Jan", hours: 250 },
-    { month: "Feb", hours: 320 },
-    { month: "Mar", hours: 410 },
-    { month: "Apr", hours: 500 },
-    { month: "May", hours: 480 },
-    { month: "Jun", hours: 590 },
-    { month: "Jul", hours: 680 },
-    { month: "Aug", hours: 750 },
-    { month: "Sep", hours: 820 },
-    { month: "Oct", hours: 910 },
-    { month: "Nov", hours: 740 },
-    { month: "Dec", hours: 860 },
-  ];
+  const studentCount = dashboardData?.volunteers.by_category?.STUDENT ?? 0;
+  const alumniCount = dashboardData?.volunteers.by_category?.ALUMNI ?? 0;
+  const corporateCount = dashboardData?.volunteers.by_category?.CORPORATE ?? 0;
+  const totalVolunteers =
+    dashboardData?.volunteers.total_volunteers ??
+    (studentCount + alumniCount + corporateCount);
+
+  const studentPct = totalVolunteers > 0 ? Math.round((studentCount / totalVolunteers) * 100) : 0;
+  const alumniPct = totalVolunteers > 0 ? Math.round((alumniCount / totalVolunteers) * 100) : 0;
+  const corporatePct = totalVolunteers > 0 ? Math.round((corporateCount / totalVolunteers) * 100) : 0;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -258,7 +253,7 @@ export default function AdminReportsPage() {
               </div>
               <div>
                 <div className="text-2xl font-black text-charcoal-900 tracking-tight">
-                  {dashboardData?.volunteers.total ?? 156}
+                  {dashboardData?.volunteers.total_volunteers ?? 0}
                 </div>
                 <div className="text-xs font-semibold text-charcoal-500 mt-0.5">Total Volunteers</div>
               </div>
@@ -270,7 +265,7 @@ export default function AdminReportsPage() {
               </div>
               <div>
                 <div className="text-2xl font-black text-charcoal-900 tracking-tight">
-                  {dashboardData?.volunteers.active ?? 142}
+                  {dashboardData?.volunteers.active_volunteers ?? 0}
                 </div>
                 <div className="text-xs font-semibold text-charcoal-500 mt-0.5">Approved & Active</div>
               </div>
@@ -282,7 +277,7 @@ export default function AdminReportsPage() {
               </div>
               <div>
                 <div className="text-2xl font-black text-charcoal-900 tracking-tight">
-                  {dashboardData?.applications.pending ?? 42}
+                  {dashboardData?.applications.pending ?? 0}
                 </div>
                 <div className="text-xs font-semibold text-charcoal-500 mt-0.5">Pending Review</div>
               </div>
@@ -294,7 +289,7 @@ export default function AdminReportsPage() {
               </div>
               <div>
                 <div className="text-2xl font-black text-charcoal-900 tracking-tight">
-                  {dashboardData?.applications.rejected ?? 12}
+                  {dashboardData?.applications.rejected ?? 0}
                 </div>
                 <div className="text-xs font-semibold text-charcoal-500 mt-0.5">Rejected</div>
               </div>
@@ -303,43 +298,64 @@ export default function AdminReportsPage() {
 
           {/* Dual Charts from Screen 9 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left: Verified Hours (Monthly) Bar Chart */}
+            {/* Left: Verified Engagement Summary */}
             <div className="bg-white border border-stone-200 rounded-xl p-6 shadow-xs flex flex-col justify-between">
               <div>
                 <h3 className="text-sm font-bold text-charcoal-900 tracking-tight">
-                  Verified Hours (Monthly)
+                  Verified Engagement Metrics
                 </h3>
                 <p className="text-xs text-charcoal-400 mt-0.5">
-                  Aggregated volunteering hours completed across cycles
+                  Canonical aggregated data from PostgreSQL attendance & gamification ledgers
                 </p>
               </div>
 
-              {/* Bar Chart Container */}
-              <div className="mt-8 pt-4 border-t border-stone-100">
-                <div className="flex items-end justify-between gap-2 h-48 px-2">
-                  {monthlyHours.map((item, idx) => {
-                    const heightPercent = Math.min(Math.round((item.hours / 1000) * 100), 100);
+              <div className="mt-6 pt-4 border-t border-stone-100 grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-amber-50/60 border border-amber-200/60">
+                  <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider block">
+                    Verified Service Hours
+                  </span>
+                  <div className="text-2xl font-black text-charcoal-900 mt-1">
+                    {dashboardData?.engagement.total_hours_credited ?? "0.00"} hrs
+                  </div>
+                  <span className="text-[10px] text-charcoal-500 mt-0.5 block">
+                    Approved attendance hours
+                  </span>
+                </div>
 
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-2 group relative">
-                        {/* Tooltip */}
-                        <div className="opacity-0 group-hover:opacity-100 transition absolute -top-8 bg-charcoal-900 text-white text-[10px] font-bold py-1 px-1.5 rounded pointer-events-none whitespace-nowrap shadow-sm z-10">
-                          {item.hours} hrs
-                        </div>
-                        {/* Bar */}
-                        <div className="w-full max-w-[20px] bg-stone-100 rounded-t-sm h-full flex items-end">
-                          <div
-                            style={{ height: `${heightPercent}%` }}
-                            className="w-full bg-amber-500 hover:bg-amber-400 rounded-t-sm transition-all duration-300"
-                          />
-                        </div>
-                        {/* Label */}
-                        <span className="text-[10px] text-charcoal-500 font-medium">
-                          {item.month}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="p-4 rounded-xl bg-emerald-50/60 border border-emerald-200/60">
+                  <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block">
+                    Points Allocated
+                  </span>
+                  <div className="text-2xl font-black text-charcoal-900 mt-1">
+                    {dashboardData?.engagement.total_points_allocated ?? "0.00"} pts
+                  </div>
+                  <span className="text-[10px] text-charcoal-500 mt-0.5 block">
+                    Canonical ledger balance
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
+                  <span className="text-[11px] font-bold text-charcoal-600 uppercase tracking-wider block">
+                    Total Registrations
+                  </span>
+                  <div className="text-2xl font-black text-charcoal-900 mt-1">
+                    {dashboardData?.engagement.total_registrations ?? 0}
+                  </div>
+                  <span className="text-[10px] text-charcoal-500 mt-0.5 block">
+                    Volunteer drive signups
+                  </span>
+                </div>
+
+                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200">
+                  <span className="text-[11px] font-bold text-charcoal-600 uppercase tracking-wider block">
+                    Completed Events
+                  </span>
+                  <div className="text-2xl font-black text-charcoal-900 mt-1">
+                    {dashboardData?.events.completed_events ?? 0}
+                  </div>
+                  <span className="text-[10px] text-charcoal-500 mt-0.5 block">
+                    Closed & points distributed
+                  </span>
                 </div>
               </div>
             </div>
@@ -368,7 +384,7 @@ export default function AdminReportsPage() {
                       stroke="#E5E7EB"
                       strokeWidth="4"
                     />
-                    {/* Students (62%) */}
+                    {/* Students */}
                     <circle
                       cx="18"
                       cy="18"
@@ -376,10 +392,10 @@ export default function AdminReportsPage() {
                       fill="none"
                       stroke="#10B981"
                       strokeWidth="4"
-                      strokeDasharray="54.5 100"
+                      strokeDasharray={`${studentPct * 0.88} 100`}
                       strokeDashoffset="0"
                     />
-                    {/* Alumni (24%) */}
+                    {/* Alumni */}
                     <circle
                       cx="18"
                       cy="18"
@@ -387,10 +403,10 @@ export default function AdminReportsPage() {
                       fill="none"
                       stroke="#F59E0B"
                       strokeWidth="4"
-                      strokeDasharray="21.1 100"
-                      strokeDashoffset="-54.5"
+                      strokeDasharray={`${alumniPct * 0.88} 100`}
+                      strokeDashoffset={`-${studentPct * 0.88}`}
                     />
-                    {/* Corporate (14%) */}
+                    {/* Corporate */}
                     <circle
                       cx="18"
                       cy="18"
@@ -398,34 +414,34 @@ export default function AdminReportsPage() {
                       fill="none"
                       stroke="#3B82F6"
                       strokeWidth="4"
-                      strokeDasharray="12.3 100"
-                      strokeDashoffset="-75.6"
+                      strokeDasharray={`${corporatePct * 0.88} 100`}
+                      strokeDashoffset={`-${(studentPct + alumniPct) * 0.88}`}
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center">
                     <span className="text-xl font-black text-charcoal-900">
-                      {dashboardData?.volunteers.total ?? 156}
+                      {totalVolunteers}
                     </span>
                     <span className="text-[10px] text-charcoal-400 font-semibold uppercase">Total</span>
                   </div>
                 </div>
 
-                {/* Legend matching Screen 9 */}
-                <div className="space-y-3 text-xs">
+                {/* Legend */}
+                <div className="space-y-3 text-xs min-w-[130px]">
                   <div className="flex items-center gap-3">
                     <span className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
                     <span className="text-charcoal-700 font-medium">Students</span>
-                    <span className="font-bold text-charcoal-900 ml-auto">62%</span>
+                    <span className="font-bold text-charcoal-900 ml-auto">{studentPct}%</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="w-3 h-3 rounded-full bg-amber-500 shrink-0" />
                     <span className="text-charcoal-700 font-medium">Alumni</span>
-                    <span className="font-bold text-charcoal-900 ml-auto">24%</span>
+                    <span className="font-bold text-charcoal-900 ml-auto">{alumniPct}%</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="w-3 h-3 rounded-full bg-blue-500 shrink-0" />
                     <span className="text-charcoal-700 font-medium">Corporate</span>
-                    <span className="font-bold text-charcoal-900 ml-auto">14%</span>
+                    <span className="font-bold text-charcoal-900 ml-auto">{corporatePct}%</span>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 """FastAPI dependency injection for database sessions, security, RBAC, and CSRF protection."""
 
+import hmac
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -20,7 +21,7 @@ from src.core.exceptions import (
     TokenExpiredException,
     UnauthorizedException,
 )
-from src.core.security import decode_access_token, ensure_utc
+from src.core.security import decode_access_token, ensure_utc, verify_csrf_token
 from src.models.users import User, UserSession
 from src.repositories.user_repo import user_repository
 
@@ -112,34 +113,92 @@ async def verify_csrf(
     request: Request,
     x_csrf_token: Annotated[str | None, Header(alias="X-CSRF-Token")] = None,
     auth_header: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)] = None,
+    csrf_token_cookie: Annotated[str | None, Cookie(alias="csrf_token")] = None,
     refresh_token_cookie: Annotated[str | None, Cookie(alias="refresh_token")] = None,
+    access_token_cookie: Annotated[str | None, Cookie(alias="access_token")] = None,
 ) -> None:
     """Verify Double-Submit CSRF token on cookie-authenticated mutative state operations.
 
     Exemptions:
     - Safe HTTP methods (GET, HEAD, OPTIONS).
-    - Mobile clients using Authorization: Bearer <token>.
+    - Mobile clients using Authorization: Bearer <token> without ambient browser cookies.
     """
-    # Safe methods do not mutate state
+    # 1. Safe methods do not mutate state
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
 
-    # Mobile requests utilizing Bearer authentication header are immune to browser CSRF
+    # 2. Check for genuinely authenticated Bearer credentials
+    # Bearer-token exemption requires a genuinely valid, unexpired token signed by our SECRET_KEY,
+    # preventing any dummy/invalid Authorization header from bypassing CSRF verification.
+    is_authenticated_bearer = False
+    bearer_payload: dict[str, Any] | None = None
     if auth_header and auth_header.credentials:
+        try:
+            bearer_payload = decode_access_token(auth_header.credentials)
+            is_authenticated_bearer = True
+        except (TokenExpiredException, InvalidTokenException):
+            is_authenticated_bearer = False
+
+    # 3. Check if ambient browser cookies are present
+    has_cookies = bool(refresh_token_cookie or access_token_cookie or csrf_token_cookie)
+
+    # 4. Genuinely authenticated Bearer requests (e.g. mobile clients, programmatic API calls)
+    # that do not use cookie authentication are exempt from CSRF
+    if is_authenticated_bearer and not access_token_cookie:
         return
 
-    # If request is cookie-authenticated, CSRF validation is strictly enforced
-    if refresh_token_cookie:
-        # 1. Validate Origin / Referer against whitelist if present
-        origin = request.headers.get("origin")
-        if origin and origin not in settings.BACKEND_CORS_ORIGINS:
-            raise CSRFValidationException("Origin not permitted.")
+    # 5. If request has no cookies at all and no valid bearer token, it cannot mutate protected state
+    if not has_cookies:
+        return
 
-        # 2. Enforce presence and non-emptiness of X-CSRF-Token
-        if not x_csrf_token or not x_csrf_token.strip():
+    # 5. Cookie-authenticated request requires strict CSRF validation:
+    # A. Origin / Referer validation if present
+    origin = request.headers.get("origin")
+    if origin and origin not in settings.BACKEND_CORS_ORIGINS:
+        raise CSRFValidationException("Origin not permitted.")
+
+    referer = request.headers.get("referer")
+    if referer and not any(referer.startswith(allowed) for allowed in settings.BACKEND_CORS_ORIGINS):
+        raise CSRFValidationException("Referer origin not permitted.")
+
+    # B. Enforce presence and non-emptiness of X-CSRF-Token
+    if not x_csrf_token or not x_csrf_token.strip():
+        raise CSRFValidationException(
+            "X-CSRF-Token header missing on cookie-authenticated request."
+        )
+
+    clean_header_token = x_csrf_token.strip()
+
+    # C. Validate double-submit cookie comparison if csrf_token cookie is present
+    if csrf_token_cookie:
+        clean_cookie_token = csrf_token_cookie.strip()
+        if not hmac.compare_digest(clean_header_token, clean_cookie_token):
             raise CSRFValidationException(
-                "X-CSRF-Token header missing on cookie-authenticated request."
+                "CSRF token mismatch between header and cookie."
             )
+
+    # D. Cryptographic verification & session binding
+    payload = bearer_payload
+    if not payload and access_token_cookie:
+        try:
+            payload = decode_access_token(access_token_cookie)
+        except (TokenExpiredException, InvalidTokenException):
+            raise CSRFValidationException(
+                "CSRF token validation failed: authentication token expired or invalid."
+            )
+
+    if payload:
+        session_id = payload.get("session_id")
+        if session_id:
+            if not verify_csrf_token(clean_header_token, session_id):
+                raise CSRFValidationException(
+                    "CSRF token cryptographic signature invalid or expired."
+                )
+    else:
+        # If no access token is available (e.g. only refresh_token_cookie provided),
+        # verify token structure at minimum
+        if "." not in clean_header_token:
+            raise CSRFValidationException("CSRF token format invalid.")
 
 
 def set_auth_cookies(

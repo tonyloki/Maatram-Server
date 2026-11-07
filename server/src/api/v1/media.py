@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user, get_db, require_role
+from src.api.deps import get_current_user, get_db, require_role, verify_csrf
 from src.models.users import User
 from src.schemas.media import (
     EventGalleryResponse,
@@ -27,11 +27,13 @@ router = APIRouter(tags=["Media & Communications"])
     "/media/signed-upload",
     response_model=SignedUploadResponse,
     summary="Generate HMAC-SHA256 signed parameters for direct Cloudinary upload",
+    dependencies=[Depends(verify_csrf)],
 )
 @router.post(
     "/media/sign-upload",
     response_model=SignedUploadResponse,
     include_in_schema=False,
+    dependencies=[Depends(verify_csrf)],
 )
 async def generate_signed_upload(
     payload: SignUploadRequest,
@@ -51,12 +53,14 @@ async def generate_signed_upload(
     response_model=MediaAssetResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register uploaded media asset into canonical database",
+    dependencies=[Depends(verify_csrf)],
 )
 @router.post(
     "/media/register",
     response_model=MediaAssetResponse,
     status_code=status.HTTP_201_CREATED,
     include_in_schema=False,
+    dependencies=[Depends(verify_csrf)],
 )
 async def register_media_asset(
     payload: MediaAssetCreate,
@@ -75,6 +79,7 @@ async def register_media_asset(
     "/media/assets/{asset_id}",
     status_code=status.HTTP_200_OK,
     summary="Delete media asset",
+    dependencies=[Depends(verify_csrf)],
 )
 async def delete_media_asset(
     asset_id: uuid.UUID,
@@ -109,6 +114,7 @@ async def get_event_photos(
     response_model=EventPhotoResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Bind media asset to event gallery (Admin only)",
+    dependencies=[Depends(verify_csrf)],
 )
 async def add_event_photo(
     event_id: uuid.UUID,

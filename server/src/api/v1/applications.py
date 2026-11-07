@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user, get_db, require_role
+from src.api.deps import get_current_user, get_db, require_role, verify_csrf
 from src.models.users import User
 from src.schemas.application import (
     ApplicationApproveRequest,
@@ -99,7 +99,7 @@ async def get_application_by_id(
     status_code=status.HTTP_200_OK,
     response_model=ApplicationResponse,
     summary="Approve volunteer application (Admin only)",
-    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN"))],
+    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN")), Depends(verify_csrf)],
 )
 async def approve_application(
     application_id: uuid.UUID,
@@ -128,7 +128,7 @@ async def approve_application(
     status_code=status.HTTP_200_OK,
     response_model=ApplicationResponse,
     summary="Reject volunteer application with mandatory reason (Admin only)",
-    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN"))],
+    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN")), Depends(verify_csrf)],
 )
 async def reject_application(
     application_id: uuid.UUID,
@@ -156,7 +156,7 @@ async def reject_application(
     status_code=status.HTTP_200_OK,
     response_model=VolunteerProfileResponse,
     summary="Verify minor applicant parental consent (Admin only)",
-    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN"))],
+    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN")), Depends(verify_csrf)],
 )
 async def verify_parental_consent(
     application_id: uuid.UUID,

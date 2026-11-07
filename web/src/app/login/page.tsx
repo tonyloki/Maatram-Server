@@ -51,24 +51,20 @@ function LoginForm() {
       const userStatus = response.user.status;
 
       if (userStatus === "PENDING" || userStatus === "PENDING_APPROVAL") {
-        setStatusNotice({
-          status: userStatus,
-          message:
-            "Your volunteer application is currently under administrative review. Once approved, you will have full access to event registrations and dashboards.",
-          tone: "warning",
+        const queryParams = new URLSearchParams({
+          email: response.user.email || email.trim(),
+          name: (response.user.email || email).split("@")[0],
         });
-        setIsLoading(false);
+        router.push(`/onboarding/pending?${queryParams.toString()}`);
         return;
       }
 
       if (userStatus === "REJECTED") {
-        setStatusNotice({
-          status: userStatus,
-          message:
-            "Your volunteer application was not accepted at this time. Please contact volunteers@maatramfoundation.org for inquiries.",
-          tone: "error",
+        const queryParams = new URLSearchParams({
+          email: response.user.email || email.trim(),
+          name: (response.user.email || email).split("@")[0],
         });
-        setIsLoading(false);
+        router.push(`/onboarding/rejected?${queryParams.toString()}`);
         return;
       }
 
@@ -87,6 +83,22 @@ function LoginForm() {
       router.push(redirectPath);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Invalid email or password. Please try again.";
+      if (msg.includes("PENDING_APPROVAL") || msg.includes("PENDING_VERIFICATION") || msg.toLowerCase().includes("verify your email")) {
+        const queryParams = new URLSearchParams({
+          email: email.trim(),
+          name: email.split("@")[0],
+        });
+        router.push(`/onboarding/pending?${queryParams.toString()}`);
+        return;
+      }
+      if (msg.toLowerCase().includes("rejected")) {
+        const queryParams = new URLSearchParams({
+          email: email.trim(),
+          name: email.split("@")[0],
+        });
+        router.push(`/onboarding/rejected?${queryParams.toString()}`);
+        return;
+      }
       setErrorMessage(msg);
     } finally {
       setIsLoading(false);
@@ -159,6 +171,12 @@ function LoginForm() {
             <label className="block text-xs font-semibold text-[#374151]">
               Password
             </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-medium text-[#B45309] hover:text-[#92400E] hover:underline"
+            >
+              Forgot password?
+            </Link>
           </div>
           <div className="relative">
             <Lock className="w-4 h-4 text-[#9CA3AF] absolute left-3 top-1/2 -translate-y-1/2" />

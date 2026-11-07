@@ -136,24 +136,54 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def generate_csrf_token(session_id: uuid.UUID | str) -> str:
-    """Generate cryptographically signed anti-CSRF token bound to session."""
+def generate_csrf_token(session_id: uuid.UUID | str, issued_at: int | None = None) -> str:
+    """Generate cryptographically signed anti-CSRF token bound to session and timestamp."""
     nonce = secrets.token_hex(16)
-    message = f"{session_id}:{nonce}".encode()
+    ts = issued_at if issued_at is not None else int(datetime.now(UTC).timestamp())
+    message = f"{session_id}:{nonce}:{ts}".encode()
     signature = hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
-    return f"{nonce}.{signature}"
+    return f"{nonce}.{ts}.{signature}"
 
 
-def verify_csrf_token(csrf_token: str, session_id: uuid.UUID | str) -> bool:
-    """Validate signed double-submit CSRF token."""
+def verify_csrf_token(
+    csrf_token: str,
+    session_id: uuid.UUID | str,
+    max_age_seconds: int = 86400 * 30,
+) -> bool:
+    """Validate signed double-submit CSRF token against session binding, signature, and expiration."""
     if not csrf_token or "." not in csrf_token:
         return False
-    nonce, signature = csrf_token.split(".", 1)
-    message = f"{session_id}:{nonce}".encode()
-    expected_signature = hmac.new(
-        settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
-    ).hexdigest()
-    return hmac.compare_digest(signature, expected_signature)
+
+    parts = csrf_token.split(".")
+    # 3-part token: nonce.timestamp.signature
+    if len(parts) == 3:
+        nonce, ts_str, signature = parts
+        try:
+            ts = int(ts_str)
+        except ValueError:
+            return False
+
+        # Expiration check
+        now = int(datetime.now(UTC).timestamp())
+        if now - ts > max_age_seconds or ts > now + 300:  # Allow 5 min clock skew
+            return False
+
+        message = f"{session_id}:{nonce}:{ts}".encode()
+        expected_signature = hmac.new(
+            settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(signature, expected_signature)
+
+    # 2-part token (legacy backward compatibility): nonce.signature
+    if len(parts) == 2:
+        nonce, signature = parts
+        message = f"{session_id}:{nonce}".encode()
+        expected_signature = hmac.new(
+            settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(signature, expected_signature)
+
+    return False
 
 
 def ensure_utc(dt: datetime) -> datetime:

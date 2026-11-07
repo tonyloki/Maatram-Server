@@ -7,7 +7,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_db, require_role
+from src.api.deps import get_db, require_role, verify_csrf
 from src.core.config import settings
 from src.core.exceptions import NotFoundException
 from src.models.users import User
@@ -84,6 +84,7 @@ async def get_inactive_volunteers(
     response_model=ReportExportResponse,
     status_code=status.HTTP_202_ACCEPTED,
     summary="Trigger asynchronous report generation job (Admin only)",
+    dependencies=[Depends(verify_csrf)],
 )
 async def trigger_report_export(
     payload: ReportExportRequest,

@@ -19,14 +19,39 @@ Before starting, ensure you have the following installed:
 
 ```text
 Maatram_Gamification/
-├── server/          # FastAPI backend (Port 8000)
-│   ├── src/         # API routes, business logic, SQLAlchemy models
-│   ├── alembic/     # Database migrations
-│   └── requirements.txt
-├── web/             # Next.js 16 Web Application (Port 3000 or 3001)
-│   ├── src/         # React 19 pages, UI components, Tailwind CSS
-│   └── package.json
-└── RUN_GUIDE.md     # This guide
+├── package.json          # Root scripts for monorepo orchestration
+├── .env.example          # Root template reference
+├── server/               # FastAPI backend (Port 8000)
+│   ├── src/              # API routes, business logic, SQLAlchemy models
+│   ├── alembic/          # Database migrations
+│   ├── requirements.txt  # Python backend dependencies
+│   └── .env.example      # Backend environment template
+├── web/                  # Next.js 16 Web Application (Port 3000 or 3001)
+│   ├── src/              # React 19 pages, UI components, Tailwind CSS
+│   ├── package.json      # Frontend dependencies & scripts
+│   └── .env.example      # Frontend environment template
+└── RUN_GUIDE.md          # This guide
+```
+
+---
+
+## ⚡ Superfast Teammate Quickstart
+
+From the cloned repository root `Maatram_Gamification/`:
+
+```bash
+# 1. Initialize environment files for server and web automatically
+npm run setup:env
+
+# 2. Install web packages and start frontend
+npm run install:web
+npm run dev:web
+
+# 3. In a second terminal, activate Python virtual environment and run backend
+python -m venv .venv
+# Windows: .\.venv\Scripts\Activate.ps1 | macOS/Linux: source .venv/bin/activate
+pip install -r server/requirements.txt
+npm run dev:server
 ```
 
 ---
@@ -170,20 +195,28 @@ Once both servers are running:
 ## 🧪 Running Automated Tests
 
 ### Backend Test Suite (Pytest)
-In the `server/` directory:
+From the repository root or inside `server/`:
 ```bash
-pytest tests/ --ignore=tests/test_concurrency.py --ignore=tests/test_concurrency_group5.py
+# From repository root:
+npm run test:server
+
+# Or inside server directory:
+cd server
+pytest tests/
 ```
-*Expected: 144 passed tests.*
+*Expected: 183+ passed tests (including comprehensive security and acceptance suites).*
 
 ### Frontend Checks
-In the `web/` directory:
+From the repository root or inside `web/`:
 ```bash
-# TypeScript strict type-check
-npx tsc --noEmit
+# From repository root:
+npm run typecheck:web
+npm run lint:web
 
-# Code linting
-npm run lint
+# Or inside web directory:
+cd web
+npm run typecheck   # TypeScript strict type-check (tsc --noEmit)
+npm run lint        # Code linting
 ```
 
 ---

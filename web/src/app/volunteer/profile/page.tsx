@@ -98,6 +98,7 @@ function ProfileContent() {
   // Consent update state
   const [isUpdatingConsent, setIsUpdatingConsent] = useState(false);
   const [consentSuccessText, setConsentSuccessText] = useState<string | null>(null);
+  const [consentErrorText, setConsentErrorText] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -153,8 +154,9 @@ function ProfileContent() {
       ...consent,
       [key]: newValue,
     });
+    setConsentErrorText(null);
     setConsentSuccessText("Privacy preference updated successfully.");
-    setTimeout(() => setConsentSuccessText(null), 3000);
+    setTimeout(() => setConsentSuccessText(null), 3500);
 
     try {
       setIsUpdatingConsent(true);
@@ -171,7 +173,9 @@ function ProfileContent() {
         [key]: previousValue,
       });
       setConsentSuccessText(null);
-      alert("Failed to save privacy preference. Please try again.");
+      const msg = err instanceof Error ? err.message : "Failed to save privacy preference. Please try again.";
+      setConsentErrorText(msg);
+      setTimeout(() => setConsentErrorText(null), 5000);
     } finally {
       setIsUpdatingConsent(false);
     }
@@ -184,17 +188,17 @@ function ProfileContent() {
     setInfoMessage(null);
     try {
       const payload: Record<string, unknown> = {
-        first_name: firstName,
-        last_name: lastName,
-        mobile_number: mobileNumber,
-        bio,
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        mobile_number: mobileNumber.trim() || undefined,
+        bio: bio.trim() || undefined,
       };
 
       if (profile?.category === "STUDENT" || !profile?.category) {
         payload.student_details = {
-          college_name: collegeName,
-          degree,
-          department,
+          college_name: collegeName.trim() || undefined,
+          degree: degree.trim() || undefined,
+          department: department.trim() || undefined,
         };
       }
 
@@ -205,14 +209,10 @@ function ProfileContent() {
 
       setProfile(updated);
       setInfoMessage({ type: "success", text: "Profile details updated successfully!" });
-      setTimeout(() => setInfoMessage(null), 3000);
+      setTimeout(() => setInfoMessage(null), 4000);
     } catch (err: unknown) {
-      if (err instanceof ApiError) {
-        setInfoMessage({ type: "error", text: err.message || "Failed to update profile." });
-      } else {
-        setInfoMessage({ type: "success", text: "Profile changes saved successfully!" });
-        setTimeout(() => setInfoMessage(null), 3000);
-      }
+      const msg = err instanceof Error ? err.message : "Failed to update profile. Please try again.";
+      setInfoMessage({ type: "error", text: msg });
     } finally {
       setIsSavingInfo(false);
     }
@@ -482,18 +482,29 @@ function ProfileContent() {
                 className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
                   infoMessage.type === "success"
                     ? "bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0]"
-                    : "bg-red-50 text-red-800 border border-red-200"
+                    : "bg-rose-50 text-rose-800 border border-rose-200"
                 }`}
               >
-                <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+                {infoMessage.type === "success" ? (
+                  <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                )}
                 <span>{infoMessage.text}</span>
               </div>
             )}
 
             {consentSuccessText && (
-              <div className="p-3 rounded-xl text-xs font-bold bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#16A34A]" />
+              <div className="p-3 rounded-xl text-xs font-bold bg-[#DCFCE7] text-[#166534] border border-[#BBF7D0] flex items-center gap-2 animate-in fade-in duration-200">
+                <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
                 <span>{consentSuccessText}</span>
+              </div>
+            )}
+
+            {consentErrorText && (
+              <div className="p-3 rounded-xl text-xs font-bold bg-rose-50 text-rose-800 border border-rose-200 flex items-center gap-2 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>{consentErrorText}</span>
               </div>
             )}
 
@@ -868,15 +879,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.leaderboard_visible ?? true}
+                      aria-label="Consent to show profile on public leaderboard"
+                      aria-checked={consent?.leaderboard_visible ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("leaderboard_visible")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        (consent?.leaderboard_visible ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.leaderboard_visible ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${
-                          (consent?.leaderboard_visible ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.leaderboard_visible ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -893,15 +906,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
+                      aria-label="Consent to display real name on public leaderboard"
                       aria-checked={consent?.name_visible ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("name_visible")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        consent?.name_visible ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.name_visible ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${
-                          consent?.name_visible ? "translate-x-4" : "translate-x-0"
+                          (consent?.name_visible ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -918,15 +933,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.media_usage ?? true}
+                      aria-label="Consent for media and photography usage in Maatram communications"
+                      aria-checked={consent?.media_usage ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("media_usage")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        (consent?.media_usage ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.media_usage ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${
-                          (consent?.media_usage ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.media_usage ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -943,15 +960,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.thank_you_emails ?? true}
+                      aria-label="Consent to receive thank-you and milestone emails"
+                      aria-checked={consent?.thank_you_emails ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("thank_you_emails")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        (consent?.thank_you_emails ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.thank_you_emails ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${
-                          (consent?.thank_you_emails ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.thank_you_emails ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -968,15 +987,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.linkedin_content ?? true}
+                      aria-label="Consent for LinkedIn appreciation mentions"
+                      aria-checked={consent?.linkedin_content ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("linkedin_content")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        (consent?.linkedin_content ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.linkedin_content ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${
-                          (consent?.linkedin_content ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.linkedin_content ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -993,15 +1014,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.contact_available ?? true}
+                      aria-label="Consent for contact sharing with event coordinators"
+                      aria-checked={consent?.contact_available ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("contact_available")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
-                        (consent?.contact_available ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.contact_available ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition ${
-                          (consent?.contact_available ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.contact_available ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -1101,7 +1124,9 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
+                      aria-label="Consent to show my name on public leaderboard"
                       aria-checked={consent?.name_visible ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("name_visible")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                         consent?.name_visible ? "bg-[#F5B817]" : "bg-gray-300"
@@ -1125,15 +1150,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.media_usage ?? true}
+                      aria-label="Consent to allow profile photo in Maatram communications"
+                      aria-checked={consent?.media_usage ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("media_usage")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        (consent?.media_usage ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.media_usage ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                          (consent?.media_usage ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.media_usage ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -1149,15 +1176,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.linkedin_content ?? true}
+                      aria-label="Consent to allow LinkedIn appreciation mentions"
+                      aria-checked={consent?.linkedin_content ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("linkedin_content")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        (consent?.linkedin_content ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.linkedin_content ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                          (consent?.linkedin_content ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.linkedin_content ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>
@@ -1176,15 +1205,17 @@ function ProfileContent() {
                     <button
                       type="button"
                       role="switch"
-                      aria-checked={consent?.contact_available ?? true}
+                      aria-label="Consent to share contact details with event coordinators"
+                      aria-checked={consent?.contact_available ?? false}
+                      disabled={!consent || isUpdatingConsent}
                       onClick={() => handleToggleConsent("contact_available")}
                       className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        (consent?.contact_available ?? true) ? "bg-[#F5B817]" : "bg-gray-300"
+                        (consent?.contact_available ?? false) ? "bg-[#F5B817]" : "bg-gray-300"
                       }`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                          (consent?.contact_available ?? true) ? "translate-x-4" : "translate-x-0"
+                          (consent?.contact_available ?? false) ? "translate-x-4" : "translate-x-0"
                         }`}
                       />
                     </button>

@@ -6,7 +6,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.deps import get_current_user, get_db
+from src.api.deps import get_current_user, get_db, verify_csrf
 from src.models.users import User
 from src.schemas.notification import (
     DeviceTokenRegister,
@@ -65,6 +65,7 @@ async def get_unread_count(
     "/{notification_id}/read",
     response_model=MarkReadResponse,
     summary="Mark single in-app notification as read",
+    dependencies=[Depends(verify_csrf)],
 )
 async def mark_notification_read(
     notification_id: uuid.UUID,
@@ -83,6 +84,7 @@ async def mark_notification_read(
     "/read-all",
     response_model=MarkAllReadResponse,
     summary="Mark all in-app notifications as read",
+    dependencies=[Depends(verify_csrf)],
 )
 async def mark_all_notifications_read(
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -97,12 +99,14 @@ async def mark_all_notifications_read(
     response_model=DeviceTokenResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Register FCM device token for push notifications",
+    dependencies=[Depends(verify_csrf)],
 )
 @router.post(
     "/devices",
     response_model=DeviceTokenResponse,
     status_code=status.HTTP_201_CREATED,
     include_in_schema=False,
+    dependencies=[Depends(verify_csrf)],
 )
 async def register_device_token(
     payload: DeviceTokenRegister,
@@ -123,6 +127,7 @@ async def register_device_token(
     "/devices/{fcm_token}",
     status_code=status.HTTP_200_OK,
     summary="Deactivate FCM device token",
+    dependencies=[Depends(verify_csrf)],
 )
 async def deactivate_device_token(
     fcm_token: str,

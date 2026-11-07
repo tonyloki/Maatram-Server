@@ -11,16 +11,17 @@ import {
   MapPin,
   Bookmark,
   ChevronDown,
-  Filter,
   LayoutGrid,
   School,
   Briefcase,
   ShieldCheck,
   GraduationCap,
   Users,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
-import { EventItem, EventListResponse, RegistrationListResponse } from "@/types";
+import { EventItem, EventListResponse } from "@/types";
 
 interface DisplayEvent {
   id: string;
@@ -33,58 +34,10 @@ interface DisplayEvent {
   timeStr: string;
   location: string;
   imageSrc: string;
+  startTime: Date | null;
+  capacity?: number;
+  mode: string;
 }
-
-const DEFAULT_EVENTS: DisplayEvent[] = [
-  {
-    id: "evt-school-visit-01",
-    title: "School Visit – Government High School",
-    description: "Interact with school students and share your journey.",
-    category: "School Visit",
-    categoryKey: "SCHOOL_VISIT",
-    categoryBadgeClass: "bg-[#FEF3C7] text-[#92400E]",
-    dateStr: "7 Nov 2026",
-    timeStr: "9:00 AM – 1:00 PM",
-    location: "Chennai",
-    imageSrc: "/assets/maatram/photography/school-visit.jpg",
-  },
-  {
-    id: "evt-mock-interview-01",
-    title: "Mock Interview Session",
-    description: "Help students prepare for interviews.",
-    category: "Mock Interview",
-    categoryKey: "MOCK_INTERVIEW",
-    categoryBadgeClass: "bg-[#E0F2FE] text-[#0369A1]",
-    dateStr: "8 Nov 2026",
-    timeStr: "10:00 AM – 12:00 PM",
-    location: "Online",
-    imageSrc: "/assets/maatram/photography/mock-interview.jpg",
-  },
-  {
-    id: "evt-bgv-support-01",
-    title: "BGV Support Drive",
-    description: "Support background verification process.",
-    category: "BGV Support",
-    categoryKey: "BGV",
-    categoryBadgeClass: "bg-[#EDE9FE] text-[#6D28D9]",
-    dateStr: "30 Oct 2026",
-    timeStr: "2:00 PM – 5:00 PM",
-    location: "Chennai",
-    imageSrc: "/assets/maatram/photography/bgv-support.jpg",
-  },
-  {
-    id: "evt-admissions-guidance-01",
-    title: "Admissions Guidance Session",
-    description: "Guide students on higher education options.",
-    category: "Admissions",
-    categoryKey: "ADMISSIONS",
-    categoryBadgeClass: "bg-[#FFEDD5] text-[#C2410C]",
-    dateStr: "28 Oct 2026",
-    timeStr: "10:00 AM – 12:00 PM",
-    location: "Online",
-    imageSrc: "/assets/maatram/photography/admissions-guidance.jpg",
-  },
-];
 
 const CATEGORIES = [
   { id: "ALL", label: "All", icon: LayoutGrid },
@@ -97,24 +50,28 @@ const CATEGORIES = [
 
 export default function VolunteerEventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [savedEventIds, setSavedEventIds] = useState<Set<string>>(new Set());
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [sortBy, setSortBy] = useState<"RECENT" | "SOONEST">("RECENT");
+  const [sortBy, setSortBy] = useState<"SOONEST" | "RECENT">("SOONEST");
 
   const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const eventsRes = await apiClient<EventListResponse>("/events", {
-        params: { page: 1, limit: 50 },
-      }).catch(() => ({ items: [], total: 0, page: 1, page_size: 50, total_pages: 1 }));
-
-      if (eventsRes?.items && eventsRes.items.length > 0) {
-        setEvents(eventsRes.items);
-      }
-    } catch {
-      // Gracefully present canonical reference opportunities
+      const res = await apiClient.get<EventListResponse>("/events", {
+        params: { page: 1, limit: 100 },
+      });
+      setEvents(res.data.items || []);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unable to load events at this time.";
+      setError(msg);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -133,65 +90,65 @@ export default function VolunteerEventsPage() {
     });
   };
 
-  // Merge live backend events with reference fallback
+  // Convert real backend events to DisplayEvent format
   const displayEvents: DisplayEvent[] = useMemo(() => {
-    let sourceList: DisplayEvent[] = DEFAULT_EVENTS;
+    const list: DisplayEvent[] = events.map((evt) => {
+      const startDate = evt.start_time ? new Date(evt.start_time) : null;
+      const dateStr = startDate ? format(startDate, "d MMM yyyy") : "Upcoming";
+      const timeStr = startDate ? format(startDate, "h:mm a") : "";
+      const cat = (evt.category || "").toUpperCase();
 
-    if (events.length > 0) {
-      sourceList = events.map((evt) => {
-        const startDate = evt.start_time ? new Date(evt.start_time) : null;
-        const dateStr = startDate ? format(startDate, "d MMM yyyy") : "Upcoming";
-        const timeStr = startDate ? format(startDate, "h:mm a") : "";
-        const cat = evt.category.toUpperCase();
+      let categoryLabel = "Volunteering";
+      let categoryKey = "ALL";
+      let badgeClass = "bg-gray-100 text-gray-800";
+      let imageSrc = "/assets/maatram/photography/school-visit.jpg";
 
-        let category = "Volunteering";
-        let categoryKey = "ALL";
-        let badgeClass = "bg-gray-100 text-gray-800";
-        let imageSrc = "/assets/maatram/photography/school-visit.jpg";
+      if (cat.includes("SCHOOL")) {
+        categoryLabel = "School Visit";
+        categoryKey = "SCHOOL_VISIT";
+        badgeClass = "bg-[#FEF3C7] text-[#92400E]";
+        imageSrc = "/assets/maatram/photography/school-visit.jpg";
+      } else if (cat.includes("MOCK")) {
+        categoryLabel = "Mock Interview";
+        categoryKey = "MOCK_INTERVIEW";
+        badgeClass = "bg-[#E0F2FE] text-[#0369A1]";
+        imageSrc = "/assets/maatram/photography/mock-interview.jpg";
+      } else if (cat.includes("BGV") || cat.includes("VERIF")) {
+        categoryLabel = "BGV Support";
+        categoryKey = "BGV";
+        badgeClass = "bg-[#EDE9FE] text-[#6D28D9]";
+        imageSrc = "/assets/maatram/photography/bgv-support.jpg";
+      } else if (cat.includes("ADMISSION")) {
+        categoryLabel = "Admissions";
+        categoryKey = "ADMISSIONS";
+        badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
+        imageSrc = "/assets/maatram/photography/admissions-guidance.jpg";
+      } else if (cat.includes("PANEL")) {
+        categoryLabel = "Panel Interview";
+        categoryKey = "PANEL_INTERVIEW";
+        badgeClass = "bg-[#DCFCE7] text-[#166534]";
+        imageSrc = "/assets/maatram/photography/panel-interview.jpg";
+      }
 
-        if (cat.includes("SCHOOL")) {
-          category = "School Visit";
-          categoryKey = "SCHOOL_VISIT";
-          badgeClass = "bg-[#FEF3C7] text-[#92400E]";
-          imageSrc = "/assets/maatram/photography/school-visit.jpg";
-        } else if (cat.includes("MOCK")) {
-          category = "Mock Interview";
-          categoryKey = "MOCK_INTERVIEW";
-          badgeClass = "bg-[#E0F2FE] text-[#0369A1]";
-          imageSrc = "/assets/maatram/photography/mock-interview.jpg";
-        } else if (cat.includes("BGV") || cat.includes("VERIF")) {
-          category = "BGV Support";
-          categoryKey = "BGV";
-          badgeClass = "bg-[#EDE9FE] text-[#6D28D9]";
-          imageSrc = "/assets/maatram/photography/bgv-support.jpg";
-        } else if (cat.includes("ADMISSION")) {
-          category = "Admissions";
-          categoryKey = "ADMISSIONS";
-          badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
-          imageSrc = "/assets/maatram/photography/admissions-guidance.jpg";
-        } else if (cat.includes("PANEL")) {
-          category = "Panel Interview";
-          categoryKey = "PANEL_INTERVIEW";
-          badgeClass = "bg-[#DCFCE7] text-[#166534]";
-          imageSrc = "/assets/maatram/photography/panel-interview.jpg";
-        }
+      return {
+        id: evt.id,
+        title: evt.title,
+        description: evt.description || "Contribute your time and expertise to empower deserving students.",
+        category: categoryLabel,
+        categoryKey,
+        categoryBadgeClass: badgeClass,
+        dateStr,
+        timeStr,
+        location: evt.mode === "ONLINE" ? "Online" : evt.location || "Tamil Nadu",
+        imageSrc,
+        startTime: startDate,
+        capacity: evt.capacity,
+        mode: evt.mode,
+      };
+    });
 
-        return {
-          id: evt.id,
-          title: evt.title,
-          description: evt.description || "Interact with students and make an enduring impact.",
-          category,
-          categoryKey,
-          categoryBadgeClass: badgeClass,
-          dateStr,
-          timeStr,
-          location: evt.mode === "ONLINE" ? "Online" : evt.location || "Chennai",
-          imageSrc,
-        };
-      });
-    }
-
-    return sourceList.filter((item) => {
+    // Filtering
+    const filtered = list.filter((item) => {
       // Category filter
       if (selectedCategory !== "ALL" && item.categoryKey !== selectedCategory) {
         return false;
@@ -207,16 +164,25 @@ export default function VolunteerEventsPage() {
       }
       return true;
     });
-  }, [events, selectedCategory, searchQuery]);
+
+    // Sorting
+    return filtered.sort((a, b) => {
+      const timeA = a.startTime ? a.startTime.getTime() : 0;
+      const timeB = b.startTime ? b.startTime.getTime() : 0;
+      if (sortBy === "SOONEST") {
+        return timeA - timeB;
+      }
+      return timeB - timeA;
+    });
+  }, [events, selectedCategory, searchQuery, sortBy]);
 
   return (
     <div className="space-y-6 sm:space-y-7 animate-in fade-in-50 duration-300 pb-10 overflow-x-hidden min-w-0 max-w-full">
-      {/* 1. Curved Golden Hero Banner matching ui-Reference/Discover_Events.jpeg */}
+      {/* 1. Curved Golden Hero Banner */}
       <section
         aria-label="Discover Events Hero"
         className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FFFDF5] via-[#FFF3D6] to-[#FCEFC7] border border-[#FDE68A]/70 px-8 py-6 shadow-xs min-h-[175px] flex items-center justify-between"
       >
-        {/* Soft Golden Foliage Crescent Watermark on Left */}
         <div className="absolute -top-3 -left-3 w-32 h-32 pointer-events-none opacity-45 select-none z-0">
           <svg viewBox="0 0 100 100" fill="none" className="w-full h-full text-[#EAB308]">
             <path
@@ -232,7 +198,6 @@ export default function VolunteerEventsPage() {
           </svg>
         </div>
 
-        {/* Hero Banner Photography on Right with Soft Organic Left Fade Mask */}
         <div className="absolute right-0 bottom-0 top-0 w-1/2 max-w-[560px] pointer-events-none select-none z-10 hidden md:block overflow-hidden rounded-r-3xl">
           <Image
             src="/assets/maatram/photography/volunteers-team-hero.jpg"
@@ -241,12 +206,10 @@ export default function VolunteerEventsPage() {
             className="object-cover object-center"
             priority
           />
-          {/* Natural Soft Gradient Fade on Left Edge */}
           <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FFF3D6] to-transparent z-10" />
         </div>
 
         <div className="relative z-10 max-w-lg space-y-1.5">
-          {/* 3 Golden Radiating Burst Sparks */}
           <div className="flex items-center gap-1 text-[#F5B817]">
             <svg className="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="4" x2="12" y2="10" />
@@ -265,7 +228,7 @@ export default function VolunteerEventsPage() {
         </div>
       </section>
 
-      {/* 2. Full-Width Search Input Card matching Reference */}
+      {/* 2. Search Input Card */}
       <div className="bg-white rounded-2xl p-2 pl-4 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3">
         <div className="relative flex-1 flex items-center gap-3">
           <Search className="w-4 h-4 text-gray-400 shrink-0" />
@@ -287,9 +250,8 @@ export default function VolunteerEventsPage() {
         </button>
       </div>
 
-      {/* 3. Category Filter Pill Strip & Sort Dropdown matching Reference */}
+      {/* 3. Category Filter Pill Strip & Sort Dropdown */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 min-w-0 max-w-full">
-        {/* Horizontal Category Pill Strip */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none min-w-0 max-w-full shrink">
           {CATEGORIES.map((cat) => {
             const Icon = cat.icon;
@@ -311,7 +273,6 @@ export default function VolunteerEventsPage() {
           })}
         </div>
 
-        {/* Right Sort & Filter Controls matching Reference */}
         <div className="flex items-center gap-2 min-w-0 max-w-full shrink-0">
           <div className="relative">
             <select
@@ -319,37 +280,85 @@ export default function VolunteerEventsPage() {
               onChange={(e) => setSortBy(e.target.value as "RECENT" | "SOONEST")}
               className="appearance-none bg-white border border-gray-200/90 text-xs font-semibold text-[#1F2421] pl-3 pr-8 py-2 rounded-xl shadow-2xs focus:outline-none cursor-pointer"
             >
-              <option value="RECENT">Sort by: Most Recent</option>
               <option value="SOONEST">Sort by: Happening Soonest</option>
+              <option value="RECENT">Sort by: Most Recent</option>
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           <button
             type="button"
+            onClick={() => void loadData()}
             className="p-2 rounded-xl bg-white border border-gray-200/90 text-[#4B5563] hover:text-[#1F2421] shadow-2xs"
-            title="Filters"
+            title="Refresh events list"
           >
-            <Filter className="w-4 h-4" />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* 4. Horizontal Event Cards Stack matching Reference Discover_Events.jpeg */}
-      {displayEvents.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 border border-gray-200/80 shadow-xs text-center space-y-3">
-          <p className="text-sm font-bold text-[#6B7280]">
-            No volunteering events found matching your search.
-          </p>
+      {/* 4. Content Area: Loading / Error / Empty / Real Events */}
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-white rounded-2xl p-5 border border-gray-200/80 animate-pulse flex flex-col md:flex-row items-stretch gap-5"
+            >
+              <div className="w-full md:w-52 h-28 rounded-xl bg-gray-200 shrink-0" />
+              <div className="flex-1 space-y-3">
+                <div className="h-5 bg-gray-200 rounded w-1/2" />
+                <div className="h-4 bg-gray-100 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 rounded w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="bg-white rounded-2xl p-8 border border-rose-200 text-center space-y-4 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div className="max-w-md mx-auto space-y-1">
+            <h3 className="text-base font-bold text-charcoal-900">Failed to Load Events</h3>
+            <p className="text-xs text-charcoal-600">{error}</p>
+          </div>
           <button
-            onClick={() => {
-              setSearchQuery("");
-              setSelectedCategory("ALL");
-            }}
-            className="px-5 py-2 rounded-full bg-[#FFF8E7] text-[#946C00] border border-[#FDE68A] text-xs font-bold hover:bg-[#F5B817] hover:text-[#1F2421] transition-colors"
+            onClick={() => void loadData()}
+            className="px-5 py-2 rounded-xl bg-[#F5B817] text-charcoal-950 font-bold text-xs hover:bg-[#E5AA10] transition-colors"
           >
-            Clear Filters
+            Try Again
           </button>
+        </div>
+      ) : displayEvents.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 border border-gray-200/80 shadow-xs text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFF8E7] text-[#B45309] flex items-center justify-center mx-auto">
+            <Calendar className="w-6 h-6" />
+          </div>
+          {searchQuery.trim() || selectedCategory !== "ALL" ? (
+            <>
+              <h3 className="text-sm font-bold text-[#1F2421]">No Matching Events Found</h3>
+              <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+                No active volunteer events matched your current category or search query.
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("ALL");
+                }}
+                className="px-5 py-2 rounded-full bg-[#FFF8E7] text-[#946C00] border border-[#FDE68A] text-xs font-bold hover:bg-[#F5B817] hover:text-[#1F2421] transition-colors"
+              >
+                Clear Filters
+              </button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-sm font-bold text-[#1F2421]">No Upcoming Events Scheduled</h3>
+              <p className="text-xs text-[#6B7280] max-w-sm mx-auto">
+                There are currently no published volunteering drives. Check back soon or reach out to the volunteer coordination team.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -361,7 +370,7 @@ export default function VolunteerEventsPage() {
                 key={evt.id}
                 className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs hover:border-amber-300 hover:shadow-md transition-all flex flex-col md:flex-row items-stretch md:items-center justify-between gap-5 group"
               >
-                {/* Left: Clean Photographic Thumbnail */}
+                {/* Left: Photographic Thumbnail */}
                 <div className="relative w-full md:w-52 h-36 md:h-28 rounded-xl overflow-hidden bg-gray-100 shrink-0">
                   <Image
                     src={evt.imageSrc}
@@ -397,11 +406,14 @@ export default function VolunteerEventsPage() {
                     </span>
                   </div>
 
-                  <div className="pt-1">
+                  <div className="pt-1 flex items-center gap-2">
                     <span
                       className={`text-[11px] font-semibold px-3 py-0.5 rounded-full ${evt.categoryBadgeClass}`}
                     >
                       {evt.category}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider bg-gray-100 px-2 py-0.5 rounded-md">
+                      {evt.mode}
                     </span>
                   </div>
                 </div>
