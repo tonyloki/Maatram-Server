@@ -3731,6 +3731,36 @@
         "title": "LinkedInDraftResponse",
         "type": "object"
       },
+      "LivenessResponse": {
+        "description": "Liveness probe response indicating application runtime is responsive.",
+        "properties": {
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "status": {
+            "const": "alive",
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "environment",
+          "status",
+          "version"
+        ],
+        "title": "LivenessResponse",
+        "type": "object"
+      },
       "LoginRequest": {
         "additionalProperties": false,
         "description": "User authentication login request.",
@@ -4660,6 +4690,43 @@
           "volunteer_profile_id"
         ],
         "title": "PointTransactionResponse",
+        "type": "object"
+      },
+      "ReadinessResponse": {
+        "description": "Readiness probe response indicating ability to serve traffic.",
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseHealth"
+          },
+          "environment": {
+            "title": "Environment",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ready",
+              "unready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "database",
+          "environment",
+          "status",
+          "version"
+        ],
+        "title": "ReadinessResponse",
         "type": "object"
       },
       "RefreshRequest": {
@@ -8222,6 +8289,127 @@
       }
     },
     "/api/v1/applications/{application_id}/verify-parental-consent": {
+      "patch": {
+        "description": "Admin documentary review and verification of parental consent for applicants under 18.",
+        "operationId": "verify_parental_consent_api_v1_applications__application_id__verify_parental_consent_patch",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "csrf_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Csrf Token"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "refresh_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Refresh Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ParentalConsentVerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VolunteerProfileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Verify minor applicant parental consent (Admin only) - PATCH alias",
+        "tags": [
+          "Volunteer Applications"
+        ]
+      },
       "post": {
         "description": "Admin documentary review and verification of parental consent for applicants under 18.",
         "operationId": "verify_parental_consent_api_v1_applications__application_id__verify_parental_consent_post",
@@ -12433,6 +12621,232 @@
         ]
       }
     },
+    "/api/v1/gamification/events/{event_id}/complete": {
+      "post": {
+        "description": "Atomic event completion finalization with row lock, exactly-once ledger insertion, and outbox jobs.",
+        "operationId": "complete_and_award_event_api_v1_gamification_events__event_id__complete_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "csrf_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Csrf Token"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "refresh_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Refresh Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventCompletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete And Award Event",
+        "tags": [
+          "Gamification & Leaderboards"
+        ]
+      }
+    },
+    "/api/v1/gamification/events/{event_id}/complete-and-award": {
+      "post": {
+        "description": "Atomic event completion finalization with row lock, exactly-once ledger insertion, and outbox jobs.",
+        "operationId": "complete_and_award_event_api_v1_gamification_events__event_id__complete_and_award_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "access_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Access Token"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "csrf_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Csrf Token"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "refresh_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Refresh Token"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          },
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventCompletionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete And Award Event",
+        "tags": [
+          "Gamification & Leaderboards"
+        ]
+      }
+    },
     "/api/v1/gamification/leaderboard": {
       "get": {
         "description": "Fetch multi-tier leaderboard rankings respecting volunteer affirmative consent.",
@@ -13278,6 +13692,60 @@
           }
         },
         "summary": "System and Database Health Check",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/health/liveness": {
+      "get": {
+        "description": "Kubernetes/container liveness probe returning 200 without database dependencies.",
+        "operationId": "check_liveness_api_v1_health_liveness_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness Probe",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/health/readiness": {
+      "get": {
+        "description": "Inspect database connectivity within a 2.0-second timeout to assess incoming traffic readiness.",
+        "operationId": "check_readiness_api_v1_health_readiness_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            },
+            "description": "Service unready / DB unavailable"
+          }
+        },
+        "summary": "Readiness Probe",
         "tags": [
           "Health"
         ]
