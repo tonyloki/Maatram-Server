@@ -78,6 +78,10 @@ class AttendanceService:
             if record.registration.event:
                 event_title = record.registration.event.title
 
+        corrections_count = 0
+        if "corrections" in record.__dict__ and record.__dict__["corrections"]:
+            corrections_count = len(record.__dict__["corrections"])
+
         return AttendanceRecordResponse(
             id=record.id,
             event_registration_id=record.event_registration_id,
@@ -96,7 +100,7 @@ class AttendanceService:
             verified_by_user_id=record.verified_by_user_id,
             created_at=record.created_at,
             updated_at=record.updated_at,
-            corrections_count=len(record.corrections) if record.corrections else 0,
+            corrections_count=corrections_count,
         )
 
     async def check_in_volunteers(
@@ -107,7 +111,7 @@ class AttendanceService:
         check_in_time: datetime | None,
         current_user: User,
     ) -> list[AttendanceRecordResponse]:
-        """Check in one or more volunteers for an ongoing/published event."""
+        """Check in one or more volunteers for an ongoing/published event using batched database operations."""
         if current_user.role not in ("ADMIN", "SUPER_ADMIN"):
             raise ForbiddenException("Only administrators can log volunteer check-ins.")
 
@@ -123,33 +127,40 @@ class AttendanceService:
                 code="EVENT_NOT_ACTIVE",
             )
 
+        if not volunteer_profile_ids:
+            return []
+
+        # Sort deterministically by UUID string to eliminate database deadlock risk
+        sorted_vol_ids = sorted(volunteer_profile_ids, key=lambda x: str(x))
         in_time = ensure_utc(check_in_time) if check_in_time else datetime.now(UTC)
-        responses: list[AttendanceRecordResponse] = []
 
-        for vol_id in volunteer_profile_ids:
-            # Verify active SELECTED registration exists under row lock
-            stmt = (
-                select(EventRegistration)
-                .where(
-                    EventRegistration.event_id == event_id,
-                    EventRegistration.volunteer_profile_id == vol_id,
-                )
-                .with_for_update()
-            )
-            res = await db.execute(stmt)
-            registration = res.scalar_one_or_none()
+        # 1. Batch query registrations with exclusive row-level locks
+        registrations = await attendance_repository.get_registrations_batch_with_lock(
+            db, event_id, sorted_vol_ids
+        )
+        reg_by_vol_id = {r.volunteer_profile_id: r for r in registrations}
 
-            if not registration or registration.status != "SELECTED":
+        # Validate that all requested volunteers are registered and SELECTED
+        for vol_id in sorted_vol_ids:
+            reg = reg_by_vol_id.get(vol_id)
+            if not reg or reg.status != "SELECTED":
                 raise DomainException(
                     f"Volunteer {vol_id} is not SELECTED for this event.",
                     status_code=400,
                     code="REGISTRATION_NOT_SELECTED",
                 )
 
-            # Check existing attendance record
-            existing = await attendance_repository.get_by_registration_id_with_lock(
-                db, registration.id
-            )
+        # 2. Batch query existing attendance records for these registrations
+        reg_ids = [r.id for r in registrations]
+        existing_records = await attendance_repository.get_records_batch_by_registrations_with_lock(
+            db, reg_ids
+        )
+        existing_by_reg_id = {rec.event_registration_id: rec for rec in existing_records}
+
+        # Validate no duplicate check-ins
+        for vol_id in sorted_vol_ids:
+            reg = reg_by_vol_id[vol_id]
+            existing = existing_by_reg_id.get(reg.id)
             if existing and existing.status in ("IN_PROGRESS", "COMPLETED"):
                 raise DomainException(
                     f"Volunteer {vol_id} is already checked in or attendance is completed.",
@@ -157,8 +168,12 @@ class AttendanceService:
                     code="DUPLICATE_CHECKIN",
                 )
 
+        # 3. Batch apply updates/inserts in memory
+        records_to_return: list[AttendanceRecord] = []
+        for vol_id in sorted_vol_ids:
+            reg = reg_by_vol_id[vol_id]
+            existing = existing_by_reg_id.get(reg.id)
             if existing:
-                # Re-activate an incomplete or absent record
                 existing.check_in_time = in_time
                 existing.check_out_time = None
                 existing.duration_minutes = None
@@ -166,13 +181,15 @@ class AttendanceService:
                 existing.verified_by_user_id = current_user.id
                 record = existing
             else:
-                record = await attendance_repository.create_record(
-                    db=db,
-                    event_registration_id=registration.id,
+                record = AttendanceRecord(
+                    event_registration_id=reg.id,
                     check_in_time=in_time,
                     verified_by_user_id=current_user.id,
                     status="IN_PROGRESS",
                 )
+                db.add(record)
+                record.registration = reg
+                record.corrections = []
 
             self._record_audit_log(
                 db=db,
@@ -187,14 +204,13 @@ class AttendanceService:
                     "status": "IN_PROGRESS",
                 },
             )
+            records_to_return.append(record)
 
-            # Eager load relationships for response
-            reloaded = await attendance_repository.get_by_id(db, record.id)
-            if reloaded:
-                responses.append(self._build_record_response(reloaded))
-
+        # Flush batch atomically to populate IDs and timestamps in a single roundtrip
+        await db.flush()
         await db.commit()
-        return responses
+
+        return [self._build_record_response(rec) for rec in records_to_return]
 
     async def check_out_volunteers(
         self,
@@ -204,7 +220,7 @@ class AttendanceService:
         check_out_time: datetime | None,
         current_user: User,
     ) -> list[AttendanceRecordResponse]:
-        """Check out one or more volunteers and calculate duration in minutes."""
+        """Check out one or more volunteers and calculate duration using batched database operations."""
         if current_user.role not in ("ADMIN", "SUPER_ADMIN"):
             raise ForbiddenException("Only administrators can log volunteer check-outs.")
 
@@ -212,11 +228,24 @@ class AttendanceService:
         if not event:
             raise NotFoundException("Event not found.")
 
-        out_time = ensure_utc(check_out_time) if check_out_time else datetime.now(UTC)
-        responses: list[AttendanceRecordResponse] = []
+        if not volunteer_profile_ids:
+            return []
 
-        for vol_id in volunteer_profile_ids:
-            record = await attendance_repository.get_by_event_and_volunteer(db, event_id, vol_id)
+        # Sort deterministically by UUID string to eliminate deadlock risk
+        sorted_vol_ids = sorted(volunteer_profile_ids, key=lambda x: str(x))
+        out_time = ensure_utc(check_out_time) if check_out_time else datetime.now(UTC)
+
+        # 1. Batch query all attendance records for these volunteers at this event
+        records = await attendance_repository.get_records_batch_by_event_and_volunteers_with_lock(
+            db, event_id, sorted_vol_ids
+        )
+        record_by_vol_id = {
+            r.registration.volunteer_profile_id: r for r in records if r.registration
+        }
+
+        # Validate each volunteer record upfront
+        for vol_id in sorted_vol_ids:
+            record = record_by_vol_id.get(vol_id)
             if not record:
                 raise DomainException(
                     f"No attendance record found for volunteer {vol_id}.",
@@ -246,6 +275,10 @@ class AttendanceService:
                     code="INVALID_CHECKOUT_TIME",
                 )
 
+        records_to_return: list[AttendanceRecord] = []
+        for vol_id in sorted_vol_ids:
+            record = record_by_vol_id[vol_id]
+            check_in_utc = ensure_utc(record.check_in_time)
             duration_minutes = int((out_time - check_in_utc).total_seconds() // 60)
             if duration_minutes < 0:
                 duration_minutes = 0
@@ -268,13 +301,12 @@ class AttendanceService:
                     "status": "COMPLETED",
                 },
             )
+            records_to_return.append(record)
 
-            reloaded = await attendance_repository.get_by_id(db, record.id)
-            if reloaded:
-                responses.append(self._build_record_response(reloaded))
-
+        await db.flush()
         await db.commit()
-        return responses
+
+        return [self._build_record_response(rec) for rec in records_to_return]
 
     async def correct_attendance(
         self,

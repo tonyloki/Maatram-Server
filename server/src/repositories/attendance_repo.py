@@ -129,6 +129,87 @@ class AttendanceRepository:
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_registrations_batch_with_lock(
+        self,
+        db: AsyncSession,
+        event_id: uuid.UUID,
+        volunteer_profile_ids: list[uuid.UUID],
+    ) -> list[EventRegistration]:
+        """Fetch registrations for multiple volunteers at an event with deterministic sort and row locks."""
+        if not volunteer_profile_ids:
+            return []
+        sorted_ids = sorted(volunteer_profile_ids, key=lambda x: str(x))
+        stmt = (
+            select(EventRegistration)
+            .where(
+                EventRegistration.event_id == event_id,
+                EventRegistration.volunteer_profile_id.in_(sorted_ids),
+            )
+            .order_by(EventRegistration.volunteer_profile_id)
+            .with_for_update()
+            .options(
+                selectinload(EventRegistration.volunteer_profile).selectinload(VolunteerProfile.user),
+                selectinload(EventRegistration.event),
+            )
+        )
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_records_batch_by_registrations_with_lock(
+        self,
+        db: AsyncSession,
+        registration_ids: list[uuid.UUID],
+    ) -> list[AttendanceRecord]:
+        """Fetch attendance records for multiple registrations with row locks."""
+        if not registration_ids:
+            return []
+        sorted_ids = sorted(registration_ids, key=lambda x: str(x))
+        stmt = (
+            select(AttendanceRecord)
+            .where(AttendanceRecord.event_registration_id.in_(sorted_ids))
+            .order_by(AttendanceRecord.event_registration_id)
+            .with_for_update()
+            .options(
+                selectinload(AttendanceRecord.registration)
+                .selectinload(EventRegistration.volunteer_profile)
+                .selectinload(VolunteerProfile.user),
+                selectinload(AttendanceRecord.registration).selectinload(EventRegistration.event),
+                selectinload(AttendanceRecord.corrections),
+            )
+        )
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_records_batch_by_event_and_volunteers_with_lock(
+        self,
+        db: AsyncSession,
+        event_id: uuid.UUID,
+        volunteer_profile_ids: list[uuid.UUID],
+    ) -> list[AttendanceRecord]:
+        """Fetch attendance records for multiple volunteers at an event with row locks."""
+        if not volunteer_profile_ids:
+            return []
+        sorted_ids = sorted(volunteer_profile_ids, key=lambda x: str(x))
+        stmt = (
+            select(AttendanceRecord)
+            .join(EventRegistration, AttendanceRecord.event_registration_id == EventRegistration.id)
+            .where(
+                EventRegistration.event_id == event_id,
+                EventRegistration.volunteer_profile_id.in_(sorted_ids),
+            )
+            .order_by(EventRegistration.volunteer_profile_id)
+            .with_for_update()
+            .options(
+                selectinload(AttendanceRecord.registration)
+                .selectinload(EventRegistration.volunteer_profile)
+                .selectinload(VolunteerProfile.user),
+                selectinload(AttendanceRecord.registration).selectinload(EventRegistration.event),
+                selectinload(AttendanceRecord.corrections),
+            )
+        )
+        result = await db.execute(stmt)
+        return list(result.scalars().all())
+
     async def list_by_event(
         self,
         db: AsyncSession,

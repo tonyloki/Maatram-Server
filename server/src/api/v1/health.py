@@ -1,18 +1,101 @@
 """Health check and readiness endpoints."""
 
+import asyncio
 import time
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.core.database import get_db
 from src.core.logging import logger
-from src.schemas.health import DatabaseHealth, HealthResponse
+from src.schemas.health import (
+    DatabaseHealth,
+    HealthResponse,
+    LivenessResponse,
+    ReadinessResponse,
+)
 
 router = APIRouter(tags=["Health"])
+
+
+@router.get(
+    "/health/liveness",
+    response_model=LivenessResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Liveness Probe",
+    description="Kubernetes/container liveness probe returning 200 without database dependencies.",
+)
+async def check_liveness() -> LivenessResponse:
+    """Return process liveness state instantly without I/O or database dependencies."""
+    return LivenessResponse(
+        status="alive",
+        version=settings.VERSION,
+        environment=settings.ENVIRONMENT,
+    )
+
+
+@router.get(
+    "/health/readiness",
+    response_model=ReadinessResponse,
+    status_code=status.HTTP_200_OK,
+    responses={503: {"model": ReadinessResponse, "description": "Service unready / DB unavailable"}},
+    summary="Readiness Probe",
+    description="Inspect database connectivity within a 2.0-second timeout to assess incoming traffic readiness.",
+)
+async def check_readiness(
+    response: Response,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> ReadinessResponse:
+    """Assess database connectivity and roundtrip latency with strict 2.0-second timeout."""
+    db_connected = False
+    dialect_name = "unknown"
+    latency_ms = 0.0
+    db_error = None
+
+    try:
+        bind = db.get_bind()
+        dialect_name = bind.dialect.name if bind else "unknown"
+
+        start_time = time.perf_counter()
+        result = await asyncio.wait_for(db.execute(text("SELECT 1")), timeout=2.0)
+        _ = result.scalar()
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+        db_connected = True
+    except TimeoutError:
+        logger.error("Readiness probe timed out waiting for database query.")
+        db_error = "Database query timed out (exceeded 2.0s limit)."
+    except Exception as e:
+        logger.error(f"Readiness probe failed database check: {e}")
+        db_error = str(e)
+
+    if not db_connected:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return ReadinessResponse(
+            status="unready",
+            version=settings.VERSION,
+            environment=settings.ENVIRONMENT,
+            database=DatabaseHealth(
+                connected=False,
+                dialect=dialect_name,
+                latency_ms=latency_ms,
+                error=db_error,
+            ),
+        )
+
+    return ReadinessResponse(
+        status="ready",
+        version=settings.VERSION,
+        environment=settings.ENVIRONMENT,
+        database=DatabaseHealth(
+            connected=True,
+            dialect=dialect_name,
+            latency_ms=latency_ms,
+            error=None,
+        ),
+    )
 
 
 @router.get(
