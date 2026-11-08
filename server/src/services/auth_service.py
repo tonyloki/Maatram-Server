@@ -671,9 +671,10 @@ class AuthService:
             db, user.id, since=now - timedelta(hours=24)
         )
         if recent_count >= 3:
-            raise RateLimitExceededException(
-                "Maximum password reset requests exceeded for this email in 24 hours."
+            logger.warning(
+                f"Password reset request suppressed due to 24h limit for user {user.id}"
             )
+            return MessageResponse(message=generic_msg)
 
         raw_otp = generate_otp()
         hashed_otp = hash_otp(raw_otp)

@@ -1,7 +1,8 @@
 """Common Pydantic schemas and standard response envelopes."""
 
-from typing import Any, TypeVar
+from typing import Annotated, Any, TypeVar
 
+from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
 DataT = TypeVar("DataT")
@@ -62,3 +63,24 @@ class PaginatedResponse[DataT](BaseSchema):
 
     items: list[DataT]
     pagination: PaginationMetadata
+
+
+class PaginationParams:
+    """Standardized pagination dependency enforcing bounds and alias support."""
+
+    def __init__(
+        self,
+        page: Annotated[int, Query(ge=1, description="Page number (1-indexed)")] = 1,
+        limit: Annotated[
+            int | None,
+            Query(ge=1, le=100, description="Items per page (max 100)"),
+        ] = None,
+        page_size: Annotated[
+            int | None,
+            Query(ge=1, le=100, description="Items per page alias (max 100)"),
+        ] = None,
+    ):
+        self.page = page
+        self.limit = limit if limit is not None else (page_size if page_size is not None else 20)
+        self.page_size = self.limit
+        self.offset = (self.page - 1) * self.limit

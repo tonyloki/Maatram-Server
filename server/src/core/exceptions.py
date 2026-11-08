@@ -214,6 +214,7 @@ class RateLimitExceededException(DomainException):
         self,
         message: str = "Too many requests. Please try again later.",
         details: dict[str, Any] | None = None,
+        retry_after: int | None = None,
     ) -> None:
         super().__init__(
             message=message,
@@ -221,6 +222,7 @@ class RateLimitExceededException(DomainException):
             code="RATE_LIMIT_EXCEEDED",
             details=details,
         )
+        self.retry_after = retry_after
 
 
 async def domain_exception_handler(request: Request, exc: DomainException) -> JSONResponse:
@@ -229,8 +231,12 @@ async def domain_exception_handler(request: Request, exc: DomainException) -> JS
         f"DomainException [{exc.code}] on {request.method} {request.url.path}: {exc.message}"
     )
     now_iso = datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    headers: dict[str, str] = {}
+    if hasattr(exc, "retry_after") and exc.retry_after is not None:
+        headers["Retry-After"] = str(exc.retry_after)
     return JSONResponse(
         status_code=exc.status_code,
+        headers=headers or None,
         content={
             "error_code": exc.code,
             "message": exc.message,

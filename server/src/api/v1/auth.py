@@ -17,6 +17,7 @@ from src.api.deps import (
 from src.core.config import settings
 from src.core.exceptions import CSRFValidationException, RateLimitExceededException
 from src.core.rate_limiter import pg_rate_limiter, rate_limiter
+from src.core.security import extract_client_ip
 from src.models.users import User, UserSession
 from src.schemas.auth import (
     LoginRequest,
@@ -47,7 +48,7 @@ async def register(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> RegisterResponse:
     """Register a new volunteer account with base profile, classification, and privacy selections."""
-    client_ip = request.client.host if request.client else None
+    client_ip = extract_client_ip(request)
     user_agent = request.headers.get("user-agent")
 
     # Rate limiting: 10 registrations per hour per IP
@@ -93,7 +94,7 @@ async def login(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> TokenResponse:
     """Authenticate user with Argon2id, create server-side session, and issue dual tokens."""
-    client_ip = request.client.host if request.client else None
+    client_ip = extract_client_ip(request)
     user_agent = request.headers.get("user-agent")
 
     # Rate limiting: 30 attempts per IP, 20 attempts per account per 15 minutes
@@ -298,8 +299,30 @@ async def password_reset_request(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> MessageResponse:
     """Request password reset OTP sent via transactional email outbox."""
-    client_ip = request.client.host if request.client else None
+    client_ip = extract_client_ip(request)
     user_agent = request.headers.get("user-agent")
+
+    # Rate limiting: 5 requests per 15 minutes per IP
+    if settings.USE_DB_RATE_LIMITER:
+        allowed = await pg_rate_limiter.check_and_increment(
+            db=db,
+            identifier=client_ip,
+            endpoint_key="auth:password-reset",
+            max_attempts=5,
+            window_seconds=900,
+        )
+        if not allowed:
+            raise RateLimitExceededException(
+                message="Rate limit exceeded. Please try again later.",
+                retry_after=900,
+            )
+    else:
+        await rate_limiter.check_rate_limit(
+            key=f"password_reset:{client_ip}",
+            max_requests=5,
+            window_seconds=900,
+            error_message="Rate limit exceeded. Please try again later.",
+        )
 
     return await auth_service.request_password_reset(
         db=db,
