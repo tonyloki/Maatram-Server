@@ -244,25 +244,90 @@ export interface VolunteerProfileUpdate {
   corporate_details?: Partial<CorporateProfile>;
 }
 
-// Events
+// Events (Canonical schemas mirrored from backend Pydantic models)
 export interface EventItem {
   id: string;
   title: string;
+  description?: string | null;
   category: string;
   status: EventStatus;
   mode: EventMode;
   location?: string | null;
+  online_meeting_url?: string | null; // Canonical backend field
+  meeting_url?: string | null; // Backward-compatible frontend alias
+  start_time: string;
+  end_time: string;
+  timezone?: string;
+  capacity_required: number; // Canonical backend field
+  volunteer_capacity?: number; // Backend alias
+  capacity?: number; // Backward-compatible frontend accessor
+  registration_deadline: string;
+  withdrawal_deadline?: string | null;
+  cover_media_id?: string | null; // Canonical backend field
+  banner_media_id?: string | null; // Backward-compatible frontend alias
+  registered_count: number;
+  selected_count: number;
+  waitlisted_count?: number;
+  attended_count?: number;
+  available_spots?: number;
+  created_by_user_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface EventListItem {
+  id: string;
+  title: string;
+  category: string;
+  mode: EventMode;
+  location: string;
+  online_meeting_url?: string | null;
   meeting_url?: string | null;
   start_time: string;
   end_time: string;
-  capacity: number;
-  description?: string | null;
+  timezone: string;
+  capacity_required: number;
+  volunteer_capacity: number;
+  capacity?: number;
   registration_deadline: string;
-  withdrawal_deadline: string;
-  banner_media_id?: string | null;
+  status: EventStatus;
   registered_count: number;
   selected_count: number;
-  attended_count: number;
+  available_spots: number;
+}
+
+export interface EventCreateRequest {
+  title: string;
+  description: string;
+  category: string;
+  mode: EventMode;
+  event_date?: string | null;
+  start_time: string;
+  end_time: string;
+  timezone?: string;
+  location?: string | null;
+  online_meeting_url?: string | null;
+  capacity_required: number;
+  volunteer_capacity?: number;
+  registration_deadline: string;
+  cover_media_id?: string | null;
+}
+
+export interface EventUpdateRequest {
+  title?: string;
+  description?: string;
+  category?: string;
+  mode?: EventMode;
+  event_date?: string | null;
+  start_time?: string;
+  end_time?: string;
+  timezone?: string;
+  location?: string | null;
+  online_meeting_url?: string | null;
+  capacity_required?: number;
+  volunteer_capacity?: number;
+  registration_deadline?: string;
+  cover_media_id?: string | null;
 }
 
 export interface EventListResponse {
