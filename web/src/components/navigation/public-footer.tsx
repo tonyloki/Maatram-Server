@@ -67,7 +67,7 @@ export function PublicFooter() {
               </li>
               <li className="flex items-start gap-2.5">
                 <Mail className="w-4 h-4 text-[#F5B817] shrink-0 mt-0.5" />
-                <span>volunteers@maatramfoundation.org</span>
+                <span className="break-all">volunteers@maatramfoundation.org</span>
               </li>
               <li className="pt-2">
                 <a
