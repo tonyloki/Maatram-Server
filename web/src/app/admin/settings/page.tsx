@@ -6,9 +6,7 @@ import {
   Shield,
   Clock,
   Sparkles,
-  Lock,
   Database,
-  FileCheck,
   CheckCircle2,
 } from "lucide-react";
 

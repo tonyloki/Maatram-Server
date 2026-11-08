@@ -5,11 +5,7 @@ import Link from "next/link";
 import {
   Clock,
   Search,
-  CheckCircle2,
-  Calendar,
-  AlertTriangle,
   ArrowRight,
-  Filter,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import { EventResponse, EventListResponse } from "@/types";

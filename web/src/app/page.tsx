@@ -9,11 +9,7 @@ import {
   Briefcase,
   Users,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
-  ShieldCheck,
-  Award,
-  Heart,
   Quote,
 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";

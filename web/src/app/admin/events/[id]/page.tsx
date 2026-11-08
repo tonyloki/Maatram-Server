@@ -8,18 +8,10 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Globe,
   Users,
   CheckCircle2,
-  XCircle,
   AlertTriangle,
   Award,
-  ChevronRight,
-  ShieldCheck,
-  Send,
-  UserCheck,
-  UserX,
-  FileText,
   Sparkles,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
