@@ -53,7 +53,19 @@ async def get_event_completion_preview(
     dependencies=[Depends(verify_csrf)],
 )
 @router.post(
+    "/gamification/events/{event_id}/complete-and-award",
+    response_model=EventCompletionResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_csrf)],
+)
+@router.post(
     "/events/{event_id}/complete",
+    response_model=EventCompletionResponse,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_csrf)],
+)
+@router.post(
+    "/gamification/events/{event_id}/complete",
     response_model=EventCompletionResponse,
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(verify_csrf)],

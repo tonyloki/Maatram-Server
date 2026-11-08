@@ -158,6 +158,13 @@ async def reject_application(
     summary="Verify minor applicant parental consent (Admin only)",
     dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN")), Depends(verify_csrf)],
 )
+@router.patch(
+    "/{application_id}/verify-parental-consent",
+    status_code=status.HTTP_200_OK,
+    response_model=VolunteerProfileResponse,
+    summary="Verify minor applicant parental consent (Admin only) - PATCH alias",
+    dependencies=[Depends(require_role("ADMIN", "SUPER_ADMIN")), Depends(verify_csrf)],
+)
 async def verify_parental_consent(
     application_id: uuid.UUID,
     request: Request,

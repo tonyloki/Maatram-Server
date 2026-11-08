@@ -1,5 +1,6 @@
 """Event Registration & Volunteer Selection domain service."""
 
+import asyncio
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -38,6 +39,14 @@ def _ensure_aware_utc(dt: datetime) -> datetime:
 
 class RegistrationService:
     """Core domain service orchestrating volunteer event registrations, capacity locks, and selections."""
+
+    def __init__(self) -> None:
+        self._event_locks: dict[uuid.UUID, asyncio.Lock] = {}
+
+    def _get_event_lock(self, event_id: uuid.UUID) -> asyncio.Lock:
+        if event_id not in self._event_locks:
+            self._event_locks[event_id] = asyncio.Lock()
+        return self._event_locks[event_id]
 
     def _record_audit_log(
         self,
@@ -130,151 +139,152 @@ class RegistrationService:
         notes: str | None = None,
     ) -> RegistrationResponse:
         """Register an approved volunteer for a published event with pessimistic concurrency locking."""
-        # 1. Resolve volunteer profile
-        volunteer = await volunteer_repository.get_by_user_id(db, requesting_user_id)
-        if not volunteer:
-            raise NotFoundException("Volunteer profile not found.")
+        async with self._get_event_lock(event_id):
+            # 1. Resolve volunteer profile
+            volunteer = await volunteer_repository.get_by_user_id(db, requesting_user_id)
+            if not volunteer:
+                raise NotFoundException("Volunteer profile not found.")
 
-        # 2. Check approval invariant: volunteer user must be APPROVED
-        if not volunteer.user or volunteer.user.status != "APPROVED":
-            raise DomainException(
-                "Only approved volunteers can register for events.",
-                status_code=400,
-                code="VOLUNTEER_NOT_APPROVED",
-            )
-
-        # 3. Pessimistic exclusive row lock on event row
-        event = await event_repository.get_by_id_for_update(db, event_id)
-        if not event:
-            raise NotFoundException("Event not found.")
-
-        # 4. Status validation
-        if event.status == "DRAFT":
-            raise DomainException(
-                "Cannot register for a draft event.",
-                status_code=400,
-                code="EVENT_NOT_PUBLISHED",
-            )
-        if event.status in ("REGISTRATION_CLOSED", "ONGOING", "COMPLETED", "CANCELLED"):
-            raise DomainException(
-                f"Registration is not open for event with status '{event.status}'.",
-                status_code=400,
-                code="REGISTRATION_CLOSED",
-            )
-
-        # 5. Temporal registration deadline check
-        now = datetime.now(UTC)
-        if now > _ensure_aware_utc(event.registration_deadline):
-            raise DomainException(
-                "Registration deadline for this event has passed.",
-                status_code=400,
-                code="DEADLINE_EXPIRED",
-            )
-
-        # 6. Schedule conflict detection across overlapping active events
-        overlapping = await registration_repository.get_overlapping_registrations(
-            db=db,
-            volunteer_profile_id=volunteer.id,
-            start_time=event.start_time,
-            end_time=event.end_time,
-            exclude_event_id=event.id,
-        )
-        if overlapping:
-            raise DomainException(
-                "Schedule conflict: You have an active registration for an overlapping event.",
-                status_code=400,
-                code="SCHEDULE_CONFLICT",
-            )
-
-        # 7. Check existing registration (idempotency vs reactivation)
-        existing = await registration_repository.get_by_volunteer_and_event(
-            db=db, volunteer_profile_id=volunteer.id, event_id=event.id
-        )
-        if existing:
-            if existing.status in ("SUBSCRIBED", "SELECTED", "WAITLISTED"):
-                # Idempotent response
-                return self._build_response(existing)
-            elif existing.status == "WITHDRAWN":
-                # Re-activate registration
-                subscribed = await registration_repository.count_subscribed_for_event(db, event.id)
-                selected = await registration_repository.count_selected_for_event(db, event.id)
-                active_count = subscribed + selected
-                new_status = (
-                    "SUBSCRIBED" if active_count < event.capacity_required else "WAITLISTED"
+            # 2. Check approval invariant: volunteer user must be APPROVED
+            if not volunteer.user or volunteer.user.status != "APPROVED":
+                raise DomainException(
+                    "Only approved volunteers can register for events.",
+                    status_code=400,
+                    code="VOLUNTEER_NOT_APPROVED",
                 )
 
-                existing.status = new_status
-                existing.withdrawn_at = None
-                if notes:
-                    existing.notes = notes
+            # 3. Pessimistic exclusive row lock on event row
+            event = await event_repository.get_by_id_for_update(db, event_id)
+            if not event:
+                raise NotFoundException("Event not found.")
 
-                await registration_repository.append_history(
-                    db=db,
-                    registration_id=existing.id,
-                    old_status="WITHDRAWN",
-                    new_status=new_status,
-                    actor_id=requesting_user_id,
-                    reason="Volunteer re-registered",
+            # 4. Status validation
+            if event.status == "DRAFT":
+                raise DomainException(
+                    "Cannot register for a draft event.",
+                    status_code=400,
+                    code="EVENT_NOT_PUBLISHED",
                 )
-                self._record_audit_log(
-                    db=db,
-                    actor_id=requesting_user_id,
-                    action="EVENT_REGISTRATION_REACTIVATED",
-                    resource_type="EVENT_REGISTRATION",
-                    resource_id=str(existing.id),
-                    old_state={"status": "WITHDRAWN"},
-                    new_state={"status": new_status},
-                )
-                await db.commit()
-                # Reload with relations
-                reloaded = await registration_repository.get_by_id(db, existing.id)
-                assert reloaded is not None
-                return self._build_response(reloaded)
-            else:
-                raise ConflictException(
-                    "Volunteer has an inactive/declined registration for this event."
+            if event.status in ("REGISTRATION_CLOSED", "ONGOING", "COMPLETED", "CANCELLED"):
+                raise DomainException(
+                    f"Registration is not open for event with status '{event.status}'.",
+                    status_code=400,
+                    code="REGISTRATION_CLOSED",
                 )
 
-        # 8. Capacity evaluation
-        subscribed_count = await registration_repository.count_subscribed_for_event(db, event.id)
-        selected_count = await registration_repository.count_selected_for_event(db, event.id)
-        current_committed = subscribed_count + selected_count
+            # 5. Temporal registration deadline check
+            now = datetime.now(UTC)
+            if now > _ensure_aware_utc(event.registration_deadline):
+                raise DomainException(
+                    "Registration deadline for this event has passed.",
+                    status_code=400,
+                    code="DEADLINE_EXPIRED",
+                )
 
-        initial_status = (
-            "SUBSCRIBED" if current_committed < event.capacity_required else "WAITLISTED"
-        )
+            # 6. Schedule conflict detection across overlapping active events
+            overlapping = await registration_repository.get_overlapping_registrations(
+                db=db,
+                volunteer_profile_id=volunteer.id,
+                start_time=event.start_time,
+                end_time=event.end_time,
+                exclude_event_id=event.id,
+            )
+            if overlapping:
+                raise DomainException(
+                    "Schedule conflict: You have an active registration for an overlapping event.",
+                    status_code=400,
+                    code="SCHEDULE_CONFLICT",
+                )
 
-        # 9. Create registration record
-        reg = await registration_repository.create(
-            db=db,
-            volunteer_profile_id=volunteer.id,
-            event_id=event.id,
-            status=initial_status,
-            notes=notes,
-        )
+            # 7. Check existing registration (idempotency vs reactivation)
+            existing = await registration_repository.get_by_volunteer_and_event(
+                db=db, volunteer_profile_id=volunteer.id, event_id=event.id
+            )
+            if existing:
+                if existing.status in ("SUBSCRIBED", "SELECTED", "WAITLISTED"):
+                    # Idempotent response
+                    return self._build_response(existing)
+                elif existing.status == "WITHDRAWN":
+                    # Re-activate registration
+                    subscribed = await registration_repository.count_subscribed_for_event(db, event.id)
+                    selected = await registration_repository.count_selected_for_event(db, event.id)
+                    active_count = subscribed + selected
+                    new_status = (
+                        "SUBSCRIBED" if active_count < event.capacity_required else "WAITLISTED"
+                    )
 
-        # 10. Audit trails
-        await registration_repository.append_history(
-            db=db,
-            registration_id=reg.id,
-            old_status="NONE",
-            new_status=initial_status,
-            actor_id=requesting_user_id,
-            reason="Volunteer self-service registration",
-        )
-        self._record_audit_log(
-            db=db,
-            actor_id=requesting_user_id,
-            action="EVENT_REGISTRATION_CREATED",
-            resource_type="EVENT_REGISTRATION",
-            resource_id=str(reg.id),
-            new_state={"status": initial_status, "event_id": str(event.id)},
-        )
+                    existing.status = new_status
+                    existing.withdrawn_at = None
+                    if notes:
+                        existing.notes = notes
 
-        await db.commit()
-        reloaded = await registration_repository.get_by_id(db, reg.id)
-        assert reloaded is not None
-        return self._build_response(reloaded)
+                    await registration_repository.append_history(
+                        db=db,
+                        registration_id=existing.id,
+                        old_status="WITHDRAWN",
+                        new_status=new_status,
+                        actor_id=requesting_user_id,
+                        reason="Volunteer re-registered",
+                    )
+                    self._record_audit_log(
+                        db=db,
+                        actor_id=requesting_user_id,
+                        action="EVENT_REGISTRATION_REACTIVATED",
+                        resource_type="EVENT_REGISTRATION",
+                        resource_id=str(existing.id),
+                        old_state={"status": "WITHDRAWN"},
+                        new_state={"status": new_status},
+                    )
+                    await db.commit()
+                    # Reload with relations
+                    reloaded = await registration_repository.get_by_id(db, existing.id)
+                    assert reloaded is not None
+                    return self._build_response(reloaded)
+                else:
+                    raise ConflictException(
+                        "Volunteer has an inactive/declined registration for this event."
+                    )
+
+            # 8. Capacity evaluation
+            subscribed_count = await registration_repository.count_subscribed_for_event(db, event.id)
+            selected_count = await registration_repository.count_selected_for_event(db, event.id)
+            current_committed = subscribed_count + selected_count
+
+            initial_status = (
+                "SUBSCRIBED" if current_committed < event.capacity_required else "WAITLISTED"
+            )
+
+            # 9. Create registration record
+            reg = await registration_repository.create(
+                db=db,
+                volunteer_profile_id=volunteer.id,
+                event_id=event.id,
+                status=initial_status,
+                notes=notes,
+            )
+
+            # 10. Audit trails
+            await registration_repository.append_history(
+                db=db,
+                registration_id=reg.id,
+                old_status="NONE",
+                new_status=initial_status,
+                actor_id=requesting_user_id,
+                reason="Volunteer self-service registration",
+            )
+            self._record_audit_log(
+                db=db,
+                actor_id=requesting_user_id,
+                action="EVENT_REGISTRATION_CREATED",
+                resource_type="EVENT_REGISTRATION",
+                resource_id=str(reg.id),
+                new_state={"status": initial_status, "event_id": str(event.id)},
+            )
+
+            await db.commit()
+            reloaded = await registration_repository.get_by_id(db, reg.id)
+            assert reloaded is not None
+            return self._build_response(reloaded)
 
     async def select_volunteers(
         self,
