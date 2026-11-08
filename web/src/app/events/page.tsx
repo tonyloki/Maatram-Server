@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Calendar,
   MapPin,
@@ -23,10 +24,22 @@ import { apiClient } from "@/lib/api-client";
 import { EventItem, EventListResponse } from "@/types";
 
 export default function EventsCataloguePage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // If user is authenticated, route them to their designated portal
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (user.role === "VOLUNTEER") {
+        router.replace("/volunteer/events");
+      } else if (user.role.includes("ADMIN")) {
+        router.replace("/admin/events");
+      }
+    }
+  }, [authLoading, isAuthenticated, user, router]);
 
   // Filters
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");

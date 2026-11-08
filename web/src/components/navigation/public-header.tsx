@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, ArrowRight, LayoutDashboard } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -15,11 +15,19 @@ export function PublicHeader({ activeNav = "home" }: PublicHeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
+  const portalHref = user?.role?.includes("ADMIN")
+    ? "/admin/dashboard"
+    : "/volunteer/dashboard";
+  const eventsHref = user?.role?.includes("ADMIN")
+    ? "/admin/events"
+    : "/volunteer/events";
+
   const navLinks = [
     { key: "home", label: "Home", href: "/" },
     { key: "about", label: "About", href: "/about" },
-    { key: "volunteer", label: "Volunteer", href: "/events" },
+    { key: "volunteer", label: "Volunteer", href: isAuthenticated ? eventsHref : "/events" },
     { key: "impact", label: "Impact", href: "/impact" },
+    ...(isAuthenticated ? [{ key: "dashboard", label: "Dashboard", href: portalHref }] : []),
   ];
 
   return (
@@ -59,9 +67,23 @@ export function PublicHeader({ activeNav = "home" }: PublicHeaderProps) {
         <div className="hidden md:flex items-center gap-3">
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-[#4B5563] bg-white border border-[#EBE6DD] px-3 py-1.5 rounded-full">
+              <Link href={portalHref}>
+                <button
+                  type="button"
+                  className="px-5 py-2.5 rounded-xl bg-[#F5B817] hover:bg-[#E0A714] text-[#1F2421] font-bold text-sm transition-all shadow-xs flex items-center gap-1.5"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </Link>
+              <Link
+                href={user.role.includes("ADMIN") ? "/admin/settings" : "/volunteer/profile"}
+                className="text-xs font-medium text-[#4B5563] hover:text-[#1F2421] bg-white border border-[#EBE6DD] px-3 py-1.5 rounded-full transition-colors"
+                title="View Profile"
+              >
                 {user.email}
-              </span>
+              </Link>
               <Button
                 variant="ghost"
                 size="sm"
@@ -119,7 +141,19 @@ export function PublicHeader({ activeNav = "home" }: PublicHeaderProps) {
           <div className="pt-4 border-t border-[#EBE6DD] flex flex-col gap-2.5">
             {isAuthenticated && user ? (
               <>
-                <div className="text-xs text-[#6B7280] px-3">Signed in as {user.email}</div>
+                <Link href={portalHref} onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="primary" className="w-full font-bold justify-center">
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    Go to Dashboard
+                  </Button>
+                </Link>
+                <Link
+                  href={user.role.includes("ADMIN") ? "/admin/settings" : "/volunteer/profile"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-xs text-[#6B7280] px-3 py-1 hover:underline"
+                >
+                  Signed in as {user.email}
+                </Link>
                 <Button
                   variant="outline"
                   className="w-full justify-center text-[#DC2626]"

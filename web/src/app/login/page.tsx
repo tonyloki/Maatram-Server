@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -22,7 +22,7 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/";
 
-  const { login } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading, login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +32,19 @@ function LoginForm() {
     message: string;
     tone: "warning" | "error" | "info";
   } | null>(null);
+
+  // If already authenticated, redirect to appropriate portal
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (redirectPath && redirectPath !== "/" && redirectPath !== "/events" && redirectPath !== "/login") {
+        router.replace(redirectPath);
+      } else if (user.role === "SUPER_ADMIN" || user.role === "ADMIN") {
+        router.replace("/admin/dashboard");
+      } else {
+        router.replace("/volunteer/dashboard");
+      }
+    }
+  }, [authLoading, isAuthenticated, user, redirectPath, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +92,17 @@ function LoginForm() {
         return;
       }
 
-      // Approved volunteer or staff member
-      router.push(redirectPath);
+      // Approved volunteer or staff member: direct to portal
+      if (redirectPath && redirectPath !== "/" && redirectPath !== "/events" && redirectPath !== "/login") {
+        router.push(redirectPath);
+      } else {
+        const role = response.user.role;
+        if (role === "SUPER_ADMIN" || role === "ADMIN") {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/volunteer/dashboard");
+        }
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Invalid email or password. Please try again.";
       if (msg.includes("PENDING_APPROVAL") || msg.includes("PENDING_VERIFICATION") || msg.toLowerCase().includes("verify your email")) {

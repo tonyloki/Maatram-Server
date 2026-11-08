@@ -11,17 +11,22 @@ import {
   ArrowRight,
   CheckCircle2,
   Quote,
+  LayoutDashboard,
 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/lib/auth-context";
 import {
   staggerContainer,
   fadeInUp,
 } from "@/lib/animations";
 
 export default function HomePage() {
+  const { user, isAuthenticated } = useAuth();
+  const portalHref = user?.role?.includes("ADMIN") ? "/admin/dashboard" : "/volunteer/dashboard";
+  const eventsHref = user?.role?.includes("ADMIN") ? "/admin/events" : "/volunteer/events";
   const opportunityCards = [
     {
       title: "Government School Visits",
@@ -180,23 +185,48 @@ export default function HomePage() {
                   variants={fadeInUp}
                   className="flex flex-wrap items-center gap-4 pt-1"
                 >
-                  <Link href="/register">
-                    <button
-                      type="button"
-                      className="px-8 py-3.5 rounded-xl bg-[#F5B817] hover:bg-[#E0A714] text-[#1F2421] font-bold text-base transition-all shadow-xs flex items-center gap-2"
-                    >
-                      <span>Get Started</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </Link>
-                  <Link href="/login">
-                    <button
-                      type="button"
-                      className="px-8 py-3.5 rounded-xl bg-white border border-[#D1D5DB] hover:bg-gray-50 text-[#1F2421] font-semibold text-base transition-all shadow-2xs"
-                    >
-                      Login
-                    </button>
-                  </Link>
+                  {isAuthenticated && user ? (
+                    <>
+                      <Link href={portalHref}>
+                        <button
+                          type="button"
+                          className="px-8 py-3.5 rounded-xl bg-[#F5B817] hover:bg-[#E0A714] text-[#1F2421] font-bold text-base transition-all shadow-xs flex items-center gap-2"
+                        >
+                          <LayoutDashboard className="w-5 h-5" />
+                          <span>Go to Dashboard</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </Link>
+                      <Link href={eventsHref}>
+                        <button
+                          type="button"
+                          className="px-8 py-3.5 rounded-xl bg-white border border-[#D1D5DB] hover:bg-gray-50 text-[#1F2421] font-semibold text-base transition-all shadow-2xs"
+                        >
+                          Explore Opportunities
+                        </button>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/register">
+                        <button
+                          type="button"
+                          className="px-8 py-3.5 rounded-xl bg-[#F5B817] hover:bg-[#E0A714] text-[#1F2421] font-bold text-base transition-all shadow-xs flex items-center gap-2"
+                        >
+                          <span>Get Started</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </Link>
+                      <Link href="/login">
+                        <button
+                          type="button"
+                          className="px-8 py-3.5 rounded-xl bg-white border border-[#D1D5DB] hover:bg-gray-50 text-[#1F2421] font-semibold text-base transition-all shadow-2xs"
+                        >
+                          Login
+                        </button>
+                      </Link>
+                    </>
+                  )}
                 </motion.div>
               </motion.div>
 
