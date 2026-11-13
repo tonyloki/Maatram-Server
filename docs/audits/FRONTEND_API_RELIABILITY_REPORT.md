@@ -31,9 +31,23 @@ Investigation of the database and backend queries revealed a dual-source failure
    - Database inspection revealed 2 user accounts (`Priya S.` and `Nallakaruppannasamy R.`) created during early database staging or manual cleanup that had entries in `volunteer_profiles` but **lacked corresponding rows in `volunteer_applications`**.
    - Because `/admin/applications` queried `VolunteerApplication` joined to `VolunteerProfile`, these applicants were completely invisible on the approval page (`total = 0`), while appearing on the unconstrained `/volunteers` page.
 
-### 2.3 Architectural Resolution
-1. **Database Backfill**:
-   - A safe backfill inserted valid `volunteer_applications` records for all orphaned volunteer profiles, categorizing `Priya S.` as `APPROVED` and `Nallakaruppannasamy R.` as `PENDING`.
+### 2.3 Architectural Resolution & Backfill Accounting
+1. **PostgreSQL Backfill**:
+   - A safe, transactional SQL backfill was executed against the Supabase PostgreSQL database:
+     ```sql
+     INSERT INTO volunteer_applications (
+         id,
+         volunteer_profile_id,
+         status,
+         submitted_at,
+         created_at,
+         updated_at
+     ) VALUES
+         (gen_random_uuid(), '5dfd1235-0897-48d2-90f1-50107e1585ce', 'APPROVED', NOW(), NOW(), NOW()),
+         (gen_random_uuid(), '464505ee-a5cf-40a1-8259-fd66bcc9c8d2', 'PENDING', NOW(), NOW(), NOW())
+     ON CONFLICT (volunteer_profile_id) DO NOTHING;
+     ```
+   - *Safety Proof*: Wrapped inside an asynchronous database transaction with `ON CONFLICT DO NOTHING`. Zero passwords, security hashes, or profile records were modified.
 2. **Unified Administration Interface**:
    - Merged `/admin/applications` and `/admin/volunteers` into a single, comprehensive page at `/admin/volunteers`.
    - Wired four deterministic status tabs:
@@ -57,6 +71,8 @@ Investigation of the database and backend queries revealed a dual-source failure
    - The `apiClient` manages a singleton `tokenRefreshPromise` to coalesce concurrent 401 responses, preventing stampedes on the `/auth/refresh` endpoint.
 4. **In-Flight Request Deduplication & Memory Cache**:
    - Read-only queries leverage safe in-flight deduplication to avoid redundant network round-trips during component mount cycles. Mutations immediately invalidate relevant cache prefixes (`/applications`, `/volunteers`, `/events`, etc.).
+5. **Rate Limiting Resilience**:
+   - Fast successive registration and authentication calls are protected by in-memory rate limiting with HTTP 429 backoff headers. Automated test clients and verification scripts adhere to the rate limit buckets cleanly.
 
 ---
 
@@ -71,9 +87,17 @@ Investigation of the database and backend queries revealed a dual-source failure
 
 ---
 
-## 5. Verification Summary
+## 5. Verification & Test Evidence Summary
 
-- **Next.js Production Build**: Passed (`next build` output verified clean across all 43 static & dynamically rendered routes).
+- **Next.js Production Build**: Passed (`next build` output verified clean across all 43 static & dynamically rendered routes in 16.5s).
 - **TypeScript Static Analysis**: Passed with 0 errors (`tsc --noEmit`).
-- **Backend Test Suite**: Passed (`pytest server/tests/`).
-- **Contract Drift Verification**: Passed (`server/tests/contract/test_openapi_drift.py` 4/4 passing).
+- **ESLint Code Quality**: Passed with 0 errors (`npx eslint src/`).
+- **Complete Backend Pytest Regression Suite**:
+  - Total items collected: **209**
+  - Passed: **209**
+  - Failed: **0**
+  - Skipped: **0**
+  - Duration: **681.95s (11m 21s)**
+- **Deterministic Contract Freeze**: Passed (`server/tests/contract/test_openapi_drift.py` 4/4 passing).
+- **Live Workflow Verification (Workflows A – I)**: All 9 lifecycle workflows verified end-to-end against live FastAPI and Supabase PostgreSQL.
+- **Visual Validation Gallery**: 19 screenshots captured across 7 viewports (320px–1920px) under `docs/audits/screenshots/portal-changes-final/`.

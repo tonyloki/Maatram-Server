@@ -534,8 +534,7 @@ function VolunteersContent() {
                   <th scope="col" className="py-4 px-4">Mobile Number</th>
                   <th scope="col" className="py-4 px-4">Email</th>
                   <th scope="col" className="py-4 px-4">Category</th>
-                  <th scope="col" className="py-4 px-4">Location / Institute</th>
-                  <th scope="col" className="py-4 px-4 text-center">Status</th>
+                  <th scope="col" className="py-4 px-4">Location</th>
                   <th scope="col" className="py-4 px-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -603,24 +602,6 @@ function VolunteersContent() {
                       {/* 6. Location */}
                       <td className="py-3.5 px-4 text-charcoal-700 max-w-xs truncate" title={locationStr}>
                         {locationStr}
-                      </td>
-
-                      {/* Status Badge */}
-                      <td className="py-3.5 px-4 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
-                            app.status === "APPROVED"
-                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                              : app.status === "PENDING"
-                              ? "bg-amber-50 text-amber-800 border border-amber-200"
-                              : "bg-red-50 text-red-800 border border-red-200"
-                          }`}
-                        >
-                          {app.status === "APPROVED" && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
-                          {app.status === "PENDING" && <Clock className="w-3 h-3 text-amber-600" />}
-                          {app.status === "REJECTED" && <XCircle className="w-3 h-3 text-red-600" />}
-                          {app.status}
-                        </span>
                       </td>
 
                       {/* 7. Action: View + Quick Actions for Pending */}

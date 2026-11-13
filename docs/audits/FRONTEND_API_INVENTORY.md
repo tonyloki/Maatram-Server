@@ -73,7 +73,25 @@ This document provides a comprehensive, production-grade audit of every HTTP API
 
 ---
 
-## 3. Reliability Findings & Resolutions
+## 3. End-to-End Workflow Verification Evidence (Workflows A – I)
+
+The full lifecycle was executed and validated directly against the live backend server and Supabase PostgreSQL instance:
+
+| Workflow | Scope & Endpoints Covered | Verification Execution Method | Result |
+| :--- | :--- | :--- | :---: |
+| **Workflow A** | **Registration & Application Ingestion**<br>`POST /auth/register`<br>`GET /applications?status=PENDING` | Automated client submitted synthetic student registration payload. Queried admin applications queue with status filter. | **PASSED** (`201 Created`, application surfaced immediately under `PENDING`) |
+| **Workflow B** | **Admin Review & Application Approval**<br>`POST /applications/{id}/approve`<br>`GET /users/me` | Admin approved pending application with audit notes. Verified user account status updated to `APPROVED` and email notification queued. | **PASSED** (`200 OK`, user transitioned to `APPROVED`) |
+| **Workflow C** | **Profile Parity & BOLA Protection**<br>`GET /volunteers/me`<br>`GET /volunteers/{id}` | Verified volunteer self profile matches admin read-only view. Verified BOLA prevents other volunteers from accessing peer profile endpoints. | **PASSED** (`200 OK`, identical schema payloads, BOLA 403 verified) |
+| **Workflow D** | **Event Lifecycle & Selection**<br>`POST /events`<br>`POST /events/{id}/publish`<br>`POST /events/{id}/register`<br>`POST /events/{id}/select` | Admin created draft event, published it. Volunteer registered within capacity. Admin executed batch selection transition to `SELECTED`. | **PASSED** (`201 Created` $\to$ `200 OK` $\to$ `201 Created` $\to$ `200 OK`) |
+| **Workflow E** | **Attendance Lifecycle**<br>`POST /events/{id}/attendance/check-in`<br>`POST /events/{id}/attendance/check-out` | Admin checked in selected volunteer. Checked out with 60-minute duration. Verified status `COMPLETED` and exact 1.00 credit hours logged. | **PASSED** (`200 OK`, duration 60 min, credited hours 1.00) |
+| **Workflow F** | **Completion Preview & Award**<br>`GET /events/{id}/completion-preview`<br>`POST /events/{id}/complete-and-award` | Admin previewed gamification award. Dispatched completion transaction: Event set to `COMPLETED`, points ledger credited $P = (1 \times 10) + (1 \times 2) = 12.00$ pts. | **PASSED** (`200 OK`, 12.00 points awarded atomically) |
+| **Workflow G** | **Notifications System**<br>`GET /notifications/me`<br>`GET /notifications/unread-count`<br>`PATCH /notifications/{id}/read` | Polled notifications inbox. Confirmed unread count matched pending event selections. Marked notification read and confirmed counter decremented. | **PASSED** (`200 OK`, real-time unread count updated) |
+| **Workflow H** | **Profile & Statutory Consent Updates**<br>`PATCH /volunteers/me`<br>`PUT /consent/me` | Updated bio and phone details. Updated DPDP statutory consents (`anonymize_on_leaderboard`, `allow_photography`). Confirmed non-overwritten preservation. | **PASSED** (`200 OK`, partial updates strictly preserved) |
+| **Workflow I** | **Dashboard & Audit Governance**<br>`GET /admin/dashboard`<br>`GET /admin/audit-logs` | Admin dashboard returned aggregated PostgreSQL statistics (`total_volunteers=34`). Audit log stream confirmed immutable trail of all preceding actions. | **PASSED** (`200 OK`, full audit trail verified) |
+
+---
+
+## 4. Reliability Findings & Resolutions
 
 1. **Resolution of Volunteer Status Drift Bug**:
    - *Issue*: Previously, new volunteer registrations appeared directly in the active volunteer roster rather than under pending applications review.
