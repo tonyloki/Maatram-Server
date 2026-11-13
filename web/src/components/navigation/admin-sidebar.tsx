@@ -27,11 +27,6 @@ const ADMIN_NAV_ITEMS = [
     icon: LayoutDashboard,
   },
   {
-    label: "Approve Volunteers",
-    href: "/admin/applications",
-    icon: UserCheck,
-  },
-  {
     label: "Volunteers",
     href: "/admin/volunteers",
     icon: Users,
@@ -40,21 +35,6 @@ const ADMIN_NAV_ITEMS = [
     label: "Manage Events",
     href: "/admin/events",
     icon: CalendarDays,
-  },
-  {
-    label: "Attendance",
-    href: "/admin/attendance",
-    icon: Clock,
-  },
-  {
-    label: "Reports & Analytics",
-    href: "/admin/reports",
-    icon: BarChart3,
-  },
-  {
-    label: "Operations & Outbox",
-    href: "/admin/operations",
-    icon: Send,
   },
   {
     label: "Audit Logs",

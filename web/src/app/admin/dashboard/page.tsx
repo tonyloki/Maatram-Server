@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
 
             {/* Pending Approvals */}
             <Link
-              href="/admin/applications?status=PENDING"
+              href="/admin/volunteers?tab=pending"
               className="bg-white rounded-3xl border border-charcoal-200/80 hover:border-[#F5B817] p-6 shadow-2xs hover:shadow-xs transition-all group"
             >
               <div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
 
               <div className="space-y-3 pt-2">
                 <Link
-                  href="/admin/applications?status=PENDING"
+                  href="/admin/volunteers?tab=pending"
                   className="flex items-center justify-between p-3.5 rounded-2xl bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
@@ -303,26 +303,26 @@ export default function AdminDashboardPage() {
                 </Link>
 
                 <Link
-                  href="/admin/attendance"
+                  href="/admin/volunteers"
                   className="flex items-center justify-between p-3.5 rounded-2xl bg-charcoal-50 hover:bg-charcoal-100/80 border border-charcoal-200 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-charcoal-700" />
+                    <Users className="w-5 h-5 text-charcoal-700" />
                     <span className="text-xs md:text-sm font-bold text-charcoal-900">
-                      Attendance verification and hours audit
+                      Inspect and manage volunteer roster records
                     </span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-charcoal-700 group-hover:translate-x-1 transition-transform" />
                 </Link>
 
                 <Link
-                  href="/admin/operations"
+                  href="/admin/audit-logs"
                   className="flex items-center justify-between p-3.5 rounded-2xl bg-charcoal-50 hover:bg-charcoal-100/80 border border-charcoal-200 transition-colors group"
                 >
                   <div className="flex items-center gap-3">
                     <Activity className="w-5 h-5 text-charcoal-700" />
                     <span className="text-xs md:text-sm font-bold text-charcoal-900">
-                      Inspect transactional outbox communication queue
+                      Inspect security & governance audit logs
                     </span>
                   </div>
                   <ArrowRight className="w-4 h-4 text-charcoal-700 group-hover:translate-x-1 transition-transform" />

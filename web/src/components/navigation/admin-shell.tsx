@@ -86,13 +86,6 @@ export function AdminShell({
         <header className="md:hidden sticky top-0 z-40 bg-[#16171A] border-b border-charcoal-800 px-4 py-3 flex items-center justify-between text-white shadow-md">
           <Logo width={100} height={45} href="/admin/dashboard" />
           <div className="flex items-center gap-2">
-            <Link
-              href="/admin/operations"
-              className="p-2 rounded-xl text-charcoal-300 hover:bg-charcoal-800 transition-colors"
-              title="Operations"
-            >
-              <Bell className="w-5 h-5" />
-            </Link>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-xl text-charcoal-300 hover:bg-charcoal-800 transition-colors"
@@ -133,9 +126,9 @@ export function AdminShell({
 
           <div className="flex items-center gap-4">
             <Link
-              href="/admin/operations"
+              href="/admin/audit-logs"
               className="relative p-2 rounded-xl text-charcoal-600 hover:text-charcoal-950 hover:bg-charcoal-100/70 transition-colors"
-              title="Transactional Outbox & Operations"
+              title="Audit Logs"
             >
               <Bell className="w-5 h-5" />
             </Link>
