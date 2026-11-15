@@ -134,7 +134,8 @@ class ResendClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            timeout_sec = getattr(settings, "RESEND_TIMEOUT_SECONDS", 15.0)
+            async with httpx.AsyncClient(timeout=timeout_sec) as client:
                 res = await client.post(
                     "https://api.resend.com/emails",
                     json=payload,

@@ -18,6 +18,7 @@ from src.core.exceptions import (
     validation_exception_handler,
 )
 from src.core.logging import logger
+from src.core.timing_middleware import RequestTimingMiddleware
 
 
 @asynccontextmanager
@@ -42,6 +43,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+# Register Custom Middleware
+app.add_middleware(RequestTimingMiddleware)
 
 # Configure Cross-Origin Resource Sharing (CORS)
 app.add_middleware(

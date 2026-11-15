@@ -6,8 +6,8 @@ class EnvConfig {
 
   const EnvConfig({
     required this.apiBaseUrl,
-    this.connectTimeout = const Duration(seconds: 15),
-    this.receiveTimeout = const Duration(seconds: 15),
+    this.connectTimeout = const Duration(seconds: 10),
+    this.receiveTimeout = const Duration(seconds: 30),
   });
 
   /// Default local development configuration targeting Android emulator or iOS simulator.
@@ -18,7 +18,13 @@ class EnvConfig {
       'API_BASE_URL',
       defaultValue: 'http://10.0.2.2:8000/api/v1',
     );
-    return const EnvConfig(apiBaseUrl: baseUrl);
+    const connectSec = int.fromEnvironment('API_CONNECT_TIMEOUT_SEC', defaultValue: 10);
+    const receiveSec = int.fromEnvironment('API_RECEIVE_TIMEOUT_SEC', defaultValue: 30);
+    return const EnvConfig(
+      apiBaseUrl: baseUrl,
+      connectTimeout: Duration(seconds: connectSec),
+      receiveTimeout: Duration(seconds: receiveSec),
+    );
   }
 
   /// Production configuration
@@ -27,6 +33,12 @@ class EnvConfig {
       'API_BASE_URL',
       defaultValue: 'https://api.maatram.org/api/v1',
     );
-    return const EnvConfig(apiBaseUrl: baseUrl);
+    const connectSec = int.fromEnvironment('API_CONNECT_TIMEOUT_SEC', defaultValue: 10);
+    const receiveSec = int.fromEnvironment('API_RECEIVE_TIMEOUT_SEC', defaultValue: 30);
+    return const EnvConfig(
+      apiBaseUrl: baseUrl,
+      connectTimeout: Duration(seconds: connectSec),
+      receiveTimeout: Duration(seconds: receiveSec),
+    );
   }
 }

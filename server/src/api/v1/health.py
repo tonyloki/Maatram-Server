@@ -43,30 +43,31 @@ async def check_liveness() -> LivenessResponse:
     status_code=status.HTTP_200_OK,
     responses={503: {"model": ReadinessResponse, "description": "Service unready / DB unavailable"}},
     summary="Readiness Probe",
-    description="Inspect database connectivity within a 2.0-second timeout to assess incoming traffic readiness.",
+    description="Inspect database connectivity within a configurable timeout to assess incoming traffic readiness.",
 )
 async def check_readiness(
     response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> ReadinessResponse:
-    """Assess database connectivity and roundtrip latency with strict 2.0-second timeout."""
+    """Assess database connectivity and roundtrip latency with configurable timeout."""
     db_connected = False
     dialect_name = "unknown"
     latency_ms = 0.0
     db_error = None
+    timeout_sec = getattr(settings, "DB_READINESS_TIMEOUT_SECONDS", 5.0)
 
     try:
         bind = db.get_bind()
         dialect_name = bind.dialect.name if bind else "unknown"
 
         start_time = time.perf_counter()
-        result = await asyncio.wait_for(db.execute(text("SELECT 1")), timeout=2.0)
+        result = await asyncio.wait_for(db.execute(text("SELECT 1")), timeout=timeout_sec)
         _ = result.scalar()
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
         db_connected = True
     except TimeoutError:
-        logger.error("Readiness probe timed out waiting for database query.")
-        db_error = "Database query timed out (exceeded 2.0s limit)."
+        logger.error(f"Readiness probe timed out waiting for database query ({timeout_sec}s limit).")
+        db_error = f"Database query timed out (exceeded {timeout_sec}s limit)."
     except Exception as e:
         logger.error(f"Readiness probe failed database check: {e}")
         db_error = str(e)

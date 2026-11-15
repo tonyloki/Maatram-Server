@@ -7,6 +7,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.cache import cache
 from src.core.exceptions import (
     DomainException,
     ForbiddenException,
@@ -132,6 +133,9 @@ class EventService:
         await db.commit()
         await db.refresh(event)
 
+        # Invalidate event caches upon creation
+        await cache.invalidate_prefix("events:")
+
         counts = {"registered": 0, "selected": 0, "waitlisted": 0}
         return self._build_event_response(event, counts)
 
@@ -165,6 +169,15 @@ class EventService:
     ) -> EventListResponse:
         """List events with role-governed visibility and multi-field filters."""
         is_admin = current_user.role in ("ADMIN", "SUPER_ADMIN")
+        cache_key = (
+            f"events:pub:{status or 'all'}:{category or 'all'}:{mode or 'all'}:"
+            f"{page}:{page_size}:{search or 'none'}"
+        )
+        if not is_admin:
+            cached_result = await cache.get(cache_key)
+            if cached_result is not None:
+                return cached_result  # type: ignore[no-any-return]
+
         skip = (page - 1) * page_size
 
         events, total = await event_repository.list_events(
@@ -214,13 +227,16 @@ class EventService:
             )
 
         total_pages = (total + page_size - 1) // page_size if total > 0 else 1
-        return EventListResponse(
+        response = EventListResponse(
             items=items,
             total=total,
             page=page,
             page_size=page_size,
             total_pages=total_pages,
         )
+        if not is_admin:
+            await cache.set(cache_key, response, ttl_seconds=30.0)
+        return response
 
     async def update_event(
         self,
@@ -299,6 +315,9 @@ class EventService:
         await db.commit()
         await db.refresh(updated_event)
 
+        # Invalidate event caches upon update
+        await cache.invalidate_prefix("events:")
+
         counts = await event_repository.get_registration_counts(db, updated_event.id)
         return self._build_event_response(updated_event, counts)
 
@@ -375,6 +394,9 @@ class EventService:
         )
         await db.commit()
         await db.refresh(updated_event)
+
+        # Invalidate event caches upon update
+        await cache.invalidate_prefix("events:")
 
         counts = await event_repository.get_registration_counts(db, updated_event.id)
         return self._build_event_response(updated_event, counts)
@@ -481,6 +503,9 @@ class EventService:
         )
         await db.commit()
         await db.refresh(cloned)
+
+        # Invalidate event caches upon duplication
+        await cache.invalidate_prefix("events:")
 
         counts = {"registered": 0, "selected": 0, "waitlisted": 0}
         return self._build_event_response(cloned, counts)

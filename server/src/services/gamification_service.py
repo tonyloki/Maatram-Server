@@ -9,6 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.core.cache import cache
 from src.core.config import settings
 from src.core.exceptions import DomainException, ForbiddenException, NotFoundException
 from src.models.admin import AuditLog
@@ -390,6 +391,9 @@ class GamificationService:
         # Single atomic database commit
         await db.commit()
 
+        # Invalidate cached leaderboard rankings upon point awards
+        await cache.invalidate_prefix("leaderboard:")
+
         return EventCompletionResponse(
             event_id=event.id,
             status="COMPLETED",
@@ -498,6 +502,9 @@ class GamificationService:
         await db.commit()
         await db.refresh(tx)
 
+        # Invalidate cached leaderboard rankings upon point adjustment
+        await cache.invalidate_prefix("leaderboard:")
+
         return PointTransactionResponse(
             id=tx.id,
             volunteer_profile_id=tx.volunteer_profile_id,
@@ -523,6 +530,11 @@ class GamificationService:
     ) -> LeaderboardResponse:
         """Fetch multi-tier leaderboard rankings with affirmative privacy consent masking."""
         year = cycle_year or datetime.now(UTC).year
+        cache_key = f"leaderboard:{category or 'ALL'}:{year}:{page}:{page_size}"
+        cached_result = await cache.get(cache_key)
+        if cached_result is not None:
+            return cached_result  # type: ignore[no-any-return]
+
         skip = (page - 1) * page_size
 
         rankings, total = await gamification_repository.get_leaderboard_rankings(
@@ -551,7 +563,7 @@ class GamificationService:
             )
         total_pages = (total + page_size - 1) // page_size if total > 0 else 1
 
-        return LeaderboardResponse(
+        response = LeaderboardResponse(
             cycle_year=year,
             category=category.upper() if category else "ALL",
             items=items,
@@ -560,6 +572,8 @@ class GamificationService:
             page_size=page_size,
             total_pages=total_pages,
         )
+        await cache.set(cache_key, response, ttl_seconds=60.0)
+        return response
 
     async def get_my_summary(
         self, db: AsyncSession, current_user: User, cycle_year: int | None = None

@@ -59,20 +59,37 @@ class ApiClient {
     );
   }
 
-  /// Execute GET request
+  /// Execute GET request with bounded exponential-backoff retries for safe idempotent reads.
   Future<Response<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
     Options? options,
+    int maxRetries = 2,
   }) async {
-    try {
-      return await dio.get<T>(
-        path,
-        queryParameters: queryParameters,
-        options: options,
-      );
-    } on DioException catch (e) {
-      throw _parseDioError(e);
+    int attempts = 0;
+    while (true) {
+      try {
+        return await dio.get<T>(
+          path,
+          queryParameters: queryParameters,
+          options: options,
+        );
+      } on DioException catch (e) {
+        attempts++;
+        final isRetryable = attempts <= maxRetries &&
+            (e.type == DioExceptionType.connectionTimeout ||
+                e.type == DioExceptionType.receiveTimeout ||
+                e.type == DioExceptionType.connectionError ||
+                e.response?.statusCode == 408 ||
+                e.response?.statusCode == 503 ||
+                e.response?.statusCode == 504);
+        if (isRetryable) {
+          final delayMs = 1000 * attempts;
+          await Future.delayed(Duration(milliseconds: delayMs));
+          continue;
+        }
+        throw _parseDioError(e);
+      }
     }
   }
 

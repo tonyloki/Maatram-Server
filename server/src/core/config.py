@@ -215,6 +215,11 @@ class Settings(BaseSettings):
     # Resend & Email Settings
     RESEND_API_KEY: str = "re_test_key"
     RESEND_FROM_EMAIL: str = "noreply@maatram.org"
+    RESEND_TIMEOUT_SECONDS: float = 15.0
+
+    # Health & Readiness Settings
+    DB_READINESS_TIMEOUT_SECONDS: float = 5.0
+    ENABLE_IN_MEMORY_CACHE: Annotated[bool, BeforeValidator(parse_bool)] = False
 
     # Firebase FCM Settings
     FIREBASE_CREDENTIALS_PATH: str | None = None

@@ -11,10 +11,38 @@
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
+// Configurable, environment-aware timeout defaults
+const DEFAULT_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 30000; // 30 seconds
+const DEFAULT_UPLOAD_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_UPLOAD_TIMEOUT_MS) || 60000; // 60 seconds
+const SLOW_CONNECTION_THRESHOLD_MS = Number(process.env.NEXT_PUBLIC_API_SLOW_WARNING_MS) || 5000; // 5 seconds
+
 // Strictly in-memory token store (Never persisted in browser storage)
 let inMemoryAccessToken: string | null = null;
 let tokenRefreshPromise: Promise<string | null> | null = null;
 let sessionExpiredCallback: (() => void) | null = null;
+
+// Slow connection listener registry
+type SlowConnectionListener = (isSlow: boolean, slowCount: number) => void;
+const slowConnectionListeners = new Set<SlowConnectionListener>();
+let activeSlowRequestsCount = 0;
+
+export function onSlowConnectionChange(listener: SlowConnectionListener): () => void {
+  slowConnectionListeners.add(listener);
+  return () => {
+    slowConnectionListeners.delete(listener);
+  };
+}
+
+function notifySlowConnectionChange(): void {
+  const isSlow = activeSlowRequestsCount > 0;
+  for (const listener of slowConnectionListeners) {
+    try {
+      listener(isSlow, activeSlowRequestsCount);
+    } catch {
+      // Ignore listener error
+    }
+  }
+}
 
 // In-flight GET request deduplication map
 const inFlightGetRequests = new Map<string, Promise<unknown>>();
@@ -100,6 +128,8 @@ export interface ApiRequestOptions extends RequestInit {
   skipCache?: boolean;
   forceFresh?: boolean;
   cacheTtlMs?: number;
+  maxRetries?: number; // Maximum bounded retries for idempotent GET operations (default: 2)
+  skipRetry?: boolean; // Set to true to disable automatic retries
 }
 
 export class ApiError extends Error {
@@ -136,12 +166,20 @@ export async function apiClient<T>(endpoint: string, options: ApiRequestOptions 
     }
   }
 
-  const executeRequest = async (): Promise<T> => {
+  const isRetryableError = (err: unknown): boolean => {
+    if (options.signal?.aborted) return false;
+    if (err instanceof ApiError) {
+      return err.status === 0 || err.status === 408 || err.status === 503 || err.status === 504;
+    }
+    return false;
+  };
+
+  const executeSingleAttempt = async (): Promise<T> => {
     const {
       params,
       headers: customHeaders,
       skipAuthRefresh,
-      timeoutMs = 15000,
+      timeoutMs = DEFAULT_TIMEOUT_MS,
       bearerTokenOverride,
       signal: userSignal,
       ...fetchOptions
@@ -192,6 +230,14 @@ export async function apiClient<T>(endpoint: string, options: ApiRequestOptions 
       userSignal.addEventListener("abort", () => controller.abort());
     }
 
+    // Track slow connection notification
+    let isMarkedSlow = false;
+    const slowTimer = setTimeout(() => {
+      isMarkedSlow = true;
+      activeSlowRequestsCount++;
+      notifySlowConnectionChange();
+    }, SLOW_CONNECTION_THRESHOLD_MS);
+
     let response: Response;
     try {
       response = await fetch(url, {
@@ -208,6 +254,11 @@ export async function apiClient<T>(endpoint: string, options: ApiRequestOptions 
       throw new ApiError(0, "Network error: Unable to connect to Maatram API backend.", err);
     } finally {
       clearTimeout(timeoutId);
+      clearTimeout(slowTimer);
+      if (isMarkedSlow) {
+        activeSlowRequestsCount = Math.max(0, activeSlowRequestsCount - 1);
+        notifySlowConnectionChange();
+      }
     }
 
     // Handle 401 Unauthorized with single-flight silent token rotation
@@ -248,6 +299,28 @@ export async function apiClient<T>(endpoint: string, options: ApiRequestOptions 
     }
 
     return (await response.json()) as T;
+  };
+
+  const executeRequest = async (): Promise<T> => {
+    // Only safe idempotent GET requests are eligible for retry
+    const maxRetries = isGet && !options.skipRetry ? (options.maxRetries ?? 2) : 0;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await executeSingleAttempt();
+      } catch (err: unknown) {
+        lastError = err;
+        if (attempt < maxRetries && isRetryableError(err)) {
+          // Bounded exponential backoff with jitter: 1s, 2s + 0-300ms jitter
+          const backoffDelay = Math.min(1000 * Math.pow(2, attempt) + Math.random() * 300, 5000);
+          await new Promise((res) => setTimeout(res, backoffDelay));
+          continue;
+        }
+        throw lastError;
+      }
+    }
+    throw lastError;
   };
 
   if (shouldDedupeAndCache) {
@@ -323,7 +396,7 @@ export async function apiDownload(
   endpoint: string,
   options: ApiRequestOptions = {}
 ): Promise<{ blob: Blob; filename: string }> {
-  const { headers: customHeaders, timeoutMs = 30000, ...fetchOptions } = options;
+  const { headers: customHeaders, timeoutMs = DEFAULT_UPLOAD_TIMEOUT_MS, ...fetchOptions } = options;
 
   const url = `${API_BASE}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
