@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 400" width="100%" height="100%" fill="none">
+  <defs>
+    <radialGradient id="commGlow" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FEF08A" stop-opacity="0.6"/>
+      <stop offset="60%" stop-color="#FDE047" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="primaryGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F5B817"/>
+      <stop offset="100%" stop-color="#E5A800"/>
+    </linearGradient>
+    <filter id="commShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#1F2421" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Golden Glow -->
+  <circle cx="250" cy="200" r="170" fill="url(#commGlow)"/>
+
+  <!-- Open Mentorship Book Foundation -->
+  <g filter="url(#commShadow)" transform="translate(100, 240)">
+    <!-- Book Cover Base -->
+    <path d="M15 50 Q150 70 285 50 L295 65 Q150 85 5 65 Z" fill="#946C00"/>
+    <path d="M10 45 Q150 65 290 45 L290 55 Q150 75 10 55 Z" fill="#F5B817"/>
+    <!-- Book Pages Stack -->
+    <path d="M15 40 Q150 60 150 60 Q150 60 285 40 L285 48 Q150 68 15 48 Z" fill="#FAF8F5"/>
+    <!-- Left Page -->
+    <path d="M15 40 Q150 55 150 55 L150 20 Q80 10 20 20 Z" fill="#FFFFFF" stroke="#EFECE6" stroke-width="1"/>
+    <!-- Right Page -->
+    <path d="M150 55 Q285 40 285 40 L280 20 Q220 10 150 20 Z" fill="#FFFDF5" stroke="#EFECE6" stroke-width="1"/>
+    <!-- Center Spine Bookmark Ribbon -->
+    <path d="M147 20 L153 20 L153 75 L150 70 L147 75 Z" fill="#E05A47"/>
+  </g>
+
+  <!-- Rising Knowledge Rays / Sunburst -->
+  <g stroke="#F5B817" stroke-width="2" stroke-linecap="round" opacity="0.4">
+    <line x1="250" y1="90" x2="250" y2="60"/>
+    <line x1="310" y1="110" x2="330" y2="90"/>
+    <line x1="350" y1="160" x2="375" y2="150"/>
+    <line x1="190" y1="110" x2="170" y2="90"/>
+    <line x1="150" y1="160" x2="125" y2="150"/>
+  </g>
+
+  <!-- Central Figures: Mentor & Student in Guidance -->
+  <g filter="url(#commShadow)">
+    <!-- Student (Left, young scholar with notebook) -->
+    <g transform="translate(140, 110)">
+      <!-- Head -->
+      <circle cx="45" cy="35" r="18" fill="#F6D5B8"/>
+      <!-- Hair -->
+      <path d="M30 35 C28 15 62 15 60 35 C55 25 35 25 30 35 Z" fill="#262626"/>
+      <!-- Body (Student Kurti/Shirt in Mint Green) -->
+      <path d="M25 60 C25 50 35 48 45 48 C55 48 65 50 65 60 L75 140 L15 140 Z" fill="#DEF7EC" stroke="#BCF0DA" stroke-width="2"/>
+      <!-- Notebook Held -->
+      <rect x="35" y="75" width="28" height="38" rx="4" fill="#FFF8E7" stroke="#F5B817" stroke-width="2"/>
+      <line x1="42" y1="88" x2="56" y2="88" stroke="#946C00" stroke-width="2" stroke-linecap="round"/>
+      <line x1="42" y1="96" x2="52" y2="96" stroke="#946C00" stroke-width="2" stroke-linecap="round"/>
+    </g>
+
+    <!-- Mentor (Right, professional volunteer in Black Maatram T-Shirt) -->
+    <g transform="translate(250, 80)">
+      <!-- Head -->
+      <circle cx="50" cy="38" r="20" fill="#E2A782"/>
+      <!-- Hair Tied / Professional -->
+      <path d="M30 35 C30 12 70 12 70 35 C65 22 35 22 30 35 Z" fill="#1F2421"/>
+      <!-- Bun/Back -->
+      <circle cx="70" cy="26" r="8" fill="#1F2421"/>
+      <!-- Black Maatram T-Shirt with Gold Emblem -->
+      <path d="M26 68 C26 55 38 52 50 52 C62 52 74 55 74 68 L86 170 L14 170 Z" fill="#1F2421"/>
+      <ellipse cx="50" cy="72" rx="7" ry="5" fill="#F5B817"/>
+      <!-- Guiding Arm toward Student's Book -->
+      <path d="M32 75 Q-15 95 -10 115" stroke="#E2A782" stroke-width="8" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  <!-- Floating Graduation Mortarboard Above with Gold Tassel -->
+  <g filter="url(#commShadow)" transform="translate(210, 45)">
+    <!-- Cap Top Diamond -->
+    <polygon points="40,10 75,25 40,40 5,25" fill="#1F2421"/>
+    <polygon points="40,13 70,25 40,37 10,25" fill="#374151"/>
+    <!-- Skullcap Base -->
+    <path d="M22 32 L22 44 C22 52 58 52 58 44 L58 32 Z" fill="#16171A"/>
+    <!-- Golden Button & Hanging Tassel -->
+    <circle cx="40" cy="25" r="3" fill="#F5B817"/>
+    <path d="M40 25 Q58 32 60 50" stroke="#F5B817" stroke-width="2.5" fill="none"/>
+    <rect x="58" y="50" width="5" height="12" rx="2" fill="#E5A800"/>
+  </g>
+
+  <!-- Warm Celebratory Stars -->
+  <g fill="#F5B817">
+    <polygon points="100,80 103,88 111,91 103,94 100,102 97,94 89,91 97,88"/>
+    <polygon points="380,90 382,95 387,97 382,99 380,104 378,99 373,97 378,95"/>
+    <polygon points="410,180 412,185 417,187 412,189 410,194 408,189 403,187 408,185"/>
+  </g>
+</svg>
+

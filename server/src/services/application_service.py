@@ -175,6 +175,11 @@ class ApplicationService:
             )
 
         # Enforce account lifecycle status transition (e.g. PENDING_APPROVAL -> APPROVED)
+        # If user account is still in PENDING_VERIFICATION, administrative approval satisfies verification
+        initial_user_status = user.status
+        if user.status == "PENDING_VERIFICATION":
+            user.status = "PENDING_APPROVAL"
+
         enforce_status_transition(user.status, "APPROVED")
 
         # Mutate application & user status
@@ -199,7 +204,7 @@ class ApplicationService:
             actor_user_id=reviewer_user.id,
             ip_address=client_ip,
             user_agent=user_agent,
-            old_state={"application_status": "PENDING", "user_status": "PENDING_APPROVAL"},
+            old_state={"application_status": "PENDING", "user_status": initial_user_status},
             new_state={"application_status": "APPROVED", "user_status": "APPROVED"},
         )
 
@@ -249,6 +254,11 @@ class ApplicationService:
         user = profile.user
 
         # Enforce account lifecycle status transition (e.g. PENDING_APPROVAL -> REJECTED)
+        # If user account is still in PENDING_VERIFICATION, administrative rejection satisfies/concludes verification
+        initial_user_status = user.status
+        if user.status == "PENDING_VERIFICATION":
+            user.status = "PENDING_APPROVAL"
+
         enforce_status_transition(user.status, "REJECTED")
 
         # Mutate application & user status
@@ -273,7 +283,7 @@ class ApplicationService:
             actor_user_id=reviewer_user.id,
             ip_address=client_ip,
             user_agent=user_agent,
-            old_state={"application_status": "PENDING", "user_status": "PENDING_APPROVAL"},
+            old_state={"application_status": "PENDING", "user_status": initial_user_status},
             new_state={
                 "application_status": "REJECTED",
                 "user_status": "REJECTED",

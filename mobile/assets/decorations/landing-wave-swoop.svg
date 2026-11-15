@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 160" width="100%" height="100%" fill="none" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="waveGold" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#F5B817"/>
+      <stop offset="60%" stop-color="#FAC938"/>
+      <stop offset="100%" stop-color="#E5A800"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Dynamic Curved Golden Swoop Wave -->
+  <path
+    d="M0 130 C120 140 240 160 380 120 C480 90 540 40 600 0 L600 160 L0 160 Z"
+    fill="url(#waveGold)"
+  />
+  <!-- Subtle Translucent Layer for Depth -->
+  <path
+    d="M0 145 C140 152 260 165 400 135 C490 115 550 70 600 30 L600 160 L0 160 Z"
+    fill="#F5B817"
+    opacity="0.35"
+  />
+</svg>
+

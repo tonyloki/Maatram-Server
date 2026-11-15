@@ -45,9 +45,20 @@ class ResendClient:
         event_title = payload.get("event_title", "Maatram Event")
 
         if template_name == "VERIFY_EMAIL":
-            verify_url = payload.get("verify_url", "#")
+            token = payload.get("token", "")
+            email_addr = payload.get("email", "")
+            verify_url = payload.get("verify_url") or (
+                f"http://localhost:3001/verify-email?token={token}&email={email_addr}"
+                if token
+                else "#"
+            )
             subject = "Verify your Maatram Volunteer Portal Email"
-            html = f"<p>Hello {first_name},</p><p>Please verify your email address by clicking <a href='{verify_url}'>here</a>.</p>"
+            html = (
+                f"<p>Hello {first_name},</p>"
+                f"<p>Please verify your email address by clicking <a href='{verify_url}'>here</a>.</p>"
+                f"<p>If the link above does not work, copy and paste this URL into your browser:<br/>"
+                f"<a href='{verify_url}'>{verify_url}</a></p>"
+            )
         elif template_name == "PASSWORD_RESET":
             otp = payload.get("otp", "")
             subject = "Maatram Volunteer Portal — Password Reset Code"

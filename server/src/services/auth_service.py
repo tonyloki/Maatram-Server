@@ -231,11 +231,17 @@ class AuthService:
         await token_repository.create_email_verification(db, verif)
 
         try:
+            verify_url = f"http://localhost:3001/verify-email?token={raw_token}&email={user.email}"
             outbox_job = CommunicationJob(
                 channel="EMAIL",
                 recipient=user.email,
                 template_name="VERIFY_EMAIL",
-                payload={"token": raw_token, "email": user.email, "first_name": profile.first_name},
+                payload={
+                    "token": raw_token,
+                    "email": user.email,
+                    "first_name": profile.first_name,
+                    "verify_url": verify_url,
+                },
                 idempotency_key=str(uuid.uuid4()),
             )
             await token_repository.create_communication_job(db, outbox_job)
