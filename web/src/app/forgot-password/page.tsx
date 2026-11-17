@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";
@@ -12,7 +11,6 @@ import { Logo } from "@/components/ui/logo";
 import { apiClient } from "@/lib/api-client";
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

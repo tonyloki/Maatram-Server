@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.config import settings
 from src.core.logging import get_logger
+from src.integrations import EmailProvider, get_email_client
 from src.integrations.fcm_client import FCMClient, fcm_client
-from src.integrations.resend_client import ResendClient, resend_client
 from src.models.communications import CommunicationJob, CommunicationLog
 from src.models.notifications import DeviceToken
 
@@ -22,12 +22,12 @@ class OutboxWorker:
     def __init__(
         self,
         worker_id: str | None = None,
-        email_client: ResendClient | None = None,
+        email_client: EmailProvider | None = None,
         push_client: FCMClient | None = None,
         lease_timeout_seconds: int | None = None,
     ) -> None:
         self.worker_id = worker_id or f"worker_{uuid.uuid4().hex[:8]}"
-        self.email_client = email_client or resend_client
+        self.email_client = email_client or get_email_client()
         self.push_client = push_client or fcm_client
         self.lease_timeout_seconds = (
             lease_timeout_seconds
@@ -125,17 +125,31 @@ class OutboxWorker:
         """Process an individual claimed job and record delivery audit log with ownership verification."""
         now = datetime.now(UTC)
         success = False
-        provider = "RESEND" if job.channel == "EMAIL" else "FCM"
+        provider = (
+            getattr(self.email_client, "provider_name", "GMAIL_SMTP")
+            if job.channel == "EMAIL"
+            else "FCM"
+        )
         provider_message_id: str | None = None
         error_msg: str | None = None
 
         try:
             if job.channel == "EMAIL":
-                subject, html = self.email_client.render_template(job.template_name, job.payload)
+                if hasattr(self.email_client, "render_email"):
+                    subject, html, text = self.email_client.render_email(
+                        job.template_name, job.payload
+                    )
+                else:
+                    subject, html = self.email_client.render_template(
+                        job.template_name, job.payload
+                    )
+                    text = None
+
                 res = await self.email_client.send_email(
                     to=job.recipient,
                     subject=subject,
                     html=html,
+                    text=text,
                     idempotency_key=str(job.id),
                 )
                 success = res.success

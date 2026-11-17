@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   Calendar,
@@ -13,12 +13,9 @@ import {
   ChevronRight,
   Filter,
   CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Copy,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
-import { EventResponse, EventListResponse, EventStatus, EventCategory } from "@/types";
+import { EventResponse, EventListResponse } from "@/types";
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<EventResponse[]>([]);
@@ -32,7 +29,7 @@ export default function AdminEventsPage() {
   const [search, setSearch] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -52,11 +49,11 @@ export default function AdminEventsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [statusFilter, categoryFilter, search]);
 
   useEffect(() => {
-    fetchEvents();
-  }, [statusFilter, categoryFilter, search]);
+    void fetchEvents();
+  }, [fetchEvents]);
 
   const handlePublish = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -96,7 +93,7 @@ export default function AdminEventsPage() {
             Manage Events & Operations
           </h1>
           <p className="text-sm text-charcoal-500 mt-1">
-            Create events, review registrations, manage participant selection, and complete gamification awards.
+            Create events, review registrations, manage participant selection, and complete gamification awards ({total} {total === 1 ? "event" : "events"}).
           </p>
         </div>
         <Link
@@ -195,7 +192,6 @@ export default function AdminEventsPage() {
         <div className="grid grid-cols-1 gap-4">
           {events.map((ev) => {
             const startDate = new Date(ev.start_time);
-            const endDate = new Date(ev.end_time);
 
             return (
               <div

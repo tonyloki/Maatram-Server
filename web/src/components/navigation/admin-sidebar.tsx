@@ -5,12 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  UserCheck,
   Users,
   CalendarDays,
-  Clock,
-  BarChart3,
-  Send,
   ScrollText,
   Settings,
   LogOut,

@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Lock, Mail, KeyRound, ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";
@@ -12,7 +12,6 @@ import { Logo } from "@/components/ui/logo";
 import { apiClient } from "@/lib/api-client";
 
 function ResetPasswordForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const initialEmail = searchParams.get("email") || "";
 

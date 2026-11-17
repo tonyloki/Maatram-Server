@@ -145,6 +145,13 @@ class VolunteerProfile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     achievements: Mapped[list["VolunteerAchievement"]] = relationship(
         "VolunteerAchievement", back_populates="volunteer_profile"
     )
+    avatar_media: Mapped["MediaAsset | None"] = relationship(
+        "MediaAsset", foreign_keys=[avatar_media_id], lazy="joined"
+    )
+
+    @property
+    def avatar_url(self) -> str | None:
+        return self.avatar_media.secure_url if self.avatar_media else None
 
 
 class StudentProfile(Base, UUIDPrimaryKeyMixin, TimestampMixin):

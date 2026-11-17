@@ -36,6 +36,7 @@ export default function VolunteerActivityPage() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -50,6 +51,7 @@ export default function VolunteerActivityPage() {
       setRegistrations(regRes.items || []);
       setAttendanceRecords(attRes.items || []);
       setLedgerData(ledRes);
+      setNow(Date.now());
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Unable to retrieve your volunteering activity.";
       setError(msg);
@@ -61,8 +63,6 @@ export default function VolunteerActivityPage() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
-
-  const now = Date.now();
 
   const upcomingRegistrations = registrations.filter((r) => {
     if (["WITHDRAWN", "DECLINED"].includes(r.status)) return false;

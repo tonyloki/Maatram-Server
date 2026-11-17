@@ -9,7 +9,6 @@ import {
   Home,
   HelpCircle,
   RefreshCw,
-  FileText,
   AlertTriangle,
 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";

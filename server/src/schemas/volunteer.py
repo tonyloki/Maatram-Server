@@ -132,6 +132,7 @@ class VolunteerProfileUpdate(BaseModel):
     last_name: str | None = Field(None, min_length=1, max_length=100)
     mobile_number: E164PhoneStr | None = None
     gender: Literal["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"] | None = None
+    avatar_media_id: uuid.UUID | None = None
     bio: str | None = Field(None, max_length=1000)
     parent_guardian_name: str | None = Field(None, max_length=150)
     parent_guardian_relationship: str | None = Field(None, max_length=50)
@@ -153,6 +154,7 @@ class VolunteerProfileResponse(BaseModel):
     gender: str
     category: str
     avatar_media_id: uuid.UUID | None = None
+    avatar_url: str | None = None
     bio: str | None = None
     parent_guardian_name: str | None = None
     parent_guardian_relationship: str | None = None

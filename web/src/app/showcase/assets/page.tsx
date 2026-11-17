@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Sparkles, Layers, Image as ImageIcon, Award, Shield, Palette } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Shield } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SegmentedTabs } from "@/components/ui/tabs";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -22,13 +21,13 @@ interface AssetCardProps {
 
 function AssetPreviewCard({
   title,
-  category,
+  category: _category,
   path,
   format,
   dimensions,
   description,
   usage,
-  isVector = true,
+  isVector: _isVector = true,
 }: AssetCardProps) {
   return (
     <Card className="flex flex-col overflow-hidden border-[#EFECE6] hover:border-[#F5B817]/60 transition-all group">

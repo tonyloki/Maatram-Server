@@ -25,12 +25,14 @@ export default function AdminDashboardPage() {
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [now, setNow] = useState<number>(0);
 
   const loadDashboard = useCallback(async () => {
     setError(null);
     try {
       const res = await apiClient<AdminDashboardResponse>("/admin/dashboard");
       setData(res);
+      setNow(Date.now());
     } catch (err: unknown) {
       console.error("Failed to load admin dashboard", err);
       setError("Unable to retrieve operational metrics. Please verify backend connection.");
@@ -45,7 +47,8 @@ export default function AdminDashboardPage() {
 
   const formatRelativeTime = (isoString: string) => {
     try {
-      const diffSec = Math.floor((Date.now() - new Date(isoString).getTime()) / 1000);
+      const current = now || new Date(isoString).getTime();
+      const diffSec = Math.floor((current - new Date(isoString).getTime()) / 1000);
       if (diffSec < 60) return "Just now";
       if (diffSec < 3600) return `${Math.floor(diffSec / 60)} mins ago`;
       if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} hours ago`;

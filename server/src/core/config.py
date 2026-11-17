@@ -214,7 +214,23 @@ class Settings(BaseSettings):
     CLOUDINARY_API_SECRET: str = "test-cloudinary-secret"
     CLOUDINARY_MAX_FILE_SIZE_BYTES: int = 10 * 1024 * 1024  # 10 MB
 
-    # Resend & Email Settings
+    # Email Delivery Provider Selection
+    EMAIL_PROVIDER: Literal["smtp", "resend"] = "smtp"
+
+    # SMTP Configuration (Gmail SMTP or generic SMTP)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_USE_TLS: Annotated[bool, BeforeValidator(parse_bool)] = True
+    SMTP_USE_SSL: Annotated[bool, BeforeValidator(parse_bool)] = False
+    SMTP_TIMEOUT_SECONDS: float = 15.0
+
+    # Common Email Sender Settings
+    EMAIL_FROM_ADDRESS: str = "noreply@maatram.org"
+    EMAIL_FROM_NAME: str = "Maatram Volunteering Portal"
+
+    # Resend & Email Settings (Retained as Fallback Provider)
     RESEND_API_KEY: str = "re_test_key"
     RESEND_FROM_EMAIL: str = "noreply@maatram.org"
     RESEND_TIMEOUT_SECONDS: float = 15.0

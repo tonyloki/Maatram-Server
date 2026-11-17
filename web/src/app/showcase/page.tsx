@@ -4,28 +4,19 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   Trophy,
-  Users,
   Calendar,
   Clock,
   Sparkles,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Sliders,
-  Layers,
   Search,
   ArrowRight,
-  Mail,
-  Shield,
-  HelpCircle,
   Flame,
-  Award,
   Palette,
+  Award,
 } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, KpiCard } from "@/components/ui/card";
+import { Card, KpiCard } from "@/components/ui/card";
 import { Input, Textarea, Select } from "@/components/ui/input";
 import { Switch, ConsentSwitch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";

@@ -1,31 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowLeft,
   User,
   Shield,
-  Award,
   CheckCircle2,
-  Clock,
-  Coins,
   Lock,
   Mail,
   Phone,
   GraduationCap,
-  Building,
   Briefcase,
-  Calendar,
-  Sparkles,
-  Trophy,
   Sliders,
-  Settings,
-  Info,
-  MapPin,
-  XCircle,
   ThumbsUp,
   ThumbsDown,
   Loader2,
@@ -44,7 +32,6 @@ import {
 
 export default function AdminVolunteerProfileViewPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params?.id as string;
 
   const [application, setApplication] = useState<ApplicationDetailResponse | null>(null);

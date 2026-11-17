@@ -306,8 +306,9 @@ void main() {
       await tester.pumpWidget(createSubject(state: state, session: session));
       await tester.pumpAndSettle();
 
+      // Verifies no hardcoded 75% mockup value is rendered, and progress reflects dynamic completed events (2/10 = 20%)
       expect(find.text('75%'), findsNothing);
-      expect(find.textContaining('%'), findsNothing);
+      expect(find.text('20%'), findsOneWidget);
       expect(find.byType(YourProgressSection), findsOneWidget);
       expect(find.text('Your Progress'), findsOneWidget);
       expect(find.text('Keep going!'), findsOneWidget);

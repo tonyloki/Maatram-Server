@@ -2,11 +2,9 @@
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   User,
   Shield,
-  Award,
   CheckCircle2,
   Clock,
   Coins,
@@ -18,11 +16,9 @@ import {
   Mail,
   Phone,
   GraduationCap,
-  Building,
   Calendar,
   Sparkles,
   Trophy,
-  Sliders,
   Settings,
   Pencil,
   Info,
@@ -35,7 +31,7 @@ import {
   MapPin,
   Video,
 } from "lucide-react";
-import { apiClient, ApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import {
   VolunteerProfileResponse,
@@ -59,10 +55,10 @@ function ProfileContent() {
   const [profile, setProfile] = useState<VolunteerProfileResponse | null>(null);
   const [consent, setConsent] = useState<ConsentResponse | null>(null);
   const [gamification, setGamification] = useState<GamificationSummaryResponse | null>(null);
-  const [achievements, setAchievements] = useState<AchievementBadge[]>([]);
+  const [_achievements, setAchievements] = useState<AchievementBadge[]>([]);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_isLoading, setIsLoading] = useState(true);
+  const [_error, setError] = useState<string | null>(null);
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"info" | "preferences" | "consents" | "achievements">("info");

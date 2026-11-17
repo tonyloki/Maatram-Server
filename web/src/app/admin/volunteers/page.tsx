@@ -6,7 +6,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   Users,
   Search,
-  Filter,
   CheckCircle2,
   Clock,
   XCircle,
@@ -21,8 +20,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   X,
-  Sparkles,
-  UserCheck,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import {

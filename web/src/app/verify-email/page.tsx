@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, XCircle, ArrowRight, Home, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, XCircle, ArrowRight, Home, Loader2 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";
 import { Button } from "@/components/ui/button";

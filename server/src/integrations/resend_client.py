@@ -1,28 +1,25 @@
 """Resend transactional email client integration."""
 
 import uuid
-from dataclasses import dataclass
 from typing import Any
 
 import httpx
 
 from src.core.config import settings
 from src.core.logging import get_logger
+from src.integrations.email_provider import EmailResponse
+from src.integrations.email_templates import render_email_template
 
 logger = get_logger(__name__)
 
-
-@dataclass
-class ResendResponse:
-    """Outcome of Resend email dispatch."""
-
-    success: bool
-    message_id: str | None = None
-    error: str | None = None
+# Backward-compatible alias for existing test suites
+ResendResponse = EmailResponse
 
 
 class ResendClient:
     """Integration client for transactional email dispatch via Resend API."""
+
+    provider_name: str = "RESEND"
 
     def __init__(
         self,
@@ -30,8 +27,12 @@ class ResendClient:
         from_email: str | None = None,
         is_mock: bool | None = None,
     ) -> None:
-        self.api_key = api_key or settings.RESEND_API_KEY
-        self.from_email = from_email or settings.RESEND_FROM_EMAIL
+        self.api_key = api_key or getattr(settings, "RESEND_API_KEY", "re_test_key")
+        self.from_email = (
+            from_email
+            or getattr(settings, "EMAIL_FROM_ADDRESS", None)
+            or getattr(settings, "RESEND_FROM_EMAIL", "noreply@maatram.org")
+        )
         self.is_mock = (
             is_mock
             if is_mock is not None
@@ -41,61 +42,21 @@ class ResendClient:
 
     def render_template(self, template_name: str, payload: dict[str, Any]) -> tuple[str, str]:
         """Render subject and HTML body from template name and payload."""
-        first_name = payload.get("first_name", "Volunteer")
-        event_title = payload.get("event_title", "Maatram Event")
-
-        if template_name == "VERIFY_EMAIL":
-            token = payload.get("token", "")
-            email_addr = payload.get("email", "")
-            verify_url = payload.get("verify_url") or (
-                f"http://localhost:3001/verify-email?token={token}&email={email_addr}"
-                if token
-                else "#"
-            )
-            subject = "Verify your Maatram Volunteer Portal Email"
-            html = (
-                f"<p>Hello {first_name},</p>"
-                f"<p>Please verify your email address by clicking <a href='{verify_url}'>here</a>.</p>"
-                f"<p>If the link above does not work, copy and paste this URL into your browser:<br/>"
-                f"<a href='{verify_url}'>{verify_url}</a></p>"
-            )
-        elif template_name == "PASSWORD_RESET":
-            otp = payload.get("otp", "")
-            subject = "Maatram Volunteer Portal — Password Reset Code"
-            html = f"<p>Hello {first_name},</p><p>Your password reset code is: <strong>{otp}</strong>. It expires in 15 minutes.</p>"
-        elif template_name == "APPLICATION_APPROVED":
-            subject = "Welcome to Maatram Foundation — Application Approved!"
-            html = f"<p>Dear {first_name},</p><p>Congratulations! Your volunteer onboarding application has been approved.</p>"
-        elif template_name == "APPLICATION_REJECTED":
-            reason = payload.get("reason", "Eligibility criteria not met.")
-            subject = "Update regarding your Maatram Volunteer Application"
-            html = f"<p>Dear {first_name},</p><p>Thank you for your interest. Unfortunately, your application was not approved at this time. Reason: {reason}</p>"
-        elif template_name == "EVENT_SELECTED":
-            subject = f"You are selected for {event_title}!"
-            html = f"<p>Dear {first_name},</p><p>You have been selected to volunteer for <strong>{event_title}</strong>. Please review event details on the portal.</p>"
-        elif template_name == "EVENT_THANK_YOU":
-            hours = payload.get("hours_credited", "0.00")
-            points = payload.get("total_points", "0.00")
-            subject = f"Thank you for volunteering at {event_title}!"
-            html = f"<p>Dear {first_name},</p><p>Thank you for your dedication at <strong>{event_title}</strong>. You have been credited with <strong>{hours} hours</strong> and <strong>{points} points</strong>!</p>"
-        elif template_name == "EVENT_REMINDER":
-            start_time = payload.get("start_time", "soon")
-            subject = f"Reminder: Upcoming volunteering event {event_title}"
-            html = f"<p>Dear {first_name},</p><p>This is a friendly reminder that <strong>{event_title}</strong> begins at {start_time}.</p>"
-        else:
-            subject = payload.get("subject", f"Maatram Foundation Notification: {template_name}")
-            html = payload.get(
-                "body",
-                f"<p>Hello {first_name},</p><p>You have a notification regarding {template_name}.</p>",
-            )
-
+        subject, html, _ = render_email_template(template_name, payload)
         return subject, html
+
+    def render_email(
+        self, template_name: str, payload: dict[str, Any]
+    ) -> tuple[str, str, str]:
+        """Render subject, HTML body, and plain-text body from template name and payload."""
+        return render_email_template(template_name, payload)
 
     async def send_email(
         self,
         to: str,
         subject: str,
         html: str,
+        text: str | None = None,
         idempotency_key: str | None = None,
     ) -> ResendResponse:
         """Send an email via Resend API or mock in-memory for testing."""
@@ -106,6 +67,7 @@ class ResendClient:
                     "to": to,
                     "subject": subject,
                     "html": html,
+                    "text": text,
                     "idempotency_key": idempotency_key,
                     "message_id": msg_id,
                 }
@@ -126,12 +88,14 @@ class ResendClient:
         if idempotency_key:
             headers["Idempotency-Key"] = idempotency_key
 
-        payload = {
+        payload: dict[str, Any] = {
             "from": self.from_email,
             "to": [to],
             "subject": subject,
             "html": html,
         }
+        if text:
+            payload["text"] = text
 
         try:
             timeout_sec = getattr(settings, "RESEND_TIMEOUT_SECONDS", 15.0)

@@ -103,28 +103,28 @@ class UpcomingEventsSection extends StatelessWidget {
   }
 
   Widget _buildEventsList(BuildContext context) {
-    // If only 1 event, display as full width card; if multiple, horizontal scroll
-    return SizedBox(
-      height: 275,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MaatramSpacing.md,
-          vertical: MaatramSpacing.xs,
-        ),
-        scrollDirection: Axis.horizontal,
-        itemCount: events.length,
-        separatorBuilder: (_, __) => const SizedBox(width: MaatramSpacing.md),
-        itemBuilder: (context, index) {
-          final event = events[index];
+    // Show up to 3 events as vertical full-width list cards (matches reference design)
+    final visibleEvents = events.take(3).toList();
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: MaatramSpacing.md,
+        vertical: MaatramSpacing.xs,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: visibleEvents.asMap().entries.map((entry) {
+          final index = entry.key;
+          final event = entry.value;
           final reg = registrations[event.id];
-          return _EventCard(
-            event: event,
-            registration: reg,
-            onTap: () {
-              context.push('/events/${event.id}');
-            },
+          return Padding(
+            padding: EdgeInsets.only(bottom: index < visibleEvents.length - 1 ? MaatramSpacing.sm : 0),
+            child: _EventListCard(
+              event: event,
+              registration: reg,
+              onTap: () => context.push('/events/${event.id}'),
+            ),
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -266,12 +266,14 @@ class UpcomingEventsSection extends StatelessWidget {
   }
 }
 
-class _EventCard extends StatelessWidget {
+/// Full-width horizontal list card matching the reference home screen design.
+/// Left: rectangular event image. Right: category pill, title, location, date, time, arrow.
+class _EventListCard extends StatelessWidget {
   final EventModel event;
   final EventRegistrationModel? registration;
   final VoidCallback onTap;
 
-  const _EventCard({
+  const _EventListCard({
     required this.event,
     this.registration,
     required this.onTap,
@@ -280,29 +282,31 @@ class _EventCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaatramFadeSlideIn(
-      direction: SlideDirection.fromRight,
+      direction: SlideDirection.fromBottom,
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 290,
+          height: 125,
           decoration: BoxDecoration(
             color: MaatramColors.white,
             borderRadius: MaatramRadii.cardRadius,
             border: Border.all(color: MaatramColors.warmBorder),
             boxShadow: MaatramShadows.card,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              // 1. Cover Image & Category Pill
-              Stack(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // ── Left: event image ──────────────────────────────
                   ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(16)),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      bottomLeft: Radius.circular(16),
+                    ),
                     child: SizedBox(
-                      height: 120,
-                      width: double.infinity,
+                      width: 100,
+                      height: 125,
                       child: event.coverImageUrl != null &&
                               event.coverImageUrl!.isNotEmpty
                           ? CachedNetworkImage(
@@ -320,155 +324,80 @@ class _EventCard extends StatelessWidget {
                     ),
                   ),
 
-                  // Category Pill Overlay
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 9, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBEB),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: const Color(0xFFFDE68A), width: 0.8),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x15000000),
-                            blurRadius: 4,
-                            offset: Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                  // ── Right: event details ───────────────────────────
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 8, 38, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Icon(
-                            Icons.school_rounded,
-                            size: 12,
-                            color: Color(0xFFB45309),
+                          // Category pill
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 7, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFFBEB),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: const Color(0xFFFDE68A), width: 0.8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.school_rounded,
+                                  size: 11,
+                                  color: Color(0xFFB45309),
+                                ),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    event.categoryDisplay,
+                                    style: const TextStyle(
+                                      fontFamily: 'Roboto',
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFFB45309),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 4),
+
+                          // Event title
                           Text(
-                            event.categoryDisplay,
+                            event.title,
                             style: const TextStyle(
                               fontFamily: 'Roboto',
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFFB45309),
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: MaatramColors.deepNavy,
+                              height: 1.2,
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Registration status badge (if registered)
-                  if (registration != null)
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3.5),
-                        decoration: BoxDecoration(
-                          color: MaatramColors.successLight,
-                          borderRadius: BorderRadius.circular(10),
-                          border:
-                              Border.all(color: MaatramColors.successBorder),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.check_circle_rounded,
-                              size: 10,
-                              color: MaatramColors.successDark,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              registration!.statusDisplay,
-                              style: const TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
-                                color: MaatramColors.successDark,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              // 2. Details Body
-              Padding(
-                padding: const EdgeInsets.all(MaatramSpacing.sm + 2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title
-                    Text(
-                      event.title,
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.bold,
-                        color: MaatramColors.deepNavy,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 5),
-
-                    // Location
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.location_on_outlined,
-                          size: 13,
-                          color: MaatramColors.secondaryText,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            event.locationDisplay,
-                            style: const TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 11.5,
-                              color: MaatramColors.secondaryText,
-                            ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
 
-                    // Date & Time + Arrow Button
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Row(
+                          // Location
+                          Row(
                             children: [
                               const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 12,
-                                color: Color(0xFFD97706),
+                                Icons.location_on_outlined,
+                                size: 11,
+                                color: MaatramColors.secondaryText,
                               ),
-                              const SizedBox(width: 4),
+                              const SizedBox(width: 3),
                               Expanded(
                                 child: Text(
-                                  '${event.formattedDate} • ${event.formattedTime}',
+                                  event.locationDisplay,
                                   style: const TextStyle(
                                     fontFamily: 'Roboto',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: MaatramColors.deepNavy,
+                                    fontSize: 10.5,
+                                    color: MaatramColors.secondaryText,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -476,27 +405,115 @@ class _EventCard extends StatelessWidget {
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(width: 8),
 
-                        // Gold circular arrow icon
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFFF3D6),
-                            shape: BoxShape.circle,
+                          // Date & time row
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 10.5,
+                                color: Color(0xFFD97706),
+                              ),
+                              const SizedBox(width: 3),
+                              Flexible(
+                                flex: 4,
+                                child: Text(
+                                  event.formattedDate,
+                                  style: const TextStyle(
+                                    fontFamily: 'Roboto',
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: MaatramColors.deepNavy,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(
+                                Icons.access_time_rounded,
+                                size: 10.5,
+                                color: MaatramColors.secondaryText,
+                              ),
+                              const SizedBox(width: 2),
+                              Flexible(
+                                flex: 5,
+                                child: Text(
+                                  event.formattedTime,
+                                  style: const TextStyle(
+                                    fontFamily: 'Roboto',
+                                    fontSize: 10,
+                                    color: MaatramColors.secondaryText,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
                           ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 14,
-                            color: Color(0xFFB45309),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // ── Arrow button (right edge, vertically centered) ────
+              Positioned(
+                right: 8,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFF3D6),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 13,
+                      color: Color(0xFFB45309),
+                    ),
+                  ),
+                ),
+              ),
+
+              // ── Registration badge (if registered) ────────────────
+              if (registration != null)
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: MaatramColors.successLight,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: MaatramColors.successBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 9,
+                          color: MaatramColors.successDark,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          registration!.statusDisplay,
+                          style: const TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                            color: MaatramColors.successDark,
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -504,3 +521,4 @@ class _EventCard extends StatelessWidget {
     );
   }
 }
+

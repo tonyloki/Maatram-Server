@@ -29,7 +29,9 @@ class VolunteerRepository:
                 selectinload(VolunteerProfile.alumni_profile),
                 selectinload(VolunteerProfile.corporate_profile),
                 selectinload(VolunteerProfile.user),
+                selectinload(VolunteerProfile.avatar_media),
             )
+            .execution_options(populate_existing=True)
         )
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
@@ -44,6 +46,7 @@ class VolunteerRepository:
                 selectinload(VolunteerProfile.alumni_profile),
                 selectinload(VolunteerProfile.corporate_profile),
                 selectinload(VolunteerProfile.user),
+                selectinload(VolunteerProfile.avatar_media),
             )
         )
         result = await db.execute(stmt)
@@ -163,6 +166,7 @@ class VolunteerRepository:
                 selectinload(VolunteerProfile.alumni_profile),
                 selectinload(VolunteerProfile.corporate_profile),
                 selectinload(VolunteerProfile.user),
+                selectinload(VolunteerProfile.avatar_media),
             )
             .order_by(VolunteerProfile.created_at.desc())
             .offset(offset)

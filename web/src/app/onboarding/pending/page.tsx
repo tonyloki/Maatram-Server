@@ -8,9 +8,7 @@ import {
   ShieldCheck,
   Mail,
   Home,
-  CheckCircle2,
   HelpCircle,
-  FileText,
 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";

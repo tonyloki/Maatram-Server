@@ -57,6 +57,8 @@
 | **M3.5** | Runtime Visual & Data Integrity Correction | **COMPLETED** | `m3_5_viewports_test.dart` | Corrected text rendering, image decoding, hero banner, tabs |
 | **M4.0** | 38-Screen Design Reference Library | **COMPLETED** | `DESIGN_REFERENCE_INDEX.md` | 38 individual full-resolution screen references across 6 groups |
 | **M4.1** | Phase 4 Complete Mobile App UI/UX & Functional Parity | **COMPLETED** | `docs/PHASE_4_*.md` (5 reports) | All 38 screens implemented, 168/168 tests passing, 0 errors, 0 overflows across 320dp–430dp |
+| **M5.0** | Phase 5 Visual Fidelity & Zero-Mock Backend Integration | **COMPLETED** | `docs/audits/ui-ux/phase-5/` | 38-screen visual fidelity reconstruction, zero mock data, 206/206 Flutter tests, 81/81 backend tests, web/APK builds |
+| **M6-QA** | Phase 6 Complete System-Wide QA, Functional Testing & Integration Audit | **COMPLETED** | `docs/audits/phase-6/` (10 reports) | System-wide QA across Flutter (206 tests), FastAPI (210 tests), Next.js (43 routes), PostgreSQL (29 tables), Resend, Cloudinary, FCM, and 6 E2E cross-app workflows |
 
 ---
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, useState, useCallback, use } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -65,7 +65,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [completionSuccess, setCompletionSuccess] = useState<EventCompletionResponse | null>(null);
 
-  const fetchEventData = async () => {
+  const fetchEventData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -97,11 +97,11 @@ export default function AdminEventDetailPage({ params }: PageProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, activeTab]);
 
   useEffect(() => {
-    fetchEventData();
-  }, [id, activeTab]);
+    void fetchEventData();
+  }, [fetchEventData]);
 
   // Tab filtering
   const subscribedList = registrations.filter(

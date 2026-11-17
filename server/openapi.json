@@ -6064,6 +6064,17 @@
             ],
             "title": "Avatar Media Id"
           },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
           "bio": {
             "anyOf": [
               {
@@ -6227,6 +6238,18 @@
                 "type": "null"
               }
             ]
+          },
+          "avatar_media_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Media Id"
           },
           "bio": {
             "anyOf": [
@@ -13721,7 +13744,7 @@
     },
     "/api/v1/health/readiness": {
       "get": {
-        "description": "Inspect database connectivity within a 2.0-second timeout to assess incoming traffic readiness.",
+        "description": "Inspect database connectivity within a configurable timeout to assess incoming traffic readiness.",
         "operationId": "check_readiness_api_v1_health_readiness_get",
         "responses": {
           "200": {

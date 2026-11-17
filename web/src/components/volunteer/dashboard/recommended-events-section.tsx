@@ -14,7 +14,7 @@ interface RecommendedEventsSectionProps {
 
 export function RecommendedEventsSection({
   events,
-  isLoading,
+  isLoading: _isLoading,
 }: RecommendedEventsSectionProps) {
   // Fallback curated drives matching the mentor's reference visual cards
   const fallbackDrives = [

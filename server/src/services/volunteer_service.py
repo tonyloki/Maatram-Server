@@ -72,6 +72,8 @@ class VolunteerService:
             profile.last_name = update_data.last_name.strip()
         if update_data.gender is not None:
             profile.gender = update_data.gender
+        if update_data.avatar_media_id is not None:
+            profile.avatar_media_id = update_data.avatar_media_id
         if update_data.bio is not None:
             profile.bio = update_data.bio.strip()
         if update_data.parent_guardian_name is not None:

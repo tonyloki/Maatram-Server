@@ -10,14 +10,10 @@ import {
   Calendar,
   Clock,
   MapPin,
-  Users,
   AlertCircle,
   CheckCircle2,
-  Hourglass,
   Loader2,
   Check,
-  Building,
-  UserCheck,
   Info,
   Video,
   ShieldCheck,
@@ -194,8 +190,7 @@ function EventDetailContent({ eventId }: { eventId: string }) {
   const isRegistrationClosed =
     event.status === "REGISTRATION_CLOSED" ||
     event.status === "COMPLETED" ||
-    event.status === "CANCELLED" ||
-    (event.registration_deadline && new Date(event.registration_deadline).getTime() < Date.now());
+    event.status === "CANCELLED";
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in-50 duration-300">
