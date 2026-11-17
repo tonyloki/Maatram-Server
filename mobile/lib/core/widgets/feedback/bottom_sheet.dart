@@ -29,7 +29,8 @@ abstract final class MaatramBottomSheet {
             left: MaatramSpacing.xl,
             right: MaatramSpacing.xl,
             top: MaatramSpacing.md,
-            bottom: MediaQuery.of(context).viewInsets.bottom + MaatramSpacing.xl,
+            bottom:
+                MediaQuery.of(context).viewInsets.bottom + MaatramSpacing.xl,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -63,7 +64,8 @@ abstract final class MaatramBottomSheet {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 20, color: MaatramColors.charcoal600),
+                    icon: const Icon(Icons.close,
+                        size: 20, color: MaatramColors.charcoal600),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -108,7 +110,9 @@ abstract final class MaatramBottomSheet {
               Expanded(
                 child: MaatramButton(
                   label: confirmLabel,
-                  variant: isDanger ? MaatramButtonVariant.danger : MaatramButtonVariant.primary,
+                  variant: isDanger
+                      ? MaatramButtonVariant.danger
+                      : MaatramButtonVariant.primary,
                   onPressed: () => Navigator.of(context).pop(true),
                 ),
               ),
@@ -121,4 +125,3 @@ abstract final class MaatramBottomSheet {
     return result ?? false;
   }
 }
-

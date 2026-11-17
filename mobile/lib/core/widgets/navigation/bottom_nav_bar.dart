@@ -93,7 +93,9 @@ class MaatramBottomNavBar extends StatelessWidget {
                       vertical: MaatramSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: isSelected ? MaatramColors.goldSurface : Colors.transparent,
+                      color: isSelected
+                          ? MaatramColors.goldSurface
+                          : Colors.transparent,
                       borderRadius: MaatramRadii.radiusPill,
                     ),
                     child: Column(
@@ -102,7 +104,9 @@ class MaatramBottomNavBar extends StatelessWidget {
                         Icon(
                           isSelected ? item.selectedIcon : item.unselectedIcon,
                           size: 22,
-                          color: isSelected ? MaatramColors.goldDeep : MaatramColors.secondaryText,
+                          color: isSelected
+                              ? MaatramColors.goldDeep
+                              : MaatramColors.secondaryText,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -114,7 +118,8 @@ class MaatramBottomNavBar extends StatelessWidget {
                             color: isSelected
                                 ? MaatramColors.deepNavy
                                 : MaatramColors.secondaryText,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                             fontSize: 10.5,
                           ),
                           maxLines: 1,
@@ -131,4 +136,3 @@ class MaatramBottomNavBar extends StatelessWidget {
     );
   }
 }
-

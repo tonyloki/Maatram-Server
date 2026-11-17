@@ -14,7 +14,9 @@ import 'package:maatram_mobile/core/widgets/navigation/bottom_nav_bar.dart';
 
 void main() {
   group('Core Component Library Tests', () {
-    testWidgets('MaatramButton renders primary, responds to tap and shows loading', (tester) async {
+    testWidgets(
+        'MaatramButton renders primary, responds to tap and shows loading',
+        (tester) async {
       var pressed = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -45,7 +47,8 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('MaatramIconButton renders and triggers onPressed', (tester) async {
+    testWidgets('MaatramIconButton renders and triggers onPressed',
+        (tester) async {
       var iconTapped = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -63,7 +66,8 @@ void main() {
       expect(iconTapped, isTrue);
     });
 
-    testWidgets('MaatramTextField renders label, hint, and accepts input', (tester) async {
+    testWidgets('MaatramTextField renders label, hint, and accepts input',
+        (tester) async {
       final controller = TextEditingController();
       await tester.pumpWidget(
         MaterialApp(
@@ -84,7 +88,8 @@ void main() {
       expect(controller.text, 'Ananya Krishnan');
     });
 
-    testWidgets('MaatramSearchField renders and clears search query', (tester) async {
+    testWidgets('MaatramSearchField renders and clears search query',
+        (tester) async {
       final controller = TextEditingController(text: 'Teaching');
       await tester.pumpWidget(
         MaterialApp(
@@ -105,7 +110,8 @@ void main() {
       expect(controller.text, '');
     });
 
-    testWidgets('MaatramCard renders child inside bordered container', (tester) async {
+    testWidgets('MaatramCard renders child inside bordered container',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -119,7 +125,8 @@ void main() {
       expect(find.text('Card Content'), findsOneWidget);
     });
 
-    testWidgets('MaatramStatCard renders icon, count, and label', (tester) async {
+    testWidgets('MaatramStatCard renders icon, count, and label',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -138,7 +145,9 @@ void main() {
       expect(find.text('Volunteer Points'), findsOneWidget);
     });
 
-    testWidgets('MaatramCategoryBadge, MaatramStatusBadge, MaatramPointsBadge render properly', (tester) async {
+    testWidgets(
+        'MaatramCategoryBadge, MaatramStatusBadge, MaatramPointsBadge render properly',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -158,7 +167,8 @@ void main() {
       expect(find.text('+150 pts'), findsOneWidget);
     });
 
-    testWidgets('MaatramBottomNavBar renders 4 navigation destinations', (tester) async {
+    testWidgets('MaatramBottomNavBar renders 4 navigation destinations',
+        (tester) async {
       var selectedIndex = 0;
       await tester.pumpWidget(
         MaterialApp(

@@ -15,4 +15,3 @@ abstract final class AppConstants {
   static const int defaultPointsPerEvent = 10;
   static const int pointsPerHour = 2; // Formula: Points = 10E + 2H
 }
-

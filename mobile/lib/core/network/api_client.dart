@@ -18,7 +18,8 @@ class ApiException implements Exception {
   });
 
   @override
-  String toString() => 'ApiException(status: $statusCode, code: $code, message: $message)';
+  String toString() =>
+      'ApiException(status: $statusCode, code: $code, message: $message)';
 }
 
 /// Central HTTP API Client configuring Dio, interceptors, and error handling for Maatram Mobile.
@@ -131,6 +132,25 @@ class ApiClient {
     }
   }
 
+  /// Execute PUT request
+  Future<Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    try {
+      return await dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+    } on DioException catch (e) {
+      throw _parseDioError(e);
+    }
+  }
+
   /// Execute DELETE request
   Future<Response<T>> delete<T>(
     String path, {
@@ -159,8 +179,11 @@ class ApiClient {
         return ApiException(
           statusCode: response.statusCode,
           code: err['code']?.toString() ?? 'API_ERROR',
-          message: err['message']?.toString() ?? 'An unexpected error occurred.',
-          details: err['details'] is Map ? Map<String, dynamic>.from(err['details'] as Map) : null,
+          message:
+              err['message']?.toString() ?? 'An unexpected error occurred.',
+          details: err['details'] is Map
+              ? Map<String, dynamic>.from(err['details'] as Map)
+              : null,
         );
       }
     }

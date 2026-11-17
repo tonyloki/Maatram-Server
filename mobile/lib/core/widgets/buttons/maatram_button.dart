@@ -6,6 +6,7 @@ import '../../theme/spacing.dart';
 import '../../theme/typography.dart';
 
 enum MaatramButtonVariant { primary, secondary, outline, danger }
+
 enum MaatramButtonSize { sm, md, lg }
 
 /// Standard production button supporting brand variants, sizes, icons, and loading state.
@@ -102,9 +103,14 @@ class MaatramButton extends StatelessWidget {
           leadingIcon!,
           const SizedBox(width: MaatramSpacing.sm),
         ],
-        Text(
-          label,
-          style: textStyle.copyWith(color: fg),
+        Flexible(
+          child: Text(
+            label,
+            style: textStyle.copyWith(color: fg),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+          ),
         ),
         if (trailingIcon != null && !isLoading) ...[
           const SizedBox(width: MaatramSpacing.sm),
@@ -123,7 +129,8 @@ class MaatramButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: bg,
           borderRadius: MaatramRadii.buttonRadius,
-          border: border == BorderSide.none ? null : Border.fromBorderSide(border),
+          border:
+              border == BorderSide.none ? null : Border.fromBorderSide(border),
         ),
         alignment: Alignment.center,
         child: content,
@@ -131,4 +138,3 @@ class MaatramButton extends StatelessWidget {
     );
   }
 }
-

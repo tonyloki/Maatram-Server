@@ -7,15 +7,17 @@ import 'package:maatram_mobile/features/dev_showcase/presentation/dev_showcase_s
 void main() {
   group('Multi-Viewport Responsive Verification (Section 12)', () {
     const viewports = [
-      Size(320, 640),  // Small phone (320dp)
-      Size(360, 780),  // Standard phone (360dp)
-      Size(390, 844),  // iPhone 14/15 (390dp)
-      Size(430, 932),  // Large phone / Pro Max (430dp)
+      Size(320, 640), // Small phone (320dp)
+      Size(360, 780), // Standard phone (360dp)
+      Size(390, 844), // iPhone 14/15 (390dp)
+      Size(430, 932), // Large phone / Pro Max (430dp)
       Size(800, 1200), // Tablet (800dp)
     ];
 
     for (final size in viewports) {
-      testWidgets('DevShowcaseScreen renders cleanly at ${size.width.toInt()}x${size.height.toInt()} without overflow', (tester) async {
+      testWidgets(
+          'DevShowcaseScreen renders cleanly at ${size.width.toInt()}x${size.height.toInt()} without overflow',
+          (tester) async {
         tester.view.physicalSize = size;
         tester.view.devicePixelRatio = 1.0;
         addTearDown(() {

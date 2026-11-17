@@ -81,4 +81,3 @@ class MaatramAvatar extends StatelessWidget {
     );
   }
 }
-

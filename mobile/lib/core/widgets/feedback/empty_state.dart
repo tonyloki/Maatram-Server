@@ -74,4 +74,3 @@ class MaatramEmptyState extends StatelessWidget {
     );
   }
 }
-

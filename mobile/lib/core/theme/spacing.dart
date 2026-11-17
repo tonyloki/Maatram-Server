@@ -21,8 +21,8 @@ abstract final class MaatramSpacing {
   static const EdgeInsets paddingXl = EdgeInsets.all(xl);
   static const EdgeInsets paddingXxl = EdgeInsets.all(xxl);
 
-  static const EdgeInsets screenPadding = EdgeInsets.symmetric(horizontal: lg, vertical: md);
+  static const EdgeInsets screenPadding =
+      EdgeInsets.symmetric(horizontal: lg, vertical: md);
   static const EdgeInsets cardPadding = EdgeInsets.all(lg);
   static const EdgeInsets compactCardPadding = EdgeInsets.all(md);
 }
-

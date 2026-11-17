@@ -42,8 +42,11 @@ class MaatramEventCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top row: Category Badge + Status / Points
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: MaatramSpacing.xs,
+            runSpacing: MaatramSpacing.xs,
             children: [
               MaatramCategoryBadge(category: category, isCompact: true),
               Row(
@@ -88,28 +91,40 @@ class MaatramEventCard extends StatelessWidget {
                   color: MaatramColors.charcoal600,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  '$dateText • $timeText',
-                  style: MaatramTypography.bodySmall.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: MaatramColors.charcoal800,
+                Flexible(
+                  child: Text(
+                    '$dateText • $timeText',
+                    style: MaatramTypography.bodySmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: MaatramColors.charcoal800,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: MaatramSpacing.sm),
                 Icon(
-                  isOnline ? Icons.videocam_outlined : Icons.location_on_outlined,
+                  isOnline
+                      ? Icons.videocam_outlined
+                      : Icons.location_on_outlined,
                   size: 14,
-                  color: isOnline ? MaatramColors.infoDark : MaatramColors.charcoal600,
+                  color: isOnline
+                      ? MaatramColors.infoDark
+                      : MaatramColors.charcoal600,
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  locationText,
-                  style: MaatramTypography.bodySmall.copyWith(
-                    color: isOnline ? MaatramColors.infoDark : MaatramColors.charcoal700,
-                    fontWeight: FontWeight.w500,
+                Flexible(
+                  child: Text(
+                    locationText,
+                    style: MaatramTypography.bodySmall.copyWith(
+                      color: isOnline
+                          ? MaatramColors.infoDark
+                          : MaatramColors.charcoal700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -119,4 +134,3 @@ class MaatramEventCard extends StatelessWidget {
     );
   }
 }
-

@@ -42,7 +42,8 @@ class HomePlaceholderScreen extends StatelessWidget {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.palette_outlined, color: MaatramColors.goldDeep),
+              icon: const Icon(Icons.palette_outlined,
+                  color: MaatramColors.goldDeep),
               tooltip: 'Developer Showcase',
               onPressed: () => context.push(RouteNames.devShowcasePath),
             ),
@@ -71,7 +72,8 @@ class HomePlaceholderScreen extends StatelessWidget {
                         style: MaatramTypography.displayMedium,
                       ),
                       SizedBox(width: MaatramSpacing.sm),
-                      MaatramCategoryBadge(category: VolunteerCategory.student, isCompact: true),
+                      MaatramCategoryBadge(
+                          category: VolunteerCategory.student, isCompact: true),
                     ],
                   ),
                   SizedBox(height: MaatramSpacing.xxs),
@@ -157,7 +159,8 @@ class HomePlaceholderScreen extends StatelessWidget {
                         color: MaatramColors.goldSurface,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.auto_awesome, color: MaatramColors.goldDark),
+                      child: const Icon(Icons.auto_awesome,
+                          color: MaatramColors.goldDark),
                     ),
                     const SizedBox(width: MaatramSpacing.md),
                     Expanded(
@@ -176,7 +179,8 @@ class HomePlaceholderScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: MaatramColors.charcoal400),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 14, color: MaatramColors.charcoal400),
                   ],
                 ),
               ),

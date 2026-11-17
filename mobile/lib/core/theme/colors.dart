@@ -5,11 +5,15 @@ import 'package:flutter/material.dart';
 abstract final class MaatramColors {
   // Locked Initial Brand Tokens
   static const Color background = Color(0xFFFAF8F5); // Warm ivory background
-  static const Color primaryGold = Color(0xFFF5B817); // Signature golden yellow accent
-  static const Color deepNavy = Color(0xFF1B2B48); // Deep navy primary typography
+  static const Color primaryGold =
+      Color(0xFFF5B817); // Signature golden yellow accent
+  static const Color deepNavy =
+      Color(0xFF1B2B48); // Deep navy primary typography
   static const Color white = Color(0xFFFFFFFF); // Clean white card surface
-  static const Color warmBorder = Color(0xFFEFECE6); // Organic warm neutral border
-  static const Color secondaryText = Color(0xFF827D73); // Warm muted slate secondary text
+  static const Color warmBorder =
+      Color(0xFFEFECE6); // Organic warm neutral border
+  static const Color secondaryText =
+      Color(0xFF827D73); // Warm muted slate secondary text
 
   // Gold Scale
   static const Color goldLight = Color(0xFFFFF7E0);
@@ -69,5 +73,11 @@ abstract final class MaatramColors {
 
   // Overlays
   static const Color scrim = Color(0x66000000);
-}
 
+  // Ergonomic Token Aliases
+  static const Color primaryGoldDark = goldDark;
+  static const Color forestGreen = successDark;
+  static const Color charcoal500 = charcoal600;
+  static const Color charcoal300 = charcoal400;
+  static const Color skyBlue = categoryStudent;
+}

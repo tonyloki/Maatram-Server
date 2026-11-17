@@ -14,13 +14,15 @@ sealed class AppException implements Exception {
   });
 
   @override
-  String toString() => '$runtimeType(message: $message, code: $code, status: $statusCode)';
+  String toString() =>
+      '$runtimeType(message: $message, code: $code, status: $statusCode)';
 }
 
 /// Network disconnection or timeout
 class NetworkException extends AppException {
   const NetworkException({
-    super.message = 'Network connection unavailable. Please check your internet.',
+    super.message =
+        'Network connection unavailable. Please check your internet.',
     super.code = 'NETWORK_ERROR',
   });
 }
@@ -33,6 +35,9 @@ class UnauthorizedException extends AppException {
     super.statusCode = 401,
   });
 }
+
+/// Alias for UnauthorizedException for auth flows
+typedef AuthException = UnauthorizedException;
 
 /// Insufficient permission (403)
 class ForbiddenException extends AppException {
@@ -91,7 +96,8 @@ abstract final class ErrorHandler {
           error.type == DioExceptionType.sendTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.connectionError) {
-        return NetworkException(message: error.message ?? 'Network connection unavailable.');
+        return NetworkException(
+            message: error.message ?? 'Network connection unavailable.');
       }
 
       final statusCode = error.response?.statusCode;

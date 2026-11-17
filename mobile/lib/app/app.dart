@@ -20,4 +20,3 @@ class MaatramApp extends ConsumerWidget {
     );
   }
 }
-

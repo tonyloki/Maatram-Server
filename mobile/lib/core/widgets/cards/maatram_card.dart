@@ -57,4 +57,3 @@ class MaatramCard extends StatelessWidget {
     return cardContent;
   }
 }
-

@@ -73,4 +73,3 @@ class MaatramAnimatedProgress extends StatelessWidget {
     );
   }
 }
-

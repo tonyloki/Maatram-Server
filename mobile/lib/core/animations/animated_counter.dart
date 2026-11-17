@@ -51,4 +51,3 @@ class MaatramAnimatedCounter extends StatelessWidget {
     );
   }
 }
-

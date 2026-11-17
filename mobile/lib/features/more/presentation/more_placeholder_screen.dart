@@ -50,7 +50,9 @@ class MorePlaceholderScreen extends StatelessWidget {
                           style: MaatramTypography.bodySmall,
                         ),
                         const SizedBox(height: MaatramSpacing.xs),
-                        const MaatramCategoryBadge(category: VolunteerCategory.student, isCompact: true),
+                        const MaatramCategoryBadge(
+                            category: VolunteerCategory.student,
+                            isCompact: true),
                       ],
                     ),
                   ),
@@ -60,7 +62,9 @@ class MorePlaceholderScreen extends StatelessWidget {
             const SizedBox(height: MaatramSpacing.xl),
 
             // Navigation Options
-            Text('Volunteer Portal', style: MaatramTypography.labelLarge.copyWith(color: MaatramColors.charcoal700)),
+            Text('Volunteer Portal',
+                style: MaatramTypography.labelLarge
+                    .copyWith(color: MaatramColors.charcoal700)),
             const SizedBox(height: MaatramSpacing.sm),
             _buildNavigationTile(
               context,
@@ -89,7 +93,9 @@ class MorePlaceholderScreen extends StatelessWidget {
             const SizedBox(height: MaatramSpacing.xl),
 
             // Developer Showcase Entry
-            Text('Engineering & Quality Tools', style: MaatramTypography.labelLarge.copyWith(color: MaatramColors.charcoal700)),
+            Text('Engineering & Quality Tools',
+                style: MaatramTypography.labelLarge
+                    .copyWith(color: MaatramColors.charcoal700)),
             const SizedBox(height: MaatramSpacing.sm),
             _buildNavigationTile(
               context,
@@ -118,18 +124,27 @@ class MorePlaceholderScreen extends StatelessWidget {
       child: MaatramCard(
         onTap: onTap ?? () {},
         padding: MaatramSpacing.compactCardPadding,
-        borderColor: highlight ? MaatramColors.primaryGold : MaatramColors.warmBorder,
-        backgroundColor: highlight ? MaatramColors.goldLight.withOpacity(0.5) : MaatramColors.white,
+        borderColor:
+            highlight ? MaatramColors.primaryGold : MaatramColors.warmBorder,
+        backgroundColor: highlight
+            ? MaatramColors.goldLight.withOpacity(0.5)
+            : MaatramColors.white,
         child: Row(
           children: [
             Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: highlight ? MaatramColors.goldSurface : MaatramColors.stone100,
+                color: highlight
+                    ? MaatramColors.goldSurface
+                    : MaatramColors.stone100,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, size: 20, color: highlight ? MaatramColors.goldDeep : MaatramColors.deepNavy),
+              child: Icon(icon,
+                  size: 20,
+                  color: highlight
+                      ? MaatramColors.goldDeep
+                      : MaatramColors.deepNavy),
             ),
             const SizedBox(width: MaatramSpacing.md),
             Expanded(
@@ -137,15 +152,18 @@ class MorePlaceholderScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title, style: MaatramTypography.titleSmall),
-                  Text(subtitle, style: MaatramTypography.bodySmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(subtitle,
+                      style: MaatramTypography.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 18, color: MaatramColors.charcoal400),
+            const Icon(Icons.chevron_right_rounded,
+                size: 18, color: MaatramColors.charcoal400),
           ],
         ),
       ),
     );
   }
 }
-

@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'motion_tokens.dart';
 
 /// Interaction wrapper providing tactile scale and opacity feedback on press.
+typedef Pressable = MaatramPressable;
+
 class MaatramPressable extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
@@ -83,7 +85,8 @@ class _MaatramPressableState extends State<MaatramPressable>
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || (widget.onTap == null && widget.onLongPress == null)) {
+    if (!widget.enabled ||
+        (widget.onTap == null && widget.onLongPress == null)) {
       return widget.child;
     }
 
@@ -119,4 +122,3 @@ class _MaatramPressableState extends State<MaatramPressable>
     );
   }
 }
-

@@ -63,4 +63,3 @@ class MaatramOrganicBackground extends StatelessWidget {
     );
   }
 }
-

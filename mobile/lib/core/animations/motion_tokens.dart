@@ -20,11 +20,11 @@ abstract final class MaatramMotion {
   }
 
   /// Get effective duration considering reduced-motion accessibility setting.
-  static Duration getEffectiveDuration(BuildContext context, Duration standardDuration) {
+  static Duration getEffectiveDuration(
+      BuildContext context, Duration standardDuration) {
     if (isReducedMotion(context)) {
       return Duration.zero;
     }
     return standardDuration;
   }
 }
-

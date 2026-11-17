@@ -69,7 +69,8 @@ class MaatramErrorState extends StatelessWidget {
                 onPressed: onRetry,
                 variant: MaatramButtonVariant.secondary,
                 size: MaatramButtonSize.sm,
-                leadingIcon: const Icon(Icons.refresh_rounded, size: 16, color: MaatramColors.white),
+                leadingIcon: const Icon(Icons.refresh_rounded,
+                    size: 16, color: MaatramColors.white),
               ),
             ],
           ],
@@ -78,4 +79,3 @@ class MaatramErrorState extends StatelessWidget {
     );
   }
 }
-

@@ -51,8 +51,10 @@ abstract final class MaatramTheme {
           backgroundColor: MaatramColors.primaryGold,
           foregroundColor: MaatramColors.deepNavy,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: MaatramSpacing.xxl, vertical: MaatramSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: MaatramRadii.buttonRadius),
+          padding: const EdgeInsets.symmetric(
+              horizontal: MaatramSpacing.xxl, vertical: MaatramSpacing.md),
+          shape:
+              RoundedRectangleBorder(borderRadius: MaatramRadii.buttonRadius),
           textStyle: MaatramTypography.labelLarge,
         ),
       ),
@@ -62,8 +64,10 @@ abstract final class MaatramTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: MaatramColors.deepNavy,
           side: const BorderSide(color: MaatramColors.warmBorder, width: 1.5),
-          padding: const EdgeInsets.symmetric(horizontal: MaatramSpacing.xxl, vertical: MaatramSpacing.md),
-          shape: RoundedRectangleBorder(borderRadius: MaatramRadii.buttonRadius),
+          padding: const EdgeInsets.symmetric(
+              horizontal: MaatramSpacing.xxl, vertical: MaatramSpacing.md),
+          shape:
+              RoundedRectangleBorder(borderRadius: MaatramRadii.buttonRadius),
           textStyle: MaatramTypography.labelLarge,
         ),
       ),
@@ -72,25 +76,31 @@ abstract final class MaatramTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: MaatramColors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: MaatramSpacing.lg, vertical: MaatramSpacing.md),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: MaatramSpacing.lg, vertical: MaatramSpacing.md),
         border: OutlineInputBorder(
           borderRadius: MaatramRadii.radiusLg,
-          borderSide: const BorderSide(color: MaatramColors.warmBorder, width: 1.0),
+          borderSide:
+              const BorderSide(color: MaatramColors.warmBorder, width: 1.0),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: MaatramRadii.radiusLg,
-          borderSide: const BorderSide(color: MaatramColors.warmBorder, width: 1.0),
+          borderSide:
+              const BorderSide(color: MaatramColors.warmBorder, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: MaatramRadii.radiusLg,
-          borderSide: const BorderSide(color: MaatramColors.primaryGold, width: 1.8),
+          borderSide:
+              const BorderSide(color: MaatramColors.primaryGold, width: 1.8),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: MaatramRadii.radiusLg,
           borderSide: const BorderSide(color: MaatramColors.error, width: 1.2),
         ),
-        hintStyle: MaatramTypography.bodyMedium.copyWith(color: MaatramColors.secondaryText),
-        labelStyle: MaatramTypography.bodyMedium.copyWith(color: MaatramColors.charcoal700),
+        hintStyle: MaatramTypography.bodyMedium
+            .copyWith(color: MaatramColors.secondaryText),
+        labelStyle: MaatramTypography.bodyMedium
+            .copyWith(color: MaatramColors.charcoal700),
       ),
 
       // Divider Theme

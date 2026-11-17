@@ -141,5 +141,9 @@ abstract final class MaatramTypography {
     fontWeight: FontWeight.w800,
     color: MaatramColors.deepNavy,
   );
-}
 
+  // Aliases for M2 Ergonomics
+  static const TextStyle headlineLarge = displayMedium;
+  static const TextStyle caption = bodySmall;
+  static const TextStyle cardTitle = titleMedium;
+}

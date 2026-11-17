@@ -5,9 +5,14 @@ import 'package:maatram_mobile/core/network/auth_interceptor.dart';
 import 'package:maatram_mobile/core/storage/token_storage.dart';
 
 class MockDio extends Mock implements Dio {}
+
 class MockTokenStorage extends Mock implements TokenStorage {}
-class MockRequestInterceptorHandler extends Mock implements RequestInterceptorHandler {}
-class MockErrorInterceptorHandler extends Mock implements ErrorInterceptorHandler {}
+
+class MockRequestInterceptorHandler extends Mock
+    implements RequestInterceptorHandler {}
+
+class MockErrorInterceptorHandler extends Mock
+    implements ErrorInterceptorHandler {}
 
 void main() {
   late MockDio mockClientDio;
@@ -18,8 +23,10 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(RequestOptions(path: '/'));
-    registerFallbackValue(Response<dynamic>(requestOptions: RequestOptions(path: '/')));
-    registerFallbackValue(DioException(requestOptions: RequestOptions(path: '/')));
+    registerFallbackValue(
+        Response<dynamic>(requestOptions: RequestOptions(path: '/')));
+    registerFallbackValue(
+        DioException(requestOptions: RequestOptions(path: '/')));
   });
 
   setUp(() {
@@ -40,7 +47,8 @@ void main() {
   });
 
   group('AuthInterceptor Tests', () {
-    test('onRequest appends Authorization Bearer header when token exists', () async {
+    test('onRequest appends Authorization Bearer header when token exists',
+        () async {
       when(() => mockTokenStorage.getAccessToken())
           .thenAnswer((_) async => 'mocked_jwt_access');
 
@@ -50,11 +58,13 @@ void main() {
 
       await authInterceptor.onRequest(options, handler);
 
-      expect(options.headers['Authorization'], equals('Bearer mocked_jwt_access'));
+      expect(
+          options.headers['Authorization'], equals('Bearer mocked_jwt_access'));
       verify(() => handler.next(options)).called(1);
     });
 
-    test('onRequest preserves custom Authorization header if already present', () async {
+    test('onRequest preserves custom Authorization header if already present',
+        () async {
       when(() => mockTokenStorage.getAccessToken())
           .thenAnswer((_) async => 'mocked_jwt_access');
 
@@ -71,7 +81,8 @@ void main() {
       verify(() => handler.next(options)).called(1);
     });
 
-    test('onError on 401 performs token refresh and retries original request', () async {
+    test('onError on 401 performs token refresh and retries original request',
+        () async {
       when(() => mockTokenStorage.getRefreshToken())
           .thenAnswer((_) async => 'valid_refresh_token');
       when(() => mockTokenStorage.saveTokens(
@@ -131,11 +142,12 @@ void main() {
       expect(sessionExpiredCalled, isFalse);
     });
 
-    test('onError on 401 with missing refresh token clears storage and invokes onSessionExpired', () async {
+    test(
+        'onError on 401 with missing refresh token clears storage and invokes onSessionExpired',
+        () async {
       when(() => mockTokenStorage.getRefreshToken())
           .thenAnswer((_) async => null);
-      when(() => mockTokenStorage.clearTokens())
-          .thenAnswer((_) async {});
+      when(() => mockTokenStorage.clearTokens()).thenAnswer((_) async {});
 
       final requestOptions = RequestOptions(path: '/events');
       final response = Response(
@@ -157,11 +169,12 @@ void main() {
       expect(sessionExpiredCalled, isTrue);
     });
 
-    test('onError on 401 with refresh failure clears storage and invokes onSessionExpired', () async {
+    test(
+        'onError on 401 with refresh failure clears storage and invokes onSessionExpired',
+        () async {
       when(() => mockTokenStorage.getRefreshToken())
           .thenAnswer((_) async => 'expired_refresh_token');
-      when(() => mockTokenStorage.clearTokens())
-          .thenAnswer((_) async {});
+      when(() => mockTokenStorage.clearTokens()).thenAnswer((_) async {});
 
       final requestOptions = RequestOptions(path: '/events');
       final response = Response(
@@ -178,12 +191,12 @@ void main() {
             '/auth/refresh',
             data: {'refresh_token': 'expired_refresh_token'},
           )).thenThrow(DioException(
-            requestOptions: RequestOptions(path: '/auth/refresh'),
-            response: Response(
-              requestOptions: RequestOptions(path: '/auth/refresh'),
-              statusCode: 401,
-            ),
-          ));
+        requestOptions: RequestOptions(path: '/auth/refresh'),
+        response: Response(
+          requestOptions: RequestOptions(path: '/auth/refresh'),
+          statusCode: 401,
+        ),
+      ));
 
       final handler = MockErrorInterceptorHandler();
       when(() => handler.reject(any())).thenReturn(null);

@@ -61,7 +61,8 @@ class _MaatramShimmerState extends State<MaatramShimmer>
                 widget.baseColor,
               ],
               stops: const [0.0, 0.5, 1.0],
-              transform: _SlidingGradientTransform(slidePercent: _controller.value),
+              transform:
+                  _SlidingGradientTransform(slidePercent: _controller.value),
             ).createShader(bounds);
           },
           child: child,
@@ -79,7 +80,7 @@ class _SlidingGradientTransform extends GradientTransform {
 
   @override
   Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
-    return Matrix4.translationValues(bounds.width * (2 * slidePercent - 1), 0.0, 0.0);
+    return Matrix4.translationValues(
+        bounds.width * (2 * slidePercent - 1), 0.0, 0.0);
   }
 }
-

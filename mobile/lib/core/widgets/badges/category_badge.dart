@@ -66,7 +66,9 @@ class MaatramCategoryBadge extends StatelessWidget {
           const SizedBox(width: MaatramSpacing.xs),
           Text(
             label,
-            style: (isCompact ? MaatramTypography.labelSmall : MaatramTypography.labelMedium)
+            style: (isCompact
+                    ? MaatramTypography.labelSmall
+                    : MaatramTypography.labelMedium)
                 .copyWith(color: fg),
           ),
         ],
@@ -74,4 +76,3 @@ class MaatramCategoryBadge extends StatelessWidget {
     );
   }
 }
-

@@ -36,11 +36,14 @@ class MaatramSearchField extends StatelessWidget {
         style: MaatramTypography.bodyMedium,
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: MaatramTypography.bodySmall.copyWith(color: MaatramColors.secondaryText),
-          prefixIcon: const Icon(Icons.search, size: 20, color: MaatramColors.charcoal600),
+          hintStyle: MaatramTypography.bodySmall
+              .copyWith(color: MaatramColors.secondaryText),
+          prefixIcon: const Icon(Icons.search,
+              size: 20, color: MaatramColors.charcoal600),
           suffixIcon: controller?.text.isNotEmpty == true
               ? IconButton(
-                  icon: const Icon(Icons.close, size: 18, color: MaatramColors.charcoal600),
+                  icon: const Icon(Icons.close,
+                      size: 18, color: MaatramColors.charcoal600),
                   onPressed: () {
                     controller?.clear();
                     onClear?.call();
@@ -60,4 +63,3 @@ class MaatramSearchField extends StatelessWidget {
     );
   }
 }
-

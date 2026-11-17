@@ -18,12 +18,15 @@ abstract final class MaatramRadii {
   static const BorderRadius radiusLg = BorderRadius.all(Radius.circular(lg));
   static const BorderRadius radiusXl = BorderRadius.all(Radius.circular(xl));
   static const BorderRadius radiusXxl = BorderRadius.all(Radius.circular(xxl));
-  static const BorderRadius radiusXxxl = BorderRadius.all(Radius.circular(xxxl));
-  static const BorderRadius radiusPill = BorderRadius.all(Radius.circular(pill));
+  static const BorderRadius radiusXxxl =
+      BorderRadius.all(Radius.circular(xxxl));
+  static const BorderRadius radiusPill =
+      BorderRadius.all(Radius.circular(pill));
 
   // Card specific default radius (organic 24dp)
   static const BorderRadius cardRadius = BorderRadius.all(Radius.circular(xxl));
-  static const BorderRadius buttonRadius = BorderRadius.all(Radius.circular(lg));
-  static const BorderRadius bottomSheetRadius = BorderRadius.vertical(top: Radius.circular(xxxl));
+  static const BorderRadius buttonRadius =
+      BorderRadius.all(Radius.circular(lg));
+  static const BorderRadius bottomSheetRadius =
+      BorderRadius.vertical(top: Radius.circular(xxxl));
 }
-

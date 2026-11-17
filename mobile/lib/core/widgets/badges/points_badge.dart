@@ -25,7 +25,8 @@ class MaatramPointsBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: MaatramColors.goldSurface,
         borderRadius: MaatramRadii.radiusPill,
-        border: Border.all(color: MaatramColors.primaryGold.withOpacity(0.5), width: 1.0),
+        border: Border.all(
+            color: MaatramColors.primaryGold.withOpacity(0.5), width: 1.0),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -38,7 +39,10 @@ class MaatramPointsBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '+$points pts',
-            style: (isLarge ? MaatramTypography.labelMedium : MaatramTypography.labelSmall).copyWith(
+            style: (isLarge
+                    ? MaatramTypography.labelMedium
+                    : MaatramTypography.labelSmall)
+                .copyWith(
               color: MaatramColors.goldDark,
               fontWeight: FontWeight.w800,
             ),
@@ -48,4 +52,3 @@ class MaatramPointsBadge extends StatelessWidget {
     );
   }
 }
-

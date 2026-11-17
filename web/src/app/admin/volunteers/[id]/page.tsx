@@ -801,6 +801,13 @@ export default function AdminVolunteerProfileViewPage() {
               </div>
             )}
 
+            {application?.user_status === "PENDING_VERIFICATION" && (
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                <span>Notice: Applicant email is pending verification. Admin approval will automatically verify and activate their account.</span>
+              </div>
+            )}
+
             {actionType === "APPROVE" ? (
               <div className="space-y-3">
                 <p className="text-xs text-charcoal-600 leading-relaxed">

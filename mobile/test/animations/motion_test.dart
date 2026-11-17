@@ -36,7 +36,8 @@ void main() {
       expect(find.text('Animated Welcome'), findsOneWidget);
     });
 
-    testWidgets('MaatramPressable provides scale and opacity feedback on touch', (tester) async {
+    testWidgets('MaatramPressable provides scale and opacity feedback on touch',
+        (tester) async {
       var tapped = false;
       await tester.pumpWidget(
         MaterialApp(
@@ -68,7 +69,8 @@ void main() {
       expect(find.text('450'), findsOneWidget);
     });
 
-    testWidgets('MaatramAnimatedProgress renders progress bar without throwing', (tester) async {
+    testWidgets('MaatramAnimatedProgress renders progress bar without throwing',
+        (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

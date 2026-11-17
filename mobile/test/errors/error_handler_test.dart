@@ -58,7 +58,10 @@ void main() {
           statusCode: 422,
           data: {
             'detail': [
-              {'loc': ['body', 'email'], 'msg': 'value is not a valid email'}
+              {
+                'loc': ['body', 'email'],
+                'msg': 'value is not a valid email'
+              }
             ]
           },
         ),

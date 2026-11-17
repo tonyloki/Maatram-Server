@@ -24,4 +24,3 @@ Future<void> bootstrap() async {
     DeviceOrientation.portraitDown,
   ]);
 }
-

@@ -33,7 +33,8 @@ class DevShowcaseScreen extends StatefulWidget {
 class _DevShowcaseScreenState extends State<DevShowcaseScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
-  final TextEditingController _textController = TextEditingController(text: 'Sneha Raman');
+  final TextEditingController _textController =
+      TextEditingController(text: 'Sneha Raman');
   final TextEditingController _searchController = TextEditingController();
   double _progressVal = 0.65;
   int _counterVal = 193;
@@ -113,23 +114,30 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
           title: 'Brand Initial Tokens',
           subtitle: 'Locked tokens forming the warm ivory editorial identity',
         ),
-        _buildColorTile('Background (Ivory)', '#FAF8F5', MaatramColors.background),
+        _buildColorTile(
+            'Background (Ivory)', '#FAF8F5', MaatramColors.background),
         _buildColorTile('Primary Gold', '#F5B817', MaatramColors.primaryGold),
-        _buildColorTile('Deep Navy (Typography)', '#1B2B48', MaatramColors.deepNavy),
+        _buildColorTile(
+            'Deep Navy (Typography)', '#1B2B48', MaatramColors.deepNavy),
         _buildColorTile('Card Surface (White)', '#FFFFFF', MaatramColors.white),
         _buildColorTile('Warm Border', '#EFECE6', MaatramColors.warmBorder),
-        _buildColorTile('Secondary Text', '#827D73', MaatramColors.secondaryText),
+        _buildColorTile(
+            'Secondary Text', '#827D73', MaatramColors.secondaryText),
         const SizedBox(height: MaatramSpacing.lg),
         const MaatramSectionHeader(
           title: 'Semantic & Category Tokens',
-          subtitle: 'Status highlights, success emerald, and volunteer categories',
+          subtitle:
+              'Status highlights, success emerald, and volunteer categories',
         ),
         _buildColorTile('Success Emerald', '#10B981', MaatramColors.success),
         _buildColorTile('Warning Amber', '#F59E0B', MaatramColors.warning),
         _buildColorTile('Error Rose', '#EF4444', MaatramColors.error),
-        _buildColorTile('Student Category', '#2563EB', MaatramColors.categoryStudent),
-        _buildColorTile('Alumni Category', '#7C3AED', MaatramColors.categoryAlumni),
-        _buildColorTile('Corporate Category', '#D97706', MaatramColors.categoryCorporate),
+        _buildColorTile(
+            'Student Category', '#2563EB', MaatramColors.categoryStudent),
+        _buildColorTile(
+            'Alumni Category', '#7C3AED', MaatramColors.categoryAlumni),
+        _buildColorTile(
+            'Corporate Category', '#D97706', MaatramColors.categoryCorporate),
       ],
     );
   }
@@ -138,7 +146,8 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
     return Padding(
       padding: const EdgeInsets.only(bottom: MaatramSpacing.sm),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: MaatramSpacing.md, vertical: MaatramSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+            horizontal: MaatramSpacing.md, vertical: MaatramSpacing.sm),
         decoration: BoxDecoration(
           color: MaatramColors.white,
           borderRadius: MaatramRadii.radiusMd,
@@ -159,7 +168,9 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
             Expanded(
               child: Text(label, style: MaatramTypography.titleSmall),
             ),
-            Text(hex, style: MaatramTypography.labelSmall.copyWith(color: MaatramColors.secondaryText)),
+            Text(hex,
+                style: MaatramTypography.labelSmall
+                    .copyWith(color: MaatramColors.secondaryText)),
           ],
         ),
       ),
@@ -173,7 +184,8 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
       children: const [
         MaatramSectionHeader(
           title: 'Editorial Display & Headings',
-          subtitle: 'Georgia serif family delivering distinguished brand presence',
+          subtitle:
+              'Georgia serif family delivering distinguished brand presence',
         ),
         MaatramCard(
           child: Column(
@@ -181,28 +193,34 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
             children: [
               Text('Display Large 32pt', style: MaatramTypography.displayLarge),
               SizedBox(height: MaatramSpacing.sm),
-              Text('Display Medium 26pt', style: MaatramTypography.displayMedium),
+              Text('Display Medium 26pt',
+                  style: MaatramTypography.displayMedium),
               SizedBox(height: MaatramSpacing.sm),
               Text('Display Small 22pt', style: MaatramTypography.displaySmall),
               SizedBox(height: MaatramSpacing.sm),
-              Text('Headline Medium 20pt', style: MaatramTypography.headlineMedium),
+              Text('Headline Medium 20pt',
+                  style: MaatramTypography.headlineMedium),
             ],
           ),
         ),
         SizedBox(height: MaatramSpacing.lg),
         MaatramSectionHeader(
           title: 'Modern Sans Body & Labels',
-          subtitle: 'Clean legible hierarchy for event descriptions and attributes',
+          subtitle:
+              'Clean legible hierarchy for event descriptions and attributes',
         ),
         MaatramCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Title Large (16pt Bold)', style: MaatramTypography.titleLarge),
+              Text('Title Large (16pt Bold)',
+                  style: MaatramTypography.titleLarge),
               SizedBox(height: MaatramSpacing.xs),
-              Text('Title Medium (15pt Semi)', style: MaatramTypography.titleMedium),
+              Text('Title Medium (15pt Semi)',
+                  style: MaatramTypography.titleMedium),
               SizedBox(height: MaatramSpacing.xs),
-              Text('Title Small (13pt Semi)', style: MaatramTypography.titleSmall),
+              Text('Title Small (13pt Semi)',
+                  style: MaatramTypography.titleSmall),
               SizedBox(height: MaatramSpacing.md),
               Text(
                 'Body Large (15pt): Maatram Foundation connects dedicated volunteers with rural school education and student career guidance.',
@@ -230,7 +248,9 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
     return ListView(
       padding: MaatramSpacing.screenPadding,
       children: [
-        const MaatramSectionHeader(title: 'Button Variants', subtitle: 'Primary gold, deep navy secondary, outline & danger'),
+        const MaatramSectionHeader(
+            title: 'Button Variants',
+            subtitle: 'Primary gold, deep navy secondary, outline & danger'),
         MaatramCard(
           child: Column(
             children: [
@@ -273,7 +293,10 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
           ),
         ),
         const SizedBox(height: MaatramSpacing.lg),
-        const MaatramSectionHeader(title: 'Inputs & Search', subtitle: 'Floating field labels, gold focus states and clearable search'),
+        const MaatramSectionHeader(
+            title: 'Inputs & Search',
+            subtitle:
+                'Floating field labels, gold focus states and clearable search'),
         MaatramCard(
           child: Column(
             children: [
@@ -288,7 +311,8 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
                 label: 'Email Address',
                 hintText: 'volunteer@maatram.org',
                 prefixIcon: Icon(Icons.mail_outline, size: 20),
-                helperText: 'Verification link will be dispatched to this mailbox',
+                helperText:
+                    'Verification link will be dispatched to this mailbox',
               ),
               const SizedBox(height: MaatramSpacing.md),
               const MaatramTextField(
@@ -392,7 +416,8 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
           padding: EdgeInsets.zero,
           child: MaatramEmptyState(
             title: 'No Upcoming Events Found',
-            description: 'You are all caught up! New volunteering drives will appear here once published by coordinators.',
+            description:
+                'You are all caught up! New volunteering drives will appear here once published by coordinators.',
             actionLabel: 'Refresh Roster',
           ),
         ),
@@ -401,7 +426,8 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
         MaatramCard(
           padding: EdgeInsets.zero,
           child: MaatramErrorState(
-            message: 'Unable to reach the server. Please check your internet connection and retry.',
+            message:
+                'Unable to reach the server. Please check your internet connection and retry.',
             onRetry: () {},
           ),
         ),
@@ -425,7 +451,10 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   MaatramAnimatedCounter(value: _counterVal, suffix: ' pts'),
-                  MaatramAnimatedCounter(value: 8, prefix: '#', style: MaatramTypography.displayLarge),
+                  MaatramAnimatedCounter(
+                      value: 8,
+                      prefix: '#',
+                      style: MaatramTypography.displayLarge),
                 ],
               ),
               const SizedBox(height: MaatramSpacing.md),
@@ -494,7 +523,8 @@ class _DevShowcaseScreenState extends State<DevShowcaseScreen>
             MaatramBottomSheet.showConfirmation(
               context: context,
               title: 'Confirm Event Sign-up',
-              message: 'Are you sure you want to register for Mock Interview Mentorship 2026? A confirmation notification will be enqueued.',
+              message:
+                  'Are you sure you want to register for Mock Interview Mentorship 2026? A confirmation notification will be enqueued.',
               confirmLabel: 'Register Now',
             );
           },

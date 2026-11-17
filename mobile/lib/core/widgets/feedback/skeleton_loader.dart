@@ -46,8 +46,10 @@ class MaatramEventCardSkeleton extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              MaatramSkeletonBox(width: 80, height: 22, borderRadius: MaatramRadii.radiusPill),
-              MaatramSkeletonBox(width: 65, height: 22, borderRadius: MaatramRadii.radiusPill),
+              MaatramSkeletonBox(
+                  width: 80, height: 22, borderRadius: MaatramRadii.radiusPill),
+              MaatramSkeletonBox(
+                  width: 65, height: 22, borderRadius: MaatramRadii.radiusPill),
             ],
           ),
           SizedBox(height: MaatramSpacing.md),
@@ -78,7 +80,8 @@ class MaatramStatCardSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          MaatramSkeletonBox(width: 38, height: 38, borderRadius: MaatramRadii.radiusLg),
+          MaatramSkeletonBox(
+              width: 38, height: 38, borderRadius: MaatramRadii.radiusLg),
           SizedBox(height: MaatramSpacing.md),
           MaatramSkeletonBox(width: 70, height: 28),
           SizedBox(height: MaatramSpacing.xs),
@@ -88,4 +91,3 @@ class MaatramStatCardSkeleton extends StatelessWidget {
     );
   }
 }
-

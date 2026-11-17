@@ -59,13 +59,15 @@ class MaatramStatusBadge extends StatelessWidget {
         bg = MaatramColors.errorLight;
         fg = MaatramColors.errorDark;
         border = MaatramColors.errorBorder;
-        label = customLabel ?? (status == MaatramStatus.rejected ? 'Rejected' : 'Cancelled');
+        label = customLabel ??
+            (status == MaatramStatus.rejected ? 'Rejected' : 'Cancelled');
         icon = Icons.cancel_outlined;
         break;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: MaatramSpacing.sm, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+          horizontal: MaatramSpacing.sm, vertical: 3),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: MaatramRadii.radiusPill,

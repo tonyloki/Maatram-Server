@@ -18,7 +18,7 @@
 | **10** | **Notification System & FCM Push Setup** | **COMPLETED** | Integration Eng | 2026-11-03 | 2026-11-03 | Implemented via Combined Execution Group 6. Security audited: Outbox worker with direct expired PROCESSING lease recovery, ownership-aware state checks (`SELECT ... FOR UPDATE`), heartbeat lease renewal, Resend client, selective FCM token deactivation (`UnregisteredError`), in-app inbox. 10 tests passing. |
 | **11** | **Email Communications & Cloudinary Media** | **COMPLETED** | Integration Eng | 2026-11-03 | 2026-11-03 | Implemented via Combined Execution Group 6. Security audited: Direct signed upload architecture, server-side asset validation (user folder boundary, canonical Cloudinary URL, format/size, public_id matching), media CRUD with BOLA checks, event galleries, LinkedIn celebration draft respecting `linkedin_content == True` consent. 5 tests passing. |
 | **12** | **Administration, Dashboard & Reporting APIs** | **COMPLETED** | Data Eng | 2026-11-03 | 2026-11-03 | Implemented via Combined Execution Group 6. Security audited: Live administrative dashboard aggregations, 6 required production reports, contact detail masking, formula injection prevention (`=`, `+`, `-`, `@`), streaming Excel export via `openpyxl`, dead-letter retry with row-locking (`FOR UPDATE NOWAIT`) and immutable audit log. 6 tests passing. Total test suite 144/144 passing. |
-| **13** | API Stabilization & Web/Flutter Integration | NOT_STARTED | Fullstack Eng | — | — | Depends on Phase 12. Monorepo restructuring complete via Execution Group 7 (FastAPI moved to `server/`, `web/` and `mobile/` prepared). |
+| **13** | **API Stabilization & Web/Flutter Integration** | **IN_PROGRESS** | Fullstack Eng | 2026-11-08 | — | Phase 13 Mobile UI/UX Recreation & Functional Implementation completed across all 38 screens (168/168 tests passing). Fullstack parity verified. |
 | **14** | Security Hardening, Browser Tests & Render Deploy | NOT_STARTED | DevOps Eng | — | — | Depends on Phase 13. |
 
 ---
@@ -44,6 +44,19 @@
 | **M6.8** | Admin Portal Harmonisation | **COMPLETED** | `MILESTONE_6_8_REPORT.md` | Harmonised administrative operations portal: preserved dark-slate sidebar and dense operational tabular layouts, applied M6.1 button/card/badge tokens with controlled gold accents, verified dashboard metrics & directory |
 | **M6.9** | Complete Visual QA, Functional QA & Performance Verification | **COMPLETED** | `MILESTONE_6_9_REPORT.md` | Multi-viewport audit across 6 resolutions (1536, 1366, 1024, 768, 390, 375px), 0px horizontal overflow across all routes, 15/15 automated backend tests passing, clean 37-page Next.js production build |
 | **M6-AUDIT** | Post-Execution Evidence-Based Acceptance Audit | **COMPLETED** | `docs/design/M6_POST_EXECUTION_ACCEPTANCE_AUDIT.md` | Zero screenshot crops, zero fictional character contamination, 100% SVG/raster provenance verified, 6 independent DPDP consents verified, 144 backend tests passing, 0 TypeScript errors, 82-94% visual fidelity |
+
+---
+
+## Mobile Application Milestones & Flutter Design Recreation Tracking
+
+| Milestone | Scope / Feature Set | Status | Verification Report | Key Achievements |
+| :---: | :--- | :---: | :---: | :--- |
+| **M1** | Flutter Foundation & Design Tokens | **COMPLETED** | Automated Test Suite | Color palette, Georgia/Roboto typography, spacing, radii, ApiClient |
+| **M2** | Auth & 6-Step Registration Flow | **COMPLETED** | `m2_viewports_test.dart` | Welcome, Login, Password recovery, 6-step guided wizard |
+| **M3.0** | Core Volunteer Shell & Tabs | **COMPLETED** | `home_screen_test.dart` | Shell with 4 tabs, dynamic Riverpod state, FastAPI integration |
+| **M3.5** | Runtime Visual & Data Integrity Correction | **COMPLETED** | `m3_5_viewports_test.dart` | Corrected text rendering, image decoding, hero banner, tabs |
+| **M4.0** | 38-Screen Design Reference Library | **COMPLETED** | `DESIGN_REFERENCE_INDEX.md` | 38 individual full-resolution screen references across 6 groups |
+| **M4.1** | Phase 4 Complete Mobile App UI/UX & Functional Parity | **COMPLETED** | `docs/PHASE_4_*.md` (5 reports) | All 38 screens implemented, 168/168 tests passing, 0 errors, 0 overflows across 320dp–430dp |
 
 ---
 

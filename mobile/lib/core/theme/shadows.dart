@@ -54,4 +54,3 @@ abstract final class MaatramShadows {
     ),
   ];
 }
-

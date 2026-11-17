@@ -37,13 +37,17 @@ void main() {
     });
 
     test('Radii tokens match geometric requirements', () {
-      expect(MaatramRadii.cardRadius, const BorderRadius.all(Radius.circular(24.0)));
-      expect(MaatramRadii.buttonRadius, const BorderRadius.all(Radius.circular(16.0)));
+      expect(MaatramRadii.cardRadius,
+          const BorderRadius.all(Radius.circular(24.0)));
+      expect(MaatramRadii.buttonRadius,
+          const BorderRadius.all(Radius.circular(16.0)));
       expect(MaatramRadii.pill, 999.0);
-      expect(MaatramRadii.bottomSheetRadius, const BorderRadius.vertical(top: Radius.circular(32.0)));
+      expect(MaatramRadii.bottomSheetRadius,
+          const BorderRadius.vertical(top: Radius.circular(32.0)));
     });
 
-    test('Typography uses Georgia for display/headings and Roboto for body', () {
+    test('Typography uses Georgia for display/headings and Roboto for body',
+        () {
       expect(MaatramTypography.headingFamily, 'Georgia');
       expect(MaatramTypography.bodyFamily, 'Roboto');
       expect(MaatramTypography.displayLarge.fontFamily, 'Georgia');
@@ -51,7 +55,8 @@ void main() {
       expect(MaatramTypography.bodyMedium.fontFamily, 'Roboto');
     });
 
-    test('MaatramTheme.lightTheme initializes with valid Material 3 config', () {
+    test('MaatramTheme.lightTheme initializes with valid Material 3 config',
+        () {
       final theme = MaatramTheme.lightTheme;
       expect(theme.useMaterial3, isTrue);
       expect(theme.scaffoldBackgroundColor, MaatramColors.background);
