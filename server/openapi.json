@@ -2282,6 +2282,17 @@
       "EventCompletionPreviewResponse": {
         "description": "Comprehensive preview of point awards and communication jobs prior to event finalization.",
         "properties": {
+          "attended_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attended Count"
+          },
           "attendees": {
             "items": {
               "$ref": "#/components/schemas/AttendeeCompletionPreview"
@@ -2323,6 +2334,17 @@
             "title": "Total Hours Credited",
             "type": "string"
           },
+          "total_hours_to_credit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Hours To Credit"
+          },
           "total_incomplete": {
             "title": "Total Incomplete",
             "type": "integer"
@@ -2335,6 +2357,13 @@
           "total_selected": {
             "title": "Total Selected",
             "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
@@ -2390,6 +2419,17 @@
           "total_volunteers_awarded": {
             "title": "Total Volunteers Awarded",
             "type": "integer"
+          },
+          "volunteers_awarded": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volunteers Awarded"
           }
         },
         "required": [

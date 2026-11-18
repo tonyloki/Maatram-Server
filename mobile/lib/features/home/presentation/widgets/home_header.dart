@@ -25,10 +25,11 @@ class HomeHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: MaatramSpacing.md,
-        vertical: MaatramSpacing.sm,
+        vertical: 10,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 1. Maatram Brand Logo
           Image.asset(
@@ -38,8 +39,11 @@ class HomeHeader extends StatelessWidget {
             errorBuilder: (_, __, ___) => const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.wb_sunny_rounded,
-                    color: MaatramColors.primaryGold, size: 24),
+                Icon(
+                  Icons.wb_sunny_rounded,
+                  color: MaatramColors.primaryGold,
+                  size: 24,
+                ),
                 SizedBox(width: 6),
                 Text(
                   'MAATRAM',
@@ -92,6 +96,7 @@ class HomeHeader extends StatelessWidget {
                         child: Text(
                           unreadCount > 9 ? '9+' : '$unreadCount',
                           style: const TextStyle(
+                            fontFamily: 'Roboto',
                             color: Colors.white,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -103,15 +108,14 @@ class HomeHeader extends StatelessWidget {
                     ),
                 ],
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: 6),
 
               // Profile Avatar (Tap to go to More / Profile)
               GestureDetector(
                 onTap: () {
-                  context.go(RouteNames.morePath);
+                  context.push(RouteNames.profilePath);
                 },
                 child: Container(
-                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
@@ -120,10 +124,9 @@ class HomeHeader extends StatelessWidget {
                     ),
                   ),
                   child: MaatramAvatar(
-                    name:
-                        volunteerName.isNotEmpty ? volunteerName : 'Volunteer',
+                    name: volunteerName.isNotEmpty ? volunteerName : 'Volunteer',
                     imageUrl: avatarUrl,
-                    size: 34,
+                    size: 36,
                   ),
                 ),
               ),

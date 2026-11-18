@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import '../../animations/motion_tokens.dart';
 import '../../animations/pressable.dart';
 import '../../theme/colors.dart';
-import '../../theme/radii.dart';
 import '../../theme/shadows.dart';
 import '../../theme/spacing.dart';
-import '../../theme/typography.dart';
 
 class MaatramNavItem {
   final String label;
@@ -21,7 +19,8 @@ class MaatramNavItem {
   });
 }
 
-/// Floating bottom navigation bar with animated active pill indicator and safe-area padding.
+/// Floating bottom navigation bar with gold capsule around the active icon
+/// and Roboto typography matching the approved design reference.
 class MaatramBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onDestinationSelected;
@@ -73,8 +72,8 @@ class MaatramBottomNavBar extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: MaatramSpacing.md,
-            vertical: MaatramSpacing.xs,
+            horizontal: MaatramSpacing.sm,
+            vertical: 6,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -85,47 +84,49 @@ class MaatramBottomNavBar extends StatelessWidget {
               return Expanded(
                 child: MaatramPressable(
                   onTap: () => onDestinationSelected(index),
-                  child: AnimatedContainer(
-                    duration: MaatramMotion.durationNormal,
-                    curve: MaatramMotion.curveStandard,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: MaatramSpacing.sm,
-                      vertical: MaatramSpacing.xs,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? MaatramColors.goldSurface
-                          : Colors.transparent,
-                      borderRadius: MaatramRadii.radiusPill,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isSelected ? item.selectedIcon : item.unselectedIcon,
-                          size: 22,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Active gold capsule around icon
+                      AnimatedContainer(
+                        duration: MaatramMotion.durationNormal,
+                        curve: MaatramMotion.curveStandard,
+                        width: 54,
+                        height: 30,
+                        decoration: BoxDecoration(
                           color: isSelected
-                              ? MaatramColors.goldDeep
-                              : MaatramColors.secondaryText,
+                              ? MaatramColors.primaryGold
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.label,
-                          style: (isSelected
-                                  ? MaatramTypography.labelSmall
-                                  : MaatramTypography.bodySmall)
-                              .copyWith(
+                        child: Center(
+                          child: Icon(
+                            isSelected
+                                ? item.selectedIcon
+                                : item.unselectedIcon,
+                            size: 20,
                             color: isSelected
                                 ? MaatramColors.deepNavy
                                 : MaatramColors.secondaryText,
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
-                            fontSize: 10.5,
                           ),
-                          maxLines: 1,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 3),
+                      // Label in Roboto
+                      Text(
+                        item.label,
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 11,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? MaatramColors.deepNavy
+                              : MaatramColors.secondaryText,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -136,3 +137,6 @@ class MaatramBottomNavBar extends StatelessWidget {
     );
   }
 }
+
+/// Alias for component-level naming
+typedef VolunteerBottomNavigation = MaatramBottomNavBar;

@@ -9,7 +9,7 @@ import '../../../../core/theme/spacing.dart';
 
 /// Section 6: Volunteer Progress Card.
 /// Shows circular progress ring (events toward 10-event milestone),
-/// motivational text, and ascending bar chart — matching the reference design.
+/// motivational text, and ascending bar chart — matching the approved reference design.
 class YourProgressSection extends StatelessWidget {
   final GamificationSummaryModel? summary;
   final bool isLoading;
@@ -38,13 +38,13 @@ class YourProgressSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // 1. Header
+        // 1. Section Header in Georgia
         const Padding(
           padding: EdgeInsets.fromLTRB(
             MaatramSpacing.md,
+            14,
             MaatramSpacing.md,
-            MaatramSpacing.md,
-            MaatramSpacing.xs,
+            8,
           ),
           child: Text(
             'Your Progress',
@@ -64,7 +64,7 @@ class YourProgressSection extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.symmetric(
               horizontal: MaatramSpacing.md,
-              vertical: MaatramSpacing.xs,
+              vertical: 6,
             ),
             padding: const EdgeInsets.all(MaatramSpacing.md),
             decoration: BoxDecoration(
@@ -89,7 +89,7 @@ class YourProgressSection extends StatelessWidget {
                 ),
                 const SizedBox(width: MaatramSpacing.md),
 
-                // 2. Motivational text
+                // 2. Motivational text in Roboto
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,30 +99,38 @@ class YourProgressSection extends StatelessWidget {
                         'Keep going!',
                         style: TextStyle(
                           fontFamily: 'Roboto',
-                          fontSize: 15,
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: MaatramColors.deepNavy,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      const Text(
-                        "You're doing great. Complete more events to earn more points.",
-                        style: TextStyle(
+                      const SizedBox(height: 4),
+                      Text(
+                        _progressFraction() >= 1.0
+                            ? 'Milestone achieved! Explore new volunteering drives.'
+                            : 'Complete 10 events to unlock Silver Volunteer badge',
+                        style: const TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 12,
-                          color: Color(0xFF6B655B),
-                          height: 1.3,
+                          color: MaatramColors.secondaryText,
+                          height: 1.35,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: MaatramSpacing.sm),
 
-                // 3. Ascending Gold Bar Chart
-                CustomPaint(
-                  size: const Size(36, 32),
-                  painter: _GrowthBarsPainter(),
+                const SizedBox(width: 8),
+
+                // 3. Ascending growth bars graphic
+                const SizedBox(
+                  width: 44,
+                  height: 38,
+                  child: CustomPaint(
+                    painter: _GrowthBarsPainter(),
+                  ),
                 ),
               ],
             ),
@@ -146,35 +154,35 @@ class _CircularProgressRing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 64,
-      height: 64,
+      width: 60,
+      height: 60,
       child: Stack(
         alignment: Alignment.center,
         children: [
           // Background track ring
           CustomPaint(
-            size: const Size(64, 64),
+            size: const Size(60, 60),
             painter: _RingPainter(
               fraction: 1.0,
-              color: const Color(0xFFE5E0D5),
-              strokeWidth: 7.0,
+              color: const Color(0xFFF3ECE0),
+              strokeWidth: 6.5,
             ),
           ),
           // Foreground progress ring
           CustomPaint(
-            size: const Size(64, 64),
+            size: const Size(60, 60),
             painter: _RingPainter(
               fraction: fraction,
-              color: const Color(0xFFD97706),
-              strokeWidth: 7.0,
+              color: MaatramColors.primaryGold,
+              strokeWidth: 6.5,
             ),
           ),
-          // Percentage label
+          // Percentage label in Roboto
           Text(
             label,
             style: const TextStyle(
               fontFamily: 'Roboto',
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
               color: Color(0xFFB45309),
             ),
@@ -214,8 +222,8 @@ class _RingPainter extends CustomPainter {
 
     canvas.drawArc(
       rect,
-      -math.pi / 2,              // start at top
-      2 * math.pi * fraction,    // sweep clockwise
+      -math.pi / 2,
+      2 * math.pi * fraction,
       false,
       paint,
     );
@@ -228,6 +236,8 @@ class _RingPainter extends CustomPainter {
 
 /// Custom painter rendering stylized ascending bar chart with upward trend arrow.
 class _GrowthBarsPainter extends CustomPainter {
+  const _GrowthBarsPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final barPaint = Paint()
@@ -285,3 +295,6 @@ class _GrowthBarsPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+/// Component alias requested in Section 6
+typedef VolunteerProgressCard = YourProgressSection;

@@ -239,7 +239,7 @@ function EventDetailContent() {
                   <div>
                     <span className="text-[#6B7280] block">Capacity</span>
                     <span className="font-semibold text-[#1F2421]">
-                      {event.capacity} volunteers needed ({event.registered_count} applied)
+                      {event.capacity_required ?? event.volunteer_capacity ?? event.capacity ?? 0} volunteers needed ({event.registered_count} applied)
                     </span>
                   </div>
                 </div>

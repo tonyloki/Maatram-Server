@@ -7,16 +7,17 @@ import '../../../../core/theme/colors.dart';
 import '../../../../core/widgets/layout/organic_background.dart';
 import '../state/home_controller.dart';
 import 'widgets/home_header.dart';
-import 'widgets/illustrated_welcome_banner.dart';
-import 'widgets/impact_statistics_row.dart';
-import 'widgets/inspiration_banner.dart';
+import 'widgets/motivational_banner.dart';
 import 'widgets/upcoming_events_section.dart';
-import 'widgets/volunteer_profile_points_card.dart';
-import 'widgets/your_progress_section.dart';
+import 'widgets/volunteer_progress_card.dart';
+import 'widgets/volunteer_statistics.dart';
+import 'widgets/volunteer_summary_card.dart';
+import 'widgets/welcome_banner.dart';
 
 /// Complete, production-grade Volunteer Home Screen for the Maatram Portal.
-/// Implements all 8 required sections with independent section resilience,
-/// pull-to-refresh, real backend integration, and zero fabricated data.
+/// Reconstructed to achieve high visual fidelity to the approved reference design.
+/// Composes all 7 content sections with real backend API integration,
+/// responsive layout, zero hardcoded volunteer data, and clean component isolation.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -61,25 +62,25 @@ class HomeScreen extends ConsumerWidget {
                     avatarUrl: profile?.avatarUrl,
                   ),
 
-                  // Section 2: Illustrated Welcome Banner ("Hello, {name}! 👋")
-                  IllustratedWelcomeBanner(
+                  // Section 2: Welcome Banner ("Hello, {name}! 👋")
+                  WelcomeBanner(
                     volunteerName: volunteerName,
                     isLoading: homeState.profile.isLoading,
                   ),
 
-                  // Section 3: Volunteer Profile Card & Points Balance
-                  VolunteerProfilePointsCard(
+                  // Section 3: Volunteer Profile Summary Card & Points Balance
+                  VolunteerSummaryCard(
                     profile: profile,
                     gamification: gamification,
                     isLoading: homeState.profile.isLoading ||
                         homeState.gamification.isLoading,
                     onEditProfile: () {
-                      context.go(RouteNames.morePath);
+                      context.push(RouteNames.profilePath);
                     },
                   ),
 
                   // Section 4: 4 Impact Statistics (Hours, Events, This Year, Rank)
-                  ImpactStatisticsRow(
+                  VolunteerStatistics(
                     summary: gamification,
                     isLoading: homeState.gamification.isLoading,
                   ),
@@ -90,7 +91,7 @@ class HomeScreen extends ConsumerWidget {
                     registrations: homeState.registrations,
                     isLoading: homeState.events.isLoading,
                     errorMessage: homeState.events.hasError
-                        ? 'Unable to load upcoming events right now.'
+                        ? 'Could not load upcoming events.'
                         : null,
                     onRetry: () {
                       ref.read(homeControllerProvider.notifier).retryEvents();
@@ -98,15 +99,15 @@ class HomeScreen extends ConsumerWidget {
                   ),
 
                   // Section 6: Your Progress (Real Badges & Milestone Progress)
-                  YourProgressSection(
+                  VolunteerProgressCard(
                     summary: gamification,
                     isLoading: homeState.gamification.isLoading,
                   ),
 
-                  // Section 7: Inspiration Banner ("Together for a Better Tomorrow")
-                  const InspirationBanner(),
+                  // Section 7: Motivational Banner ("Together for a Better Tomorrow")
+                  const MotivationalBanner(),
 
-                  // Bottom padding for scroll clearance above navigation bar
+                  // Bottom padding for scroll clearance above bottom navigation bar
                   const SizedBox(height: 24),
                 ],
               ),

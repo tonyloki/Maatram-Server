@@ -447,7 +447,9 @@ function EventDetailContent({ eventId }: { eventId: string }) {
                 <div className="space-y-2 text-xs text-[#6B7280]">
                   <div className="flex items-center justify-between">
                     <span>Volunteers Needed:</span>
-                    <strong className="text-[#1F2421]">{event.capacity || "Flexible"}</strong>
+                    <strong className="text-[#1F2421]">
+                      {event.capacity_required ?? event.volunteer_capacity ?? event.capacity ?? "Flexible"}
+                    </strong>
                   </div>
                   {event.registration_deadline && (
                     <div className="flex items-center justify-between">

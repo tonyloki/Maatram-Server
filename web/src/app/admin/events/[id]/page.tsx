@@ -353,7 +353,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
               )}
               <div className="flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-stone-400" />
-                <strong>{event.capacity}</strong> required
+                <strong>{event.capacity_required ?? event.volunteer_capacity ?? event.capacity ?? 0}</strong> required
               </div>
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
       {/* 4 Metric Summary Cards Matching Screen 8 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-xs">
-          <div className="text-2xl font-black text-charcoal-900 tracking-tight">{registrations.length}</div>
+          <div className="text-2xl font-black text-charcoal-900 tracking-tight">{subscribedList.length}</div>
           <div className="text-xs font-semibold text-charcoal-500 mt-0.5">Subscribed</div>
         </div>
         <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-xs">

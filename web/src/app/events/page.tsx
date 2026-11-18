@@ -327,7 +327,7 @@ export default function EventsCataloguePage() {
                               <div className="flex items-center gap-2">
                                 <Users className="w-4 h-4 text-[#F5B817] shrink-0" />
                                 <span>
-                                  {event.capacity} volunteers needed ({event.registered_count} applied)
+                                  {event.capacity_required ?? event.volunteer_capacity ?? event.capacity ?? 0} volunteers needed ({event.registered_count} applied)
                                 </span>
                               </div>
                             </div>
