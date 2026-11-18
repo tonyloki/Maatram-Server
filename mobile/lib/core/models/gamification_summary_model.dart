@@ -56,16 +56,42 @@ class GamificationSummaryModel {
     return 'Leaderboard';
   }
 
+  static double _parseDouble(dynamic value, [double defaultValue = 0.0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? defaultValue;
+    return defaultValue;
+  }
+
+  static int _parseInt(dynamic value, [int defaultValue = 0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ??
+          (double.tryParse(value)?.toInt() ?? defaultValue);
+    }
+    return defaultValue;
+  }
+
+  static int? _parseNullableInt(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ?? double.tryParse(value)?.toInt();
+    }
+    return null;
+  }
+
   factory GamificationSummaryModel.fromJson(Map<String, dynamic> json) {
     return GamificationSummaryModel(
       volunteerProfileId: json['volunteer_profile_id']?.toString() ?? '',
-      cycleYear: (json['cycle_year'] as num?)?.toInt() ?? DateTime.now().year,
-      totalPoints: (json['total_points'] as num?)?.toDouble() ?? 0.0,
-      totalHours: (json['total_hours'] as num?)?.toDouble() ?? 0.0,
-      completedEventsCount:
-          (json['completed_events_count'] as num?)?.toInt() ?? 0,
-      badgesEarnedCount: (json['badges_earned_count'] as num?)?.toInt() ?? 0,
-      rank: (json['rank'] as num?)?.toInt(),
+      cycleYear: _parseInt(json['cycle_year'], DateTime.now().year),
+      totalPoints: _parseDouble(json['total_points'], 0.0),
+      totalHours: _parseDouble(json['total_hours'], 0.0),
+      completedEventsCount: _parseInt(json['completed_events_count'], 0),
+      badgesEarnedCount: _parseInt(json['badges_earned_count'], 0),
+      rank: _parseNullableInt(json['rank']),
+      eventsThisYear: _parseNullableInt(json['events_this_year']),
     );
   }
 

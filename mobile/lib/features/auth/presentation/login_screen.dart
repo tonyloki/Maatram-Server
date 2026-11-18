@@ -100,12 +100,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
 
+      // Admin access barrier in Volunteer Mobile App
+      if (session.role.toUpperCase() == 'ADMIN' ||
+          session.role.toUpperCase() == 'SUPER_ADMIN') {
+        setState(() {
+          _formError =
+              "You don't have access to the Volunteer Mobile App. Please use the Admin Portal on web.";
+        });
+        await ref.read(authControllerProvider.notifier).logout();
+        return;
+      }
+
       // Exact 4-state post-login routing
-      switch (session.status) {
+      switch (session.status.toUpperCase()) {
         case 'PENDING_VERIFICATION':
           context.go(RouteNames.pendingVerificationPath);
           break;
         case 'PENDING_ADMIN_APPROVAL':
+        case 'PENDING_APPROVAL':
+        case 'PENDING':
           context.go(RouteNames.pendingApprovalPath);
           break;
         case 'REJECTED':
@@ -113,6 +126,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           break;
         case 'APPROVED':
         default:
+          if (session.status.toUpperCase().contains('PENDING')) {
+            context.go(RouteNames.pendingApprovalPath);
+            break;
+          }
           if (authState.isFirstLaunch) {
             context.go(RouteNames.welcomePath);
           } else {

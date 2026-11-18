@@ -17,11 +17,13 @@ class EnvConfig {
     // 10.0.2.2 maps to host machine localhost in Android emulator.
     // localhost maps to host machine in Web browser and iOS simulator.
     const envUrl = String.fromEnvironment('API_BASE_URL');
-    final baseUrl = envUrl.isNotEmpty
-        ? envUrl
-        : (kIsWeb
-            ? 'http://127.0.0.1:8000/api/v1'
-            : 'http://10.0.2.2:8000/api/v1');
+    final defaultHost = kIsWeb
+        ? 'http://127.0.0.1:8000/api/v1'
+        : (defaultTargetPlatform == TargetPlatform.android
+            ? 'http://10.0.2.2:8000/api/v1'
+            : 'http://127.0.0.1:8000/api/v1');
+    final rawUrl = envUrl.isNotEmpty ? envUrl : defaultHost;
+    final baseUrl = rawUrl.replaceAll(RegExp(r'/+$'), '');
     const connectSec =
         int.fromEnvironment('API_CONNECT_TIMEOUT_SEC', defaultValue: 10);
     const receiveSec =

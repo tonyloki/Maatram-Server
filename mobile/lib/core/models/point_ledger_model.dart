@@ -1,6 +1,23 @@
 import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 
+double _parseDouble(dynamic value, [double defaultValue = 0.0]) {
+  if (value == null) return defaultValue;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
+int _parseInt(dynamic value, [int defaultValue = 0]) {
+  if (value == null) return defaultValue;
+  if (value is num) return value.toInt();
+  if (value is String) {
+    return int.tryParse(value) ??
+        (double.tryParse(value)?.toInt() ?? defaultValue);
+  }
+  return defaultValue;
+}
+
 /// Models a single point transaction in the immutable ledger.
 @immutable
 class PointTransactionModel {
@@ -35,14 +52,14 @@ class PointTransactionModel {
       id: json['id']?.toString() ?? '',
       volunteerProfileId: json['volunteer_profile_id']?.toString() ?? '',
       eventId: json['event_id']?.toString(),
-      eventPoints: (json['event_points'] as num?)?.toDouble() ?? 0.0,
-      hourPoints: (json['hour_points'] as num?)?.toDouble() ?? 0.0,
-      totalPoints: (json['total_points'] as num?)?.toDouble() ?? 0.0,
-      hoursCredited: (json['hours_credited'] as num?)?.toDouble() ?? 0.0,
+      eventPoints: _parseDouble(json['event_points'], 0.0),
+      hourPoints: _parseDouble(json['hour_points'], 0.0),
+      totalPoints: _parseDouble(json['total_points'], 0.0),
+      hoursCredited: _parseDouble(json['hours_credited'], 0.0),
       transactionType:
           json['transaction_type']?.toString() ?? 'EVENT_COMPLETION',
       reason: json['reason']?.toString(),
-      cycleYear: (json['cycle_year'] as num?)?.toInt() ?? DateTime.now().year,
+      cycleYear: _parseInt(json['cycle_year'], DateTime.now().year),
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
           : DateTime.now(),
@@ -101,11 +118,11 @@ class PointLedgerModel {
       items: list
           .map((i) => PointTransactionModel.fromJson(i as Map<String, dynamic>))
           .toList(),
-      total: (json['total'] as num?)?.toInt() ?? 0,
-      page: (json['page'] as num?)?.toInt() ?? 1,
-      pageSize: (json['page_size'] as num?)?.toInt() ?? 50,
-      totalPages: (json['total_pages'] as num?)?.toInt() ?? 1,
-      netPoints: (json['net_points'] as num?)?.toDouble() ?? 0.0,
+      total: _parseInt(json['total'], 0),
+      page: _parseInt(json['page'], 1),
+      pageSize: _parseInt(json['page_size'], 50),
+      totalPages: _parseInt(json['total_pages'], 1),
+      netPoints: _parseDouble(json['net_points'], 0.0),
     );
   }
 }

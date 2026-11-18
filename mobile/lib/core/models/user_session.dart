@@ -27,7 +27,12 @@ class UserSession {
   bool get isApproved => status.toUpperCase() == 'APPROVED';
   bool get isPendingVerification =>
       status.toUpperCase() == 'PENDING_VERIFICATION';
-  bool get isPendingApproval => status.toUpperCase() == 'PENDING_APPROVAL';
+  bool get isPendingApproval {
+    final s = status.toUpperCase();
+    return s == 'PENDING_APPROVAL' ||
+        s == 'PENDING_ADMIN_APPROVAL' ||
+        s == 'PENDING';
+  }
   bool get isRejected => status.toUpperCase() == 'REJECTED';
 
   String get displayName {

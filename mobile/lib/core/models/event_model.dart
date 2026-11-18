@@ -104,6 +104,16 @@ class EventModel {
     return 'assets/images/community-engagement.jpg';
   }
 
+  static int _parseInt(dynamic value, [int defaultValue = 0]) {
+    if (value == null) return defaultValue;
+    if (value is num) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ??
+          (double.tryParse(value)?.toInt() ?? defaultValue);
+    }
+    return defaultValue;
+  }
+
   factory EventModel.fromJson(Map<String, dynamic> json) {
     DateTime parseDate(dynamic val) {
       if (val is String) {
@@ -111,6 +121,8 @@ class EventModel {
       }
       return DateTime.now();
     }
+
+    final rawLocation = json['location_name']?.toString() ?? json['location']?.toString();
 
     return EventModel(
       id: json['id']?.toString() ?? '',
@@ -120,11 +132,16 @@ class EventModel {
       mode: json['mode']?.toString() ?? 'PHYSICAL',
       startTime: parseDate(json['start_time']),
       endTime: parseDate(json['end_time']),
-      locationName: json['location_name']?.toString(),
-      address: json['address']?.toString(),
+      locationName: rawLocation,
+      address: json['address']?.toString() ?? rawLocation,
       city: json['city']?.toString(),
-      maxVolunteers: (json['max_volunteers'] as num?)?.toInt() ?? 10,
-      registeredCount: (json['registered_count'] as num?)?.toInt() ?? 0,
+      maxVolunteers: _parseInt(
+        json['capacity_required'] ??
+            json['volunteer_capacity'] ??
+            json['max_volunteers'],
+        10,
+      ),
+      registeredCount: _parseInt(json['registered_count'], 0),
       status: json['status']?.toString() ?? 'PUBLISHED',
       coverImageUrl: json['cover_image_url']?.toString(),
     );

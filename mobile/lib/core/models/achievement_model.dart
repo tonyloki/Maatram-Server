@@ -1,6 +1,23 @@
 import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 
+double _parseDouble(dynamic value, [double defaultValue = 0.0]) {
+  if (value == null) return defaultValue;
+  if (value is num) return value.toDouble();
+  if (value is String) return double.tryParse(value) ?? defaultValue;
+  return defaultValue;
+}
+
+int _parseInt(dynamic value, [int defaultValue = 0]) {
+  if (value == null) return defaultValue;
+  if (value is num) return value.toInt();
+  if (value is String) {
+    return int.tryParse(value) ??
+        (double.tryParse(value)?.toInt() ?? defaultValue);
+  }
+  return defaultValue;
+}
+
 /// Models an achievement badge definition and earned status.
 @immutable
 class AchievementModel {
@@ -39,8 +56,7 @@ class AchievementModel {
       iconUrl: json['icon_url']?.toString() ?? '',
       category: json['category']?.toString() ?? 'GENERAL',
       criteriaType: json['criteria_type']?.toString() ?? 'HOURS',
-      criteriaThreshold:
-          (json['criteria_threshold'] as num?)?.toDouble() ?? 0.0,
+      criteriaThreshold: _parseDouble(json['criteria_threshold'], 0.0),
       isActive: json['is_active'] as bool? ?? true,
       isEarned: json['is_earned'] as bool? ?? false,
       awardedAt: json['awarded_at'] != null
@@ -74,8 +90,8 @@ class VolunteerAchievementsModel {
       items: list
           .map((i) => AchievementModel.fromJson(i as Map<String, dynamic>))
           .toList(),
-      totalEarned: (json['total_earned'] as num?)?.toInt() ?? 0,
-      totalAvailable: (json['total_available'] as num?)?.toInt() ?? 0,
+      totalEarned: _parseInt(json['total_earned'], 0),
+      totalAvailable: _parseInt(json['total_available'], 0),
     );
   }
 }
