@@ -1,5 +1,6 @@
 """Maatram Volunteering & Gamification Portal — FastAPI Master Application."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
@@ -10,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.v1.router import api_v1_router
 from src.core.config import settings
-from src.core.database import close_db_connections
+from src.core.database import AsyncSessionLocal, close_db_connections
 from src.core.exceptions import (
     DomainException,
     domain_exception_handler,
@@ -19,6 +20,21 @@ from src.core.exceptions import (
 )
 from src.core.logging import logger
 from src.core.timing_middleware import RequestTimingMiddleware
+from src.workers.outbox_worker import outbox_worker
+
+
+async def _run_outbox_worker_loop() -> None:
+    """Background processor for transactional outbox communications."""
+    while True:
+        try:
+            async with AsyncSessionLocal() as db:
+                await outbox_worker.process_batch(db, batch_size=10)
+                await outbox_worker.recover_expired_leases(db)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.warning(f"Background outbox processor notice: {e}")
+        await asyncio.sleep(3)
 
 
 @asynccontextmanager
@@ -26,10 +42,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Application lifespan context managing startup initialization and graceful shutdown."""
     logger.info(f"Starting {settings.PROJECT_NAME} [Environment: {settings.ENVIRONMENT}]")
     logger.info(f"API documentation accessible at /docs (OpenAPI prefix: {settings.API_V1_STR})")
+    worker_task = asyncio.create_task(_run_outbox_worker_loop())
     try:
         yield
     finally:
         logger.info("Initiating graceful shutdown...")
+        worker_task.cancel()
+        try:
+            await worker_task
+        except asyncio.CancelledError:
+            pass
         await close_db_connections()
         logger.info("Application shutdown complete.")
 

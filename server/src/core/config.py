@@ -2,7 +2,7 @@
 
 from typing import Annotated, Any, Literal
 
-from pydantic import BeforeValidator, Field, model_validator
+from pydantic import AliasChoices, BeforeValidator, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     """Core application settings with environment variable bindings."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=("server/.env", ".env"),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
@@ -220,8 +220,14 @@ class Settings(BaseSettings):
     # SMTP Configuration (Gmail SMTP or generic SMTP)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
-    SMTP_USERNAME: str | None = None
-    SMTP_PASSWORD: str | None = None
+    SMTP_USERNAME: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SMTP_USERNAME", "SMTP_USER"),
+    )
+    SMTP_PASSWORD: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("SMTP_PASSWORD", "SMTP_PASS"),
+    )
     SMTP_USE_TLS: Annotated[bool, BeforeValidator(parse_bool)] = True
     SMTP_USE_SSL: Annotated[bool, BeforeValidator(parse_bool)] = False
     SMTP_TIMEOUT_SECONDS: float = 15.0

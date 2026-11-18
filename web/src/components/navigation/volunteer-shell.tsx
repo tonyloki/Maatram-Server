@@ -42,11 +42,10 @@ export function VolunteerShell({
       if (
         user.status === "PENDING" ||
         user.status === "PENDING_APPROVAL" ||
-        user.status === "PENDING_VERIFICATION"
+        user.status === "PENDING_VERIFICATION" ||
+        user.status === "REJECTED"
       ) {
-        router.replace("/onboarding/pending");
-      } else if (user.status === "REJECTED") {
-        router.replace("/onboarding/rejected");
+        router.replace("/onboarding/status");
       }
     }
   }, [isLoading, isAuthenticated, user, router, pathname]);

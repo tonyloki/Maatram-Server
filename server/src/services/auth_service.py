@@ -326,20 +326,12 @@ class AuthService:
             raise InvalidCredentialsException()
 
         # 4. Check account suspension / activation / lifecycle state
-        if user.status == "PENDING_VERIFICATION":
-            raise ForbiddenException(
-                "Email not verified. Please verify your email before logging in."
-            )
-        if user.status == "PENDING_APPROVAL":
-            raise ForbiddenException("Account is pending administrative approval.")
-        if user.status == "REJECTED":
-            raise ForbiddenException("Volunteer application has been rejected.")
         if user.status == "SUSPENDED":
             raise AccountSuspendedException()
         if user.status == "INACTIVE" or not user.is_active:
             raise ForbiddenException("Account has been deactivated.")
-        if user.status not in ("APPROVED",):
-            raise ForbiddenException(f"Account with status '{user.status}' cannot log in.")
+        # Volunteers with PENDING_APPROVAL, PENDING_VERIFICATION, or REJECTED status
+        # are permitted to authenticate so they can access the dedicated Application Status Page.
 
         # 5. Reset login counters
         user.failed_login_attempts = 0

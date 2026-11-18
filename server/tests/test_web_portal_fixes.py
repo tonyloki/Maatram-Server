@@ -327,22 +327,22 @@ async def test_pending_and_rejected_volunteers_blocked_from_event_registration(c
     async_db.add(r_prof)
     await async_db.commit()
 
-    # 4. Verify login rejection at the authentication barrier
+    # 4. Verify login succeeds for pending and rejected volunteers to access Application Status Page
     p_login = await client.post(
         "/api/v1/auth/login",
         json={"email": p_user.email, "password": "Password123!"},
     )
-    assert p_login.status_code == 403
-    assert "pending" in p_login.json()["message"].lower()
+    assert p_login.status_code == 200
+    assert p_login.json()["user"]["status"] == "PENDING_APPROVAL"
 
     r_login = await client.post(
         "/api/v1/auth/login",
         json={"email": r_user.email, "password": "Password123!"},
     )
-    assert r_login.status_code == 403
-    assert "rejected" in r_login.json()["message"].lower()
+    assert r_login.status_code == 200
+    assert r_login.json()["user"]["status"] == "REJECTED"
 
-    # 5. Verify direct service invariant throws VOLUNTEER_NOT_APPROVED even if auth is bypassed
+    # 5. Verify direct service invariant throws VOLUNTEER_NOT_APPROVED even when authenticated
     from src.core.exceptions import DomainException
     from src.services.registration_service import registration_service
 
@@ -353,6 +353,14 @@ async def test_pending_and_rejected_volunteers_blocked_from_event_registration(c
             requesting_user_id=p_user.id,
         )
     assert exc_info.value.code == "VOLUNTEER_NOT_APPROVED"
+
+    with pytest.raises(DomainException) as exc_info_r:
+        await registration_service.register_volunteer(
+            db=async_db,
+            event_id=event.id,
+            requesting_user_id=r_user.id,
+        )
+    assert exc_info_r.value.code == "VOLUNTEER_NOT_APPROVED"
 
     with pytest.raises(DomainException) as exc_info_r:
         await registration_service.register_volunteer(

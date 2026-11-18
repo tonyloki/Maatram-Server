@@ -836,11 +836,11 @@ async def test_rbac_volunteer_cannot_access_admin_endpoints(
 async def test_login_unapproved_account_statuses_rejected(
     client: AsyncClient, async_db: AsyncSession
 ):
-    """Verify login rejects PENDING_VERIFICATION, PENDING_APPROVAL, REJECTED, and INACTIVE accounts."""
+    """Verify login rejects INACTIVE and SUSPENDED accounts, while pending/rejected access status page."""
     password = "UserPassword123!"
 
-    statuses = ["PENDING_VERIFICATION", "PENDING_APPROVAL", "REJECTED", "INACTIVE"]
-    for st in statuses:
+    # Inactive and suspended must be rejected with 403
+    for st in ["INACTIVE", "SUSPENDED"]:
         email = f"user_{st.lower()}_{uuid.uuid4().hex[:6]}@example.com"
         user = User(
             email=email,
@@ -857,6 +857,26 @@ async def test_login_unapproved_account_statuses_rejected(
             json={"email": email, "password": password, "client_type": "WEB"},
         )
         assert res.status_code == 403, f"Expected 403 for status {st}, got {res.status_code}"
+
+    # Pending and rejected volunteers are permitted to authenticate to view their Application Status Page
+    for st in ["PENDING_VERIFICATION", "PENDING_APPROVAL", "REJECTED"]:
+        email = f"user_{st.lower()}_{uuid.uuid4().hex[:6]}@example.com"
+        user = User(
+            email=email,
+            password_hash=get_password_hash(password),
+            role="VOLUNTEER",
+            status=st,
+            is_active=True,
+        )
+        async_db.add(user)
+        await async_db.commit()
+
+        res = await client.post(
+            "/api/v1/auth/login",
+            json={"email": email, "password": password, "client_type": "WEB"},
+        )
+        assert res.status_code == 200, f"Expected 200 for status {st}, got {res.status_code}"
+        assert res.json()["user"]["status"] == st
 
 
 def test_account_status_transitions_state_machine():

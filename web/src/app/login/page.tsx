@@ -51,11 +51,10 @@ function LoginForm() {
         if (
           userStatus === "PENDING" ||
           userStatus === "PENDING_APPROVAL" ||
-          userStatus === "PENDING_VERIFICATION"
+          userStatus === "PENDING_VERIFICATION" ||
+          userStatus === "REJECTED"
         ) {
-          router.replace("/onboarding/pending");
-        } else if (userStatus === "REJECTED") {
-          router.replace("/onboarding/rejected");
+          router.replace("/onboarding/status");
         } else {
           router.replace("/volunteer/dashboard");
         }
@@ -78,21 +77,13 @@ function LoginForm() {
       const response = await login(email.trim().toLowerCase(), password);
       const userStatus = response.user.status;
 
-      if (userStatus === "PENDING" || userStatus === "PENDING_APPROVAL" || userStatus === "PENDING_VERIFICATION") {
-        const queryParams = new URLSearchParams({
-          email: response.user.email || email.trim(),
-          name: (response.user.email || email).split("@")[0],
-        });
-        router.push(`/onboarding/pending?${queryParams.toString()}`);
-        return;
-      }
-
-      if (userStatus === "REJECTED") {
-        const queryParams = new URLSearchParams({
-          email: response.user.email || email.trim(),
-          name: (response.user.email || email).split("@")[0],
-        });
-        router.push(`/onboarding/rejected?${queryParams.toString()}`);
+      if (
+        userStatus === "PENDING" ||
+        userStatus === "PENDING_APPROVAL" ||
+        userStatus === "PENDING_VERIFICATION" ||
+        userStatus === "REJECTED"
+      ) {
+        router.push("/onboarding/status");
         return;
       }
 

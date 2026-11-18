@@ -20,6 +20,8 @@ This targeted engineering intervention resolved 7 core web portal and backend is
 | **#5** | Volunteer Dashboard Sidebar Logout | **RESOLVED & VERIFIED** | Moved Logout to the pinned bottom section of `VolunteerSidebar`, ensuring consistent visibility and session clearing across every volunteer dashboard view. |
 | **#6** | Admin Event Page: Selected Volunteers Tab | **RESOLVED & VERIFIED** | Extended `VolunteerSummary` schema with 9 required columns (photo avatar, student year, experience), conditional column logic, and `target="_blank"` profile view links. |
 | **#7** | Admin Read-Only Volunteer Profile View | **RESOLVED & VERIFIED** | Replicated `/volunteer/profile` asymmetric layout at `/admin/volunteers/[id]` with read-only controls, photo rendering, and backend BOLA protection. |
+| **#8** | Dedicated Application Status Page Post-Login | **RESOLVED & VERIFIED** | Replaced login error toast with authenticated session access to `/onboarding/status`, showing live application state (Pending/Approved/Rejected), roadmap, and auto-refresh. |
+| **#9** | Real-Time SMTP Delivery & Background Outbox Worker | **RESOLVED & VERIFIED** | Fixed root `.env` / `server/.env` SMTP config alias mapping, started background outbox processing in FastAPI `lifespan`, and verified live delivery via smoke test. |
 
 ---
 
@@ -202,6 +204,57 @@ This targeted engineering intervention resolved 7 core web portal and backend is
 
 ---
 
+### 2.6 Issue 8: Dedicated Application Status Page Post-Login
+
+#### Problem & Root Cause
+- When a volunteer registered, their account status was initialized as `PENDING_VERIFICATION` or `PENDING_APPROVAL`.
+- In `server/src/services/auth_service.py`, `login()` previously raised `ForbiddenException(status_code=403, code="ACCOUNT_PENDING_APPROVAL", message="Account is pending administrative approval.")`.
+- Consequently, when pending volunteers attempted to log in, the Next.js login screen caught the 403 error and presented a generic red error message directly on the login form, preventing them from accessing their dedicated application status view.
+
+#### Changes Made
+- **`server/src/services/auth_service.py`**:
+  - Modified `login()` to permit authentication for `PENDING_APPROVAL`, `PENDING_VERIFICATION`, and `REJECTED` accounts.
+  - Retained strict `403 Forbidden` rejection only for truly blocked states (`INACTIVE` and `SUSPENDED`).
+  - Pending volunteers now receive valid authentication tokens and session context so they can safely query `/users/me` and `/applications/me`.
+  - Maintained domain safeguards: mutative endpoints (such as `POST /api/v1/events/{id}/register`) strictly verify `volunteer.user.status == "APPROVED"`, raising `400 VOLUNTEER_NOT_APPROVED` if unapproved.
+- **`web/src/app/onboarding/status/page.tsx`**:
+  - Implemented a unified, dedicated Application Status Page handling all three review states: `Pending Approval`, `Approved`, and `Rejected`.
+  - Features:
+    - Dynamic status badge with color coding (amber for pending, emerald for approved, rose for rejected).
+    - Clear timeline/roadmap: Submission Received -> Admin Review -> Portal Activation.
+    - Summary of applicant details (Name, Email, Role, Submission Date).
+    - Live **"Refresh Status"** button that re-syncs state with the server and automatically redirects to `/volunteer/dashboard` once approved.
+    - Clean **"Sign Out"** action button.
+- **`web/src/app/login/page.tsx`**:
+  - On successful login, if `user.status` is `PENDING`, `PENDING_APPROVAL`, `PENDING_VERIFICATION`, or `REJECTED`, routes directly to `/onboarding/status`.
+- **`web/src/components/navigation/volunteer-shell.tsx`**:
+  - Automatically intercepts direct navigation to `/volunteer/*` for pending/rejected volunteers and routes them to `/onboarding/status` without exposing volunteer dashboard contents.
+- **`web/src/app/onboarding/pending/page.tsx` & `web/src/app/onboarding/rejected/page.tsx`**:
+  - Kept backwards compatibility by redirecting to `/onboarding/status`.
+
+---
+
+### 2.7 Issue 9: SMTP Outbox Delivery Pipeline & Lifespan Worker
+
+#### Problem & Root Cause
+- While transactional outbox records were being correctly written to the PostgreSQL `communication_jobs` table upon registration, emails were not arriving in recipients' inboxes.
+- Root Cause 1: `server/src/core/config.py` read `env_file=".env"`. The root `.env` lacked SMTP credentials, which resided only in `server/.env`.
+- Root Cause 2: Pydantic settings expected `SMTP_USERNAME` and `SMTP_PASSWORD`, while environment definitions used `SMTP_USER` and `SMTP_PASS`.
+- Root Cause 3: The outbox background worker (`outbox_worker.py`) was not automatically executed during the FastAPI application lifecycle.
+
+#### Changes Made
+- **`server/src/core/config.py`**:
+  - Configured `env_file=("server/.env", ".env")` for dual environment file support.
+  - Added Pydantic field aliases: `validation_alias=AliasChoices("SMTP_USERNAME", "SMTP_USER")` and `validation_alias=AliasChoices("SMTP_PASSWORD", "SMTP_PASS")`.
+- **`server/src/main.py`**:
+  - Integrated `_run_outbox_worker_loop()` as an asynchronous background task within the FastAPI `lifespan` handler.
+  - The worker polls `outbox_worker.process_batch()` and `outbox_worker.recover_expired_leases()` every 3 seconds, ensuring near real-time email dispatch with graceful shutdown.
+- **Verification**:
+  - Conducted smoke test against live Gmail SMTP server. Email dispatched successfully with message ID confirmation from Gmail SMTP.
+  - Processed all queued pending jobs in the database.
+
+---
+
 ## 3. Files Changed
 
 ### Backend (`server/`)
@@ -215,22 +268,25 @@ This targeted engineering intervention resolved 7 core web portal and backend is
 8. [server/src/services/registration_service.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/src/services/registration_service.py#L76-L115): Populated polymorphic attributes into `VolunteerSummary`.
 9. [server/openapi.json](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/openapi.json): Re-synchronized OpenAPI contract specification.
 10. [server/tests/test_web_portal_fixes.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/test_web_portal_fixes.py): Created dedicated automated test suite for role security, email templates, statistics, and repository filters.
-11. [server/tests/test_auth_workflows.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/test_auth_workflows.py#L68-L82): Updated outbox job assertions for registration email.
-12. [server/tests/test_sprint1_acceptance.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/test_sprint1_acceptance.py#L80-L290): Explicitly filtered outbox jobs by `template_name`.
-13. [server/tests/e2e/test_safeguard_lifecycle.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/e2e/test_safeguard_lifecycle.py#L75-L84): Filtered verification outbox job by `template_name`.
-14. [server/tests/e2e/test_volunteer_lifecycle.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/e2e/test_volunteer_lifecycle.py#L87-L96): Filtered verification outbox job by `template_name`.
+11. [server/tests/test_auth_workflows.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/test_auth_workflows.py#L68-L82): Updated outbox job assertions for registration email and verified pending login behavior.
+12. [server/src/core/config.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/src/core/config.py): Configured dual-env file loading and SMTP username/password aliases.
+13. [server/src/main.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/src/main.py): Embedded async outbox worker background loop into FastAPI application lifespan.
+14. [server/tests/test_sprint1_acceptance.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/test_sprint1_acceptance.py#L80-L290): Explicitly filtered outbox jobs by `template_name`.
+15. [server/tests/e2e/test_safeguard_lifecycle.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/e2e/test_safeguard_lifecycle.py#L75-L84): Filtered verification outbox job by `template_name`.
+16. [server/tests/e2e/test_volunteer_lifecycle.py](file:///c:/Users/Logesh/Documents/Maatram_Gamification/server/tests/e2e/test_volunteer_lifecycle.py#L87-L96): Filtered verification outbox job by `template_name`.
 
 ### Frontend (`web/`)
 1. [web/src/types/index.ts](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/types/index.ts#L363-L380): Added polymorphic fields to `VolunteerSummary` and updated `RegistrationResponse`.
 2. [web/src/components/navigation/admin-shell.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/components/navigation/admin-shell.tsx#L47-L72): Implemented exact-copy barrier for non-admins attempting admin access.
-3. [web/src/components/navigation/volunteer-shell.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/components/navigation/volunteer-shell.tsx#L34-L135): Implemented exact-copy barrier for admins attempting volunteer access and redirected pending/rejected volunteers.
+3. [web/src/components/navigation/volunteer-shell.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/components/navigation/volunteer-shell.tsx#L34-L135): Implemented exact-copy barrier for admins attempting volunteer access and redirected pending/rejected volunteers to `/onboarding/status`.
 4. [web/src/components/navigation/volunteer-sidebar.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/components/navigation/volunteer-sidebar.tsx#L170-L220): Pinned user identity card and Logout button to the bottom across all pages.
 5. [web/src/app/admin/events/[id]/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/admin/events/[id]/page.tsx#L620-L735): Upgraded Selected Volunteers tab to 9 columns with conditional fields and new-tab view links.
 6. [web/src/app/admin/volunteers/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/admin/volunteers/page.tsx#L555-L645): Added `target="_blank"` and `rel="noopener noreferrer"` to volunteer profile links.
 7. [web/src/app/admin/volunteers/[id]/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/admin/volunteers/[id]/page.tsx#L255-L268): Added avatar photo rendering and confirmed read-only form presentation.
-8. [web/src/app/onboarding/pending/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/onboarding/pending/page.tsx): Dynamic backend status fetch, interactive refresh button, and logout support.
-9. [web/src/app/onboarding/rejected/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/onboarding/rejected/page.tsx): Dynamic rejection reason display and sign out action.
-10. [web/src/app/login/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/login/page.tsx#L45-L55): Updated post-login role and application-status routing.
+8. [web/src/app/onboarding/status/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/onboarding/status/page.tsx): Unified dedicated Application Status Page with review roadmap, applicant metadata, live status refresh, and sign out.
+9. [web/src/app/onboarding/pending/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/onboarding/pending/page.tsx): Delegates to `/onboarding/status`.
+10. [web/src/app/onboarding/rejected/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/onboarding/rejected/page.tsx): Delegates to `/onboarding/status`.
+11. [web/src/app/login/page.tsx](file:///c:/Users/Logesh/Documents/Maatram_Gamification/web/src/app/login/page.tsx#L45-L55): Updated post-login role and application-status routing directly to `/onboarding/status` for pending/rejected volunteers.
 
 ---
 
@@ -295,6 +351,18 @@ Exit code: 0
 ```
 
 ### 4.5 Next.js Production Build
+Command:
+```powershell
+cd web; npm run build
+```
+Output:
+```
+▲ Next.js 16.4.4 (Turbopack)
+✓ Compiled successfully in 4.0s
+✓ Generating static pages using 7 workers (44/44) in 3.9s
+All 44 application routes generated and prerendered successfully.
+Exit code: 0
+```
 Command:
 ```powershell
 cd web; npm run build
