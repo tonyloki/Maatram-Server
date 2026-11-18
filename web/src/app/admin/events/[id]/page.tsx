@@ -109,7 +109,9 @@ export default function AdminEventDetailPage({ params }: PageProps) {
     (r) => r.status === "SUBSCRIBED" || r.status === "WAITLISTED"
   );
   const selectedList = registrations.filter((r) => r.status === "SELECTED");
-  const attendedCount = attendanceRecords.filter((a) => a.status === "ATTENDED").length;
+  const attendedCount = attendanceRecords.filter(
+    (a) => a.status === "COMPLETED" || a.status === "ATTENDED"
+  ).length;
 
   const totalCreditedHours = attendanceRecords.reduce((acc, curr) => {
     return acc + (Number(curr.hours_credited) || 0);
@@ -394,7 +396,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
           <div>
             <div className="font-bold text-sm">Event Finalized & Gamification Points Awarded!</div>
             <div>
-              {completionSuccess.volunteers_awarded} volunteers received exact points (
+              {completionSuccess.total_volunteers_awarded ?? completionSuccess.volunteers_awarded ?? 0} volunteers received exact points (
               {completionSuccess.total_points_awarded} total pts) credited to the immutable ledger.
             </div>
           </div>
@@ -458,7 +460,17 @@ export default function AdminEventDetailPage({ params }: PageProps) {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("completion")}
+          onClick={async () => {
+            setActiveTab("completion");
+            try {
+              const previewRes = await apiClient.get<EventCompletionPreviewResponse>(
+                `/events/${id}/completion-preview`
+              );
+              setCompletionPreview(previewRes.data);
+            } catch {
+              // completion preview might fail if no attendance or draft
+            }
+          }}
           className={`pb-3 transition relative ${
             activeTab === "completion"
               ? "text-charcoal-900 border-b-2 border-[#F5B817] font-extrabold"
@@ -845,7 +857,13 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                           onClick={() => {
                             setCorrectingRecord(att);
                             setCorrectionHours(String(att.hours_credited || "4.0"));
-                            setCorrectionStatus(att.status);
+                            setCorrectionStatus(
+                              att.status === "COMPLETED" || att.status === "ATTENDED"
+                                ? "ATTENDED"
+                                : att.status === "INCOMPLETE"
+                                ? "INCOMPLETE"
+                                : "ABSENT"
+                            );
                             setCorrectionReason("");
                           }}
                           className="px-3 py-1 border border-stone-300 hover:bg-stone-100 text-charcoal-700 font-semibold rounded text-[11px]"
@@ -898,7 +916,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                     Attended Volunteers
                   </div>
                   <div className="text-2xl font-black text-charcoal-900 mt-1">
-                    {completionPreview.attended_count}
+                    {completionPreview.total_attended ?? completionPreview.attended_count ?? 0}
                   </div>
                 </div>
                 <div className="p-4 bg-stone-50 rounded-lg">
@@ -906,7 +924,7 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                     Total Hours To Credit
                   </div>
                   <div className="text-2xl font-black text-charcoal-900 mt-1">
-                    {completionPreview.total_hours_to_credit} hrs
+                    {completionPreview.total_hours_credited ?? completionPreview.total_hours_to_credit ?? 0} hrs
                   </div>
                 </div>
                 <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
@@ -914,10 +932,73 @@ export default function AdminEventDetailPage({ params }: PageProps) {
                     Total Gamification Points
                   </div>
                   <div className="text-2xl font-black text-amber-900 mt-1">
-                    {completionPreview.total_points_to_award} pts
+                    {completionPreview.total_points_to_award ?? 0} pts
                   </div>
                 </div>
               </div>
+
+              {/* Attendee Dry-Run Breakdown Table */}
+              {completionPreview.attendees && completionPreview.attendees.length > 0 && (
+                <div className="border border-stone-200 rounded-xl overflow-hidden mt-4">
+                  <div className="px-4 py-3 bg-stone-50 border-b border-stone-200 font-bold text-xs text-charcoal-800">
+                    Attendee Points & Hours Allocation Breakdown
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-stone-50/70 border-b border-stone-200 text-[11px] font-bold text-charcoal-500 uppercase tracking-wider">
+                          <th scope="col" className="py-2.5 px-4">Volunteer</th>
+                          <th scope="col" className="py-2.5 px-4">Category</th>
+                          <th scope="col" className="py-2.5 px-4 text-center">Status</th>
+                          <th scope="col" className="py-2.5 px-4 text-center">Hours Credited</th>
+                          <th scope="col" className="py-2.5 px-4 text-center">Event Pts</th>
+                          <th scope="col" className="py-2.5 px-4 text-center">Hour Pts</th>
+                          <th scope="col" className="py-2.5 px-4 text-right">Total Pts</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100">
+                        {completionPreview.attendees.map((att, idx) => (
+                          <tr key={att.volunteer_profile_id || idx} className="hover:bg-stone-50/60">
+                            <td className="py-3 px-4 font-semibold text-charcoal-900">
+                              {att.volunteer_name}
+                            </td>
+                            <td className="py-3 px-4 text-charcoal-600">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-stone-100 text-charcoal-700">
+                                {att.category}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  att.attendance_status === "COMPLETED" || att.attendance_status === "ATTENDED"
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : att.attendance_status === "INCOMPLETE"
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-red-100 text-red-800"
+                                }`}
+                              >
+                                {att.attendance_status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center font-medium text-charcoal-700">
+                              {att.hours_credited} hrs
+                            </td>
+                            <td className="py-3 px-4 text-center text-charcoal-600">
+                              {att.event_points}
+                            </td>
+                            <td className="py-3 px-4 text-center text-charcoal-600">
+                              {att.hour_points}
+                            </td>
+                            <td className="py-3 px-4 text-right font-black text-charcoal-900">
+                              {att.total_points} pts
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {completionPreview.warnings && completionPreview.warnings.length > 0 && (
                 <div className="p-4 bg-amber-50 rounded-lg border border-amber-300 text-xs text-amber-900">

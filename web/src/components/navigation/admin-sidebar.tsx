@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   CalendarDays,
+  Trophy,
   ScrollText,
   Settings,
   LogOut,
@@ -31,6 +32,11 @@ const ADMIN_NAV_ITEMS = [
     label: "Manage Events",
     href: "/admin/events",
     icon: CalendarDays,
+  },
+  {
+    label: "Leaderboard",
+    href: "/admin/leaderboard",
+    icon: Trophy,
   },
   {
     label: "Audit Logs",

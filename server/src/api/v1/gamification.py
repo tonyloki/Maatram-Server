@@ -187,6 +187,7 @@ async def get_leaderboard(
         cycle_year=cycle_year,
         page=page,
         page_size=page_size,
+        current_user=current_user,
     )
 
 
@@ -204,7 +205,12 @@ async def get_overall_leaderboard(
 ) -> LeaderboardResponse:
     """Overall leaderboard rankings across all volunteer categories."""
     return await gamification_service.get_leaderboard(
-        db=db, category="ALL", cycle_year=cycle_year, page=page, page_size=page_size
+        db=db,
+        category="ALL",
+        cycle_year=cycle_year,
+        page=page,
+        page_size=page_size,
+        current_user=current_user,
     )
 
 
@@ -222,7 +228,12 @@ async def get_student_leaderboard(
 ) -> LeaderboardResponse:
     """Student tier leaderboard rankings."""
     return await gamification_service.get_leaderboard(
-        db=db, category="STUDENT", cycle_year=cycle_year, page=page, page_size=page_size
+        db=db,
+        category="STUDENT",
+        cycle_year=cycle_year,
+        page=page,
+        page_size=page_size,
+        current_user=current_user,
     )
 
 
@@ -240,7 +251,12 @@ async def get_alumni_leaderboard(
 ) -> LeaderboardResponse:
     """Alumni tier leaderboard rankings."""
     return await gamification_service.get_leaderboard(
-        db=db, category="ALUMNI", cycle_year=cycle_year, page=page, page_size=page_size
+        db=db,
+        category="ALUMNI",
+        cycle_year=cycle_year,
+        page=page,
+        page_size=page_size,
+        current_user=current_user,
     )
 
 
@@ -258,7 +274,12 @@ async def get_corporate_leaderboard(
 ) -> LeaderboardResponse:
     """Corporate panelist tier leaderboard rankings."""
     return await gamification_service.get_leaderboard(
-        db=db, category="CORPORATE", cycle_year=cycle_year, page=page, page_size=page_size
+        db=db,
+        category="CORPORATE",
+        cycle_year=cycle_year,
+        page=page,
+        page_size=page_size,
+        current_user=current_user,
     )
 
 

@@ -349,6 +349,23 @@ async def test_leaderboard_rankings_and_privacy_consent_masking(
     assert student_items[0]["volunteer_name"] == "Priya Rajan"
     assert student_items[1]["volunteer_name"] == "Anonymous Volunteer"
 
+    # Query as Administrator: Must see real name "Karthik S" instead of "Anonymous Volunteer"
+    admin_user, _ = await create_user(async_db, role="ADMIN")
+    admin_token = await get_auth_token(client, admin_user.email)
+
+    admin_res = await client.get(
+        "/api/v1/gamification/leaderboard/overall?cycle_year=2026",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert admin_res.status_code == 200, admin_res.text
+    admin_items = admin_res.json()["items"]
+
+    # In Admin view, Karthik S is displayed with real name and is_anonymous is False
+    karthik_item = next((item for item in admin_items if item["volunteer_name"] == "Karthik S"), None)
+    assert karthik_item is not None, "Admin must see Karthik S's real name"
+    assert karthik_item["is_anonymous"] is False
+    assert karthik_item["volunteer_profile_id"] is not None
+
 
 # ---------------------------------------------------------------------------
 # 5. Achievements Catalog & Automatic Evaluation

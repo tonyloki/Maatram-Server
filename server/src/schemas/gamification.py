@@ -40,6 +40,9 @@ class EventCompletionPreviewResponse(BaseSchema):
     thank_you_recipients_count: int
     attendees: list[AttendeeCompletionPreview]
     draft_linkedin_copy: str
+    attended_count: int | None = None
+    total_hours_to_credit: Decimal | None = None
+    warnings: list[str] = Field(default_factory=list)
 
 
 class EventCompletionResponse(BaseSchema):
@@ -53,6 +56,7 @@ class EventCompletionResponse(BaseSchema):
     total_hours_credited: Decimal = Decimal("0.00")
     outbox_jobs_created: int
     achievements_awarded_count: int
+    volunteers_awarded: int | None = None
 
 
 class PointTransactionResponse(BaseSchema):

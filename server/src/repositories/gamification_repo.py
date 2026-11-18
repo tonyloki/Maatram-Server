@@ -152,10 +152,10 @@ class GamificationRepository:
         cycle_year: int,
         skip: int = 0,
         limit: int = 50,
+        is_admin: bool = False,
     ) -> tuple[list[dict[str, object]], int]:
-        """Fetch multi-tier leaderboard rankings respecting affirmative privacy consent."""
+        """Fetch multi-tier leaderboard rankings respecting affirmative privacy consent for volunteers, but revealing all real names to administrators."""
         # Join PointTransaction with VolunteerProfile and ConsentRecord
-        # Consent filter: leaderboard_visible must be TRUE
         query = (
             select(
                 VolunteerProfile.id.label("profile_id"),
@@ -179,7 +179,6 @@ class GamificationRepository:
             .outerjoin(ConsentRecord, VolunteerProfile.id == ConsentRecord.volunteer_profile_id)
             .where(
                 PointTransaction.cycle_year == cycle_year,
-                func.coalesce(ConsentRecord.leaderboard_visible, False).is_(True),
             )
             .group_by(
                 VolunteerProfile.id,
@@ -191,6 +190,9 @@ class GamificationRepository:
             )
             .having(func.sum(PointTransaction.total_points) > Decimal("0.00"))
         )
+
+        if not is_admin:
+            query = query.where(func.coalesce(ConsentRecord.leaderboard_visible, False).is_(True))
 
         if category and category.upper() not in ("ALL", "OVERALL"):
             query = query.where(VolunteerProfile.category == category.upper())
@@ -216,9 +218,14 @@ class GamificationRepository:
         results: list[dict[str, object]] = []
         for idx, r in enumerate(rows):
             rank = skip + idx + 1
-            is_anon = not bool(r.name_visible)
-            name = "Anonymous Volunteer" if is_anon else f"{r.first_name} {r.last_name}"
-            prof_id = None if is_anon else r.profile_id
+            if is_admin:
+                is_anon = False
+                name = f"{r.first_name} {r.last_name}"
+                prof_id = r.profile_id
+            else:
+                is_anon = not bool(r.name_visible)
+                name = "Anonymous Volunteer" if is_anon else f"{r.first_name} {r.last_name}"
+                prof_id = None if is_anon else r.profile_id
 
             results.append(
                 {

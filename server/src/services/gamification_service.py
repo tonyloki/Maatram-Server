@@ -216,6 +216,10 @@ class GamificationService:
             f"#MaatramVolunteering #SocialImpact #EducationForAll"
         )
 
+        all_warnings: list[str] = []
+        for att_prev in attendee_previews:
+            all_warnings.extend(att_prev.warnings)
+
         return EventCompletionPreviewResponse(
             event_id=event.id,
             event_title=event.title,
@@ -229,6 +233,9 @@ class GamificationService:
             thank_you_recipients_count=thank_you_count,
             attendees=attendee_previews,
             draft_linkedin_copy=draft_linkedin,
+            attended_count=total_attended,
+            total_hours_to_credit=total_hours,
+            warnings=all_warnings,
         )
 
     async def complete_and_award_event(
@@ -403,6 +410,7 @@ class GamificationService:
             total_hours_credited=total_hours,
             outbox_jobs_created=outbox_count,
             achievements_awarded_count=achievements_count,
+            volunteers_awarded=total_awarded,
         )
 
     async def _evaluate_volunteer_achievements(
@@ -527,10 +535,13 @@ class GamificationService:
         cycle_year: int | None,
         page: int = 1,
         page_size: int = 50,
+        current_user: User | None = None,
     ) -> LeaderboardResponse:
-        """Fetch multi-tier leaderboard rankings with affirmative privacy consent masking."""
+        """Fetch multi-tier leaderboard rankings with affirmative privacy consent masking for volunteers, and full unmasked identity for administrators."""
         year = cycle_year or datetime.now(UTC).year
-        cache_key = f"leaderboard:{category or 'ALL'}:{year}:{page}:{page_size}"
+        is_admin = current_user is not None and current_user.role in ("ADMIN", "SUPER_ADMIN")
+        audience = "admin" if is_admin else "volunteer"
+        cache_key = f"leaderboard:{category or 'ALL'}:{year}:{page}:{page_size}:{audience}"
         cached_result = await cache.get(cache_key)
         if cached_result is not None:
             return cached_result  # type: ignore[no-any-return]
@@ -543,6 +554,7 @@ class GamificationService:
             cycle_year=year,
             skip=skip,
             limit=page_size,
+            is_admin=is_admin,
         )
 
         items: list[LeaderboardItemResponse] = []

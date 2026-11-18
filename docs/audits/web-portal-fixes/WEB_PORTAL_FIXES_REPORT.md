@@ -22,6 +22,8 @@ This targeted engineering intervention resolved 7 core web portal and backend is
 | **#7** | Admin Read-Only Volunteer Profile View | **RESOLVED & VERIFIED** | Replicated `/volunteer/profile` asymmetric layout at `/admin/volunteers/[id]` with read-only controls, photo rendering, and backend BOLA protection. |
 | **#8** | Dedicated Application Status Page Post-Login | **RESOLVED & VERIFIED** | Replaced login error toast with authenticated session access to `/onboarding/status`, showing live application state (Pending/Approved/Rejected), roadmap, and auto-refresh. |
 | **#9** | Real-Time SMTP Delivery & Background Outbox Worker | **RESOLVED & VERIFIED** | Fixed root `.env` / `server/.env` SMTP config alias mapping, started background outbox processing in FastAPI `lifespan`, and verified live delivery via smoke test. |
+| **#10** | Admin Portal Leaderboard & Privacy Governance | **RESOLVED & VERIFIED** | Added `/admin/leaderboard` mirroring the Volunteer Leaderboard UI exactly. Enforced role-based privacy: volunteers see masked anonymous names, while admins see full real names of all volunteers. |
+| **#11** | Admin Event Dossier Completion & Attendance Stats | **RESOLVED & VERIFIED** | Fixed top metric cards and completion preview cards to accurately query `COMPLETED` attendance records and bind `total_attended`, `total_hours_credited`, and attendee breakdown tables. |
 
 ---
 
@@ -252,6 +254,66 @@ This targeted engineering intervention resolved 7 core web portal and backend is
 - **Verification**:
   - Conducted smoke test against live Gmail SMTP server. Email dispatched successfully with message ID confirmation from Gmail SMTP.
   - Processed all queued pending jobs in the database.
+
+---
+
+### 2.8 Issue 10: Admin Portal Leaderboard & Real-Name Privacy Governance
+
+#### Problem & Root Cause
+- The Admin Portal lacked a dedicated Leaderboard page.
+- Under the Volunteer Portal, when volunteers opt into anonymous leaderboard participation (`name_visible = False`), their names are masked as `"Anonymous Volunteer"`.
+- Requirement: Admins must have full visibility into the true identities of all volunteers on the leaderboard for governance and audit purposes. Privacy masking must apply exclusively to the Volunteer Portal.
+- Furthermore, the Admin Portal navigation rail (`AdminSidebar`) lacked a link to the Leaderboard.
+
+#### Changes Made
+- **`server/src/repositories/gamification_repo.py`**:
+  - Enhanced `get_leaderboard_rankings()` with `is_admin: bool = False`.
+  - When `is_admin=True`:
+    - Disables public consent filtering: shows all volunteers with points.
+    - Bypasses name masking: sets `is_anon = False`, `name = f"{r.first_name} {r.last_name}"`, and exposes `volunteer_profile_id`.
+  - When `is_admin=False` (Volunteers):
+    - Strictly preserves affirmative consent checks (`ConsentRecord.leaderboard_visible == True`).
+    - Masks identity when `ConsentRecord.name_visible == False` (`"Anonymous Volunteer"`, `volunteer_profile_id = None`).
+- **`server/src/services/gamification_service.py`**:
+  - Added `current_user` resolution in `get_leaderboard()`.
+  - Partitioned caching keys by audience (`:admin` vs `:volunteer`), preventing cached anonymous responses from leaking to administrators or vice versa.
+- **`server/src/api/v1/gamification.py`**:
+  - Injected `current_user` into `get_leaderboard()` calls across overall, student, alumni, and corporate tiers.
+- **`web/src/app/admin/leaderboard/page.tsx`**:
+  - Created Admin Leaderboard page with 100% visual and functional fidelity to the Volunteer Leaderboard:
+    - Golden curved hero banner with watermark, crown, and cycle year selector.
+    - Category filter pills (Overall, Students, Alumni, Corporate).
+    - 3-step physical podium pedestal with elevated champion laurel wreath and crowns.
+    - Full rankings table with trend indicators, points, and hours.
+    - Displays real volunteer names consistently.
+- **`web/src/components/navigation/admin-sidebar.tsx`**:
+  - Added `{ label: "Leaderboard", href: "/admin/leaderboard", icon: Trophy }` to `ADMIN_NAV_ITEMS`.
+
+---
+
+### 2.9 Issue 11: Admin Event Dossier Completion & Attendance Stats
+
+#### Problem & Root Cause
+- On `/admin/events/[id]`, the top metric cards reported `0 Attended` even when attendance records existed, and in the "Completion & Points" tab:
+  - "ATTENDED VOLUNTEERS" was blank.
+  - "TOTAL HOURS TO CREDIT" displayed ` hrs` with a missing hour figure.
+- Root Cause 1: Attendance record statuses for checked-out volunteers in PostgreSQL are `'COMPLETED'`. The frontend filtered for `a.status === "ATTENDED"`, resulting in `0`.
+- Root Cause 2: Contract drift between backend schema `EventCompletionPreviewResponse` (`total_attended`, `total_hours_credited`) and frontend expectation (`attended_count`, `total_hours_to_credit`).
+
+#### Changes Made
+- **`server/src/schemas/gamification.py`**:
+  - Expanded `EventCompletionPreviewResponse` to include both canonical and alias fields (`attended_count`, `total_hours_to_credit`, `warnings`).
+  - Added `volunteers_awarded` alias to `EventCompletionResponse`.
+- **`server/src/services/gamification_service.py`**:
+  - Aggregated warnings across attendees into root `warnings`.
+  - Populated all backward-compatible fields in completion preview and completion responses.
+- **`web/src/app/admin/events/[id]/page.tsx`**:
+  - Fixed attended count calculation: `a.status === "COMPLETED" || a.status === "ATTENDED"`.
+  - Bound completion preview cards to `{completionPreview.total_attended ?? completionPreview.attended_count ?? 0}` and `{completionPreview.total_hours_credited ?? completionPreview.total_hours_to_credit ?? 0} hrs`.
+  - Added an Attendee Points & Hours Allocation Breakdown table in the Completion tab displaying each volunteer's name, category, status, hours credited, event points, hour points, and total points.
+  - Bound tab click to immediately fetch preview data.
+- **`web/src/types/index.ts`**:
+  - Updated `AttendanceRecordResponse.status` to include `"COMPLETED"` and added `AttendeeCompletionPreview`.
 
 ---
 

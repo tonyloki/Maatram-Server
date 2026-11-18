@@ -410,7 +410,7 @@ export interface AttendanceRecordResponse {
   check_out_time?: string | null;
   duration_minutes?: number | null;
   hours_credited: number | string;
-  status: "ATTENDED" | "INCOMPLETE" | "ABSENT";
+  status: "ATTENDED" | "COMPLETED" | "IN_PROGRESS" | "INCOMPLETE" | "ABSENT" | string;
   verified_by_user_id?: string | null;
   created_at: string;
   updated_at: string;
@@ -726,6 +726,20 @@ export interface BulkAttendanceResponse {
 // Event Completion & Gamification Preview
 // ==========================================
 
+export interface AttendeeCompletionPreview {
+  volunteer_profile_id: string;
+  volunteer_name: string;
+  category: string;
+  attendance_status: string;
+  duration_minutes?: number | null;
+  hours_credited: string | number;
+  event_points: string | number;
+  hour_points: string | number;
+  total_points: string | number;
+  is_qualifying?: boolean;
+  warnings?: string[];
+}
+
 export interface EventCompletionPreviewParticipant {
   volunteer_profile_id: string;
   volunteer_name: string;
@@ -740,25 +754,40 @@ export interface EventCompletionPreviewParticipant {
 export interface EventCompletionPreviewResponse {
   event_id: string;
   event_title: string;
-  selected_count: number;
-  attended_count: number;
-  incomplete_count: number;
-  absent_count: number;
-  total_hours_to_credit: string;
-  total_points_to_award: string;
-  participants: EventCompletionPreviewParticipant[];
-  warnings: string[];
-  is_ready_for_completion: boolean;
+  event_status?: string;
+  total_selected?: number;
+  total_attended?: number;
+  total_incomplete?: number;
+  total_absent?: number;
+  total_hours_credited?: string | number;
+  total_points_to_award: string | number;
+  thank_you_recipients_count?: number;
+  attendees?: AttendeeCompletionPreview[];
+  draft_linkedin_copy?: string;
+  // Compatibility fields
+  selected_count?: number;
+  attended_count?: number;
+  incomplete_count?: number;
+  absent_count?: number;
+  total_hours_to_credit?: string | number;
+  participants?: EventCompletionPreviewParticipant[];
+  warnings?: string[];
+  is_ready_for_completion?: boolean;
 }
 
 export interface EventCompletionResponse {
   event_id: string;
-  event_status: string;
-  total_volunteers_credited: number;
-  total_hours_credited: string;
-  total_points_awarded: string;
-  message: string;
+  status?: string;
+  event_status?: string;
+  completed_at?: string;
+  total_volunteers_awarded?: number;
+  total_volunteers_credited?: number;
   volunteers_awarded?: number;
+  total_hours_credited?: string | number;
+  total_points_awarded?: string | number;
+  outbox_jobs_created?: number;
+  achievements_awarded_count?: number;
+  message?: string;
 }
 
 // ==========================================
