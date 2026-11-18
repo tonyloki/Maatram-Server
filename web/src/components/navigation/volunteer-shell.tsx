@@ -11,6 +11,7 @@ import {
   Ban,
   ArrowRight,
   ChevronDown,
+  ShieldAlert,
 } from "lucide-react";
 import { VolunteerSidebar } from "@/components/navigation/volunteer-sidebar";
 import { Logo } from "@/components/ui/logo";
@@ -30,12 +31,25 @@ export function VolunteerShell({
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [profile, setProfile] = useState<VolunteerProfileResponse | null>(null);
 
-  // Authentication check
+  // Authentication and status checks
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [isLoading, isAuthenticated, router, pathname]);
+
+    if (!isLoading && isAuthenticated && user && user.role === "VOLUNTEER") {
+      if (
+        user.status === "PENDING" ||
+        user.status === "PENDING_APPROVAL" ||
+        user.status === "PENDING_VERIFICATION"
+      ) {
+        router.replace("/onboarding/pending");
+      } else if (user.status === "REJECTED") {
+        router.replace("/onboarding/rejected");
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router, pathname]);
 
   // Fetch unread count & volunteer profile for topbar
   useEffect(() => {
@@ -71,6 +85,60 @@ export function VolunteerShell({
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-medium text-[#4B5563]">Loading Maatram Volunteer Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Scenario B: Admin attempts to access Volunteer Dashboard
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
+  if (isAdmin) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-stone-200 p-8 text-center shadow-lg space-y-4">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto text-[#D97706]">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-charcoal-950">You don&apos;t have access. Go to Admin Dashboard.</h2>
+          <p className="text-sm text-charcoal-600 leading-relaxed">
+            Your authenticated administrator account (<span className="font-semibold text-charcoal-900">{user?.email}</span>) does not access the Volunteer Portal.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/admin/dashboard"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold text-sm shadow-xs transition-colors"
+            >
+              <ArrowRight className="w-4 h-4" /> Go to Admin Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending / Rejected volunteer guard: block access to full Volunteer Dashboard
+  if (
+    user?.role === "VOLUNTEER" &&
+    (user.status === "PENDING" ||
+      user.status === "PENDING_APPROVAL" ||
+      user.status === "PENDING_VERIFICATION")
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-[#F5B817] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-[#4B5563]">Redirecting to Application Status...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === "VOLUNTEER" && user.status === "REJECTED") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-3 border-red-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-[#4B5563]">Redirecting to Application Status...</p>
         </div>
       </div>
     );

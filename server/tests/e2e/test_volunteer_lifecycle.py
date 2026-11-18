@@ -87,7 +87,10 @@ async def test_full_adult_volunteer_lifecycle_e2e(client: AsyncClient, async_db:
     # 3. Verify Email ownership via verification token from outbox
     job_stmt = (
         select(CommunicationJob)
-        .where(CommunicationJob.recipient == vol_email)
+        .where(
+            CommunicationJob.recipient == vol_email,
+            CommunicationJob.template_name == "VERIFY_EMAIL",
+        )
         .order_by(CommunicationJob.created_at.desc())
     )
     job = (await async_db.execute(job_stmt)).scalars().first()

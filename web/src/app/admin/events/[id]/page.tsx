@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Award,
   Sparkles,
+  Eye,
 } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 import {
@@ -629,52 +630,135 @@ export default function AdminEventDetailPage({ params }: PageProps) {
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-stone-50 border-b border-stone-200 text-[11px] font-bold text-charcoal-500 uppercase tracking-wider">
-                    <th className="py-3 px-4">Volunteer</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Selected On</th>
-                    <th className="py-3 px-4">Check-In Quick Action</th>
+                    <th scope="col" className="py-3 px-3 w-12 text-center">Photo</th>
+                    <th scope="col" className="py-3 px-4">Volunteer Name</th>
+                    <th scope="col" className="py-3 px-4">Email</th>
+                    <th scope="col" className="py-3 px-4">Mobile Number</th>
+                    <th scope="col" className="py-3 px-4">College / Organisation</th>
+                    <th scope="col" className="py-3 px-3 text-center">Year of Study</th>
+                    <th scope="col" className="py-3 px-3 text-center">Experience</th>
+                    <th scope="col" className="py-3 px-4">Selected On</th>
+                    <th scope="col" className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
                   {selectedList.map((reg) => {
                     const vol = reg.volunteer;
+                    const fullName = vol ? `${vol.first_name} ${vol.last_name}`.trim() : "Volunteer";
+                    const initials = vol
+                      ? `${vol.first_name?.[0] || ""}${vol.last_name?.[0] || ""}`.toUpperCase() || "VL"
+                      : "VL";
+                    const isStudent = vol?.category === "STUDENT";
                     const isCheckedIn = attendanceRecords.some(
                       (a) => a.volunteer_profile_id === reg.volunteer_profile_id
                     );
 
                     return (
-                      <tr key={reg.id} className="hover:bg-stone-50/50 transition">
-                        <td className="py-3 px-4">
-                          <div className="font-bold text-charcoal-900">
-                            {vol ? `${vol.first_name} ${vol.last_name}` : "Volunteer"}
+                      <tr key={reg.id} className="hover:bg-amber-50/20 transition-colors">
+                        {/* 1. Photo */}
+                        <td className="py-3 px-3 text-center">
+                          <div className="w-9 h-9 rounded-full bg-[#FFF3D6] text-amber-900 font-bold flex items-center justify-center mx-auto text-xs border border-amber-200/80 shadow-2xs overflow-hidden">
+                            {vol?.avatar_url ? (
+                              <img
+                                src={vol.avatar_url}
+                                alt={fullName}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span>{initials}</span>
+                            )}
                           </div>
-                          <div className="text-[11px] text-charcoal-500">
-                            {vol?.email || vol?.mobile_number}
-                          </div>
                         </td>
+
+                        {/* 2. Volunteer Name */}
                         <td className="py-3 px-4">
-                          <span className="font-semibold text-charcoal-700">{vol?.category}</span>
+                          <div className="font-bold text-charcoal-900 text-sm">{fullName}</div>
+                          <span className="inline-block text-[10px] font-semibold text-charcoal-500 uppercase tracking-wider">
+                            {vol?.category || "VOLUNTEER"}
+                          </span>
                         </td>
-                        <td className="py-3 px-4 text-charcoal-500">
-                          {reg.selected_at
-                            ? new Date(reg.selected_at).toLocaleDateString("en-IN")
-                            : "Approved"}
+
+                        {/* 3. Email */}
+                        <td className="py-3 px-4 text-charcoal-600 font-medium">
+                          {vol?.email || "—"}
                         </td>
-                        <td className="py-3 px-4">
-                          {isCheckedIn ? (
-                            <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-xs">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Checked In
+
+                        {/* 4. Mobile Number */}
+                        <td className="py-3 px-4 text-charcoal-700 font-medium whitespace-nowrap">
+                          {vol?.mobile_number || "—"}
+                        </td>
+
+                        {/* 5. Organization / College name */}
+                        <td className="py-3 px-4 text-charcoal-700 max-w-xs truncate" title={vol?.college_or_org || "—"}>
+                          {vol?.college_or_org || "—"}
+                        </td>
+
+                        {/* 6. Year of Study for students */}
+                        <td className="py-3 px-3 text-center">
+                          {isStudent ? (
+                            <span className="inline-flex px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 font-bold text-[11px] border border-blue-200">
+                              {vol?.current_year ? `Year ${vol.current_year}` : "Student"}
                             </span>
                           ) : (
-                            <button
-                              type="button"
-                              disabled={actionLoading}
-                              onClick={() => handleQuickCheckIn(reg.volunteer_profile_id)}
-                              className="px-3 py-1 bg-stone-900 hover:bg-stone-800 text-white rounded text-xs font-semibold transition"
-                            >
-                              Check In
-                            </button>
+                            <span className="text-stone-300">—</span>
                           )}
+                        </td>
+
+                        {/* 7. Years of Experience for working professionals */}
+                        <td className="py-3 px-3 text-center">
+                          {!isStudent ? (
+                            <span className="inline-flex px-2 py-0.5 rounded-md bg-purple-50 text-purple-800 font-bold text-[11px] border border-purple-200">
+                              {vol?.years_of_experience != null
+                                ? `${vol.years_of_experience} yrs`
+                                : "Professional"}
+                            </span>
+                          ) : (
+                            <span className="text-stone-300">—</span>
+                          )}
+                        </td>
+
+                        {/* 8. Selected On date */}
+                        <td className="py-3 px-4 text-charcoal-600 whitespace-nowrap">
+                          {reg.selected_at
+                            ? new Date(reg.selected_at).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "Approved"}
+                        </td>
+
+                        {/* 9. View button + Check In */}
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {/* View complete volunteer profile in new tab */}
+                            <Link
+                              href={`/admin/volunteers/${reg.volunteer_profile_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-stone-100 hover:bg-[#F5B817] hover:text-[#1F2421] text-charcoal-800 font-bold text-xs transition shadow-2xs"
+                              title="Open volunteer profile in new tab"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>View</span>
+                            </Link>
+
+                            {/* Check In action */}
+                            {isCheckedIn ? (
+                              <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold text-xs px-2 py-1 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> Checked In
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={() => handleQuickCheckIn(reg.volunteer_profile_id)}
+                                className="px-2.5 py-1.5 bg-stone-900 hover:bg-stone-800 text-white rounded-lg text-xs font-semibold transition"
+                              >
+                                Check In
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );

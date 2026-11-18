@@ -558,6 +558,8 @@ function VolunteersContent() {
                       <td className="py-3.5 px-4 font-bold text-charcoal-900 text-sm">
                         <Link
                           href={`/admin/volunteers/${prof.id || app.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="hover:text-[#D97706] transition-colors"
                         >
                           {fullName}
@@ -635,6 +637,8 @@ function VolunteersContent() {
                           {/* Primary View Action Button */}
                           <Link
                             href={`/admin/volunteers/${prof.id || app.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-[#F5B817] hover:text-[#1F2421] text-charcoal-800 font-bold text-xs transition shadow-2xs"
                           >
                             <Eye className="w-3.5 h-3.5" />

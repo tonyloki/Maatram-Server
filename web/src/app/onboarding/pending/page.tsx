@@ -1,25 +1,97 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Clock,
   ShieldCheck,
   Mail,
   Home,
   HelpCircle,
+  RefreshCw,
+  CheckCircle2,
+  LogOut,
 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth-context";
+import { apiClient } from "@/lib/api-client";
 
 function PendingContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your registered email address";
-  const name = searchParams.get("name") || "Volunteer";
+  const { user, refreshUser, logout, isAuthenticated } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const email = user?.email || searchParams.get("email") || "your registered email address";
+  const name =
+    (user?.email ? user.email.split("@")[0] : null) ||
+    searchParams.get("name") ||
+    "Volunteer";
+
+  const isApproved = user?.status === "APPROVED";
+  const currentStatus = user?.status || "PENDING_APPROVAL";
+
+  const handleRefreshStatus = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshUser();
+      const me = await apiClient<{ user?: { status: string }; status?: string }>("/users/me", {
+        skipCache: true,
+      });
+      const st = me.user?.status || me.status;
+      if (st === "APPROVED") {
+        router.push("/volunteer/dashboard");
+      }
+    } catch {
+      // ignore
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch {
+      router.push("/login");
+    }
+  };
+
+  if (isApproved) {
+    return (
+      <div className="w-full max-w-2xl mx-auto space-y-6">
+        <Card className="p-8 sm:p-10 bg-white border-emerald-200 shadow-xl rounded-3xl space-y-8 text-center">
+          <div className="relative mx-auto w-20 h-20 rounded-full bg-emerald-50 border-2 border-emerald-500 flex items-center justify-center shadow-md">
+            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          </div>
+          <div className="space-y-3">
+            <Badge variant="success" className="px-3.5 py-1 text-xs font-bold tracking-wide uppercase">
+              Application Approved
+            </Badge>
+            <h1 className="text-2xl sm:text-3xl font-black text-[#1F2421]">
+              Welcome to Maatram, {name}!
+            </h1>
+            <p className="text-sm text-[#4B5563] max-w-lg mx-auto leading-relaxed">
+              Your volunteering application has been approved by our team. You now have full access to explore upcoming events, attend drives, and earn contribution points.
+            </p>
+          </div>
+          <div className="pt-2 flex justify-center">
+            <Link href="/volunteer/dashboard">
+              <Button variant="primary" size="lg" className="text-sm font-bold gap-2">
+                Go to Volunteer Dashboard
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -35,13 +107,13 @@ function PendingContent() {
         {/* Heading & Context */}
         <div className="space-y-3">
           <Badge variant="warning" className="px-3.5 py-1 text-xs font-bold tracking-wide uppercase">
-            Application Under Review
+            Application Status: {currentStatus.replace("_", " ")}
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-black text-[#1F2421]">
             Welcome, {name}!
           </h1>
           <p className="text-sm text-[#4B5563] max-w-lg mx-auto leading-relaxed">
-            Thank you for registering with the <span className="font-bold text-[#1F2421]">Maatram Foundation</span> volunteering community. Your application is currently under administrative review by our verification team.
+            Thank you for registering with the <span className="font-bold text-[#1F2421]">Maatram Foundation</span> volunteering community. Our team will review your application and approve it within 2 days.
           </p>
         </div>
 
@@ -70,7 +142,7 @@ function PendingContent() {
               <div>
                 <p className="font-bold text-[#1F2421]">Decision Notification</p>
                 <p className="text-[#6B7280]">
-                  You will receive an official decision email at <span className="font-semibold text-[#1F2421]">{email}</span> within 2–3 business days.
+                  You will receive an official confirmation email at <span className="font-semibold text-[#1F2421]">{email}</span> once approved.
                 </p>
               </div>
             </div>
@@ -104,17 +176,43 @@ function PendingContent() {
 
         {/* Navigation Action Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row gap-3 justify-center">
+          {isAuthenticated && (
+            <Button
+              variant="outline"
+              size="md"
+              onClick={handleRefreshStatus}
+              disabled={isRefreshing}
+              className="text-xs font-bold gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              {isRefreshing ? "Checking Status..." : "Refresh Application Status"}
+            </Button>
+          )}
+
           <Link href="/">
             <Button variant="outline" size="md" className="w-full sm:w-auto text-xs font-bold gap-2">
               <Home className="w-4 h-4" />
               Return to Home
             </Button>
           </Link>
-          <Link href="/login">
-            <Button variant="primary" size="md" className="w-full sm:w-auto text-xs font-bold gap-2">
-              Check Login Status
+
+          {isAuthenticated ? (
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={handleLogout}
+              className="w-full sm:w-auto text-xs font-bold gap-2 text-stone-700"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
             </Button>
-          </Link>
+          ) : (
+            <Link href="/login">
+              <Button variant="primary" size="md" className="w-full sm:w-auto text-xs font-bold gap-2">
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
       </Card>
     </div>

@@ -242,11 +242,25 @@ class AuthService:
                     "first_name": profile.first_name,
                     "verify_url": verify_url,
                 },
-                idempotency_key=str(uuid.uuid4()),
+                idempotency_key=f"verify-email-{user.id}",
             )
             await token_repository.create_communication_job(db, outbox_job)
+
+            # Enqueue Volunteer Registration Confirmation Email
+            reg_job = CommunicationJob(
+                channel="EMAIL",
+                recipient=user.email,
+                template_name="VOLUNTEER_REGISTRATION",
+                payload={
+                    "first_name": profile.first_name,
+                    "email": user.email,
+                    "status": "Pending",
+                },
+                idempotency_key=f"volunteer-reg-{user.id}",
+            )
+            await token_repository.create_communication_job(db, reg_job)
         except Exception:
-            logger.warning("Failed to enqueue email verification outbox job", exc_info=True)
+            logger.warning("Failed to enqueue registration notifications outbox job", exc_info=True)
 
         # 10. Audit log
         await token_repository.create_audit_log(

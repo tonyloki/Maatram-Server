@@ -77,6 +77,20 @@ class RegistrationService:
         if reg.volunteer_profile:
             vp = reg.volunteer_profile
             user_email = vp.user.email if vp.user else None
+            college_or_org: str | None = None
+            current_year: str | None = None
+            years_of_experience: float | None = None
+
+            if vp.category == "STUDENT" and vp.student_profile:
+                college_or_org = vp.student_profile.college_name
+                current_year = str(vp.student_profile.current_year) if vp.student_profile.current_year is not None else None
+            elif vp.category == "ALUMNI" and vp.alumni_profile:
+                college_or_org = vp.alumni_profile.organisation or vp.alumni_profile.college_name
+                years_of_experience = float(vp.alumni_profile.years_of_experience) if vp.alumni_profile.years_of_experience is not None else None
+            elif vp.category == "CORPORATE" and vp.corporate_profile:
+                college_or_org = vp.corporate_profile.organisation
+                years_of_experience = float(vp.corporate_profile.years_of_experience) if vp.corporate_profile.years_of_experience is not None else None
+
             volunteer_summary = VolunteerSummary(
                 id=vp.id,
                 user_id=vp.user_id,
@@ -85,6 +99,10 @@ class RegistrationService:
                 mobile_number=vp.mobile_number,
                 category=vp.category,
                 email=user_email,
+                avatar_url=vp.avatar_url,
+                college_or_org=college_or_org,
+                current_year=current_year,
+                years_of_experience=years_of_experience,
             )
 
         event_summary: EventSummary | None = None

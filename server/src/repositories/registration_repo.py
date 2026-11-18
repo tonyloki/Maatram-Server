@@ -45,6 +45,15 @@ class RegistrationRepository:
                 selectinload(EventRegistration.volunteer_profile).selectinload(
                     VolunteerProfile.user
                 ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.student_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.alumni_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.corporate_profile
+                ),
                 selectinload(EventRegistration.event),
                 selectinload(EventRegistration.history_entries),
             )
@@ -63,6 +72,15 @@ class RegistrationRepository:
             .options(
                 selectinload(EventRegistration.volunteer_profile).selectinload(
                     VolunteerProfile.user
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.student_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.alumni_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.corporate_profile
                 ),
                 selectinload(EventRegistration.event),
                 selectinload(EventRegistration.history_entries),
@@ -84,6 +102,15 @@ class RegistrationRepository:
             .options(
                 selectinload(EventRegistration.volunteer_profile).selectinload(
                     VolunteerProfile.user
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.student_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.alumni_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.corporate_profile
                 ),
                 selectinload(EventRegistration.event),
                 selectinload(EventRegistration.history_entries),
@@ -116,6 +143,15 @@ class RegistrationRepository:
             .options(
                 selectinload(EventRegistration.volunteer_profile).selectinload(
                     VolunteerProfile.user
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.student_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.alumni_profile
+                ),
+                selectinload(EventRegistration.volunteer_profile).selectinload(
+                    VolunteerProfile.corporate_profile
                 ),
                 selectinload(EventRegistration.event),
                 selectinload(EventRegistration.history_entries),

@@ -14,11 +14,8 @@ import {
   GraduationCap,
   Briefcase,
   Sliders,
-  ThumbsUp,
-  ThumbsDown,
   Loader2,
   AlertCircle,
-  X,
   FileCheck,
   ShieldCheck,
   Building2,
@@ -41,14 +38,6 @@ export default function AdminVolunteerProfileViewPage() {
 
   // Active Tab
   const [activeTab, setActiveTab] = useState<"info" | "preferences" | "consents" | "history">("info");
-
-  // Decision Modal State
-  const [actionType, setActionType] = useState<"APPROVE" | "REJECT" | null>(null);
-  const [decisionNotes, setDecisionNotes] = useState("");
-  const [rejectReason, setRejectReason] = useState("");
-  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
-  const [decisionError, setDecisionError] = useState<string | null>(null);
-  const [feedbackSuccess, setFeedbackSuccess] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     if (!id) return;
@@ -104,46 +93,6 @@ export default function AdminVolunteerProfileViewPage() {
   useEffect(() => {
     void loadData();
   }, [loadData]);
-
-  // Handle Decision
-  const handleDecisionSubmit = async () => {
-    if (!application || !actionType) return;
-    setIsSubmittingDecision(true);
-    setDecisionError(null);
-
-    try {
-      if (actionType === "APPROVE") {
-        await apiClient(`/applications/${application.id}/approve`, {
-          method: "POST",
-          body: JSON.stringify({ notes: decisionNotes.trim() || undefined }),
-        });
-        setFeedbackSuccess("Volunteer application has been successfully approved.");
-      } else {
-        if (!rejectReason.trim()) {
-          setDecisionError("A mandatory rejection reason is required.");
-          setIsSubmittingDecision(false);
-          return;
-        }
-        await apiClient(`/applications/${application.id}/reject`, {
-          method: "POST",
-          body: JSON.stringify({ reason: rejectReason.trim() }),
-        });
-        setFeedbackSuccess("Volunteer application has been rejected.");
-      }
-
-      setActionType(null);
-      setDecisionNotes("");
-      setRejectReason("");
-      void loadData();
-      setTimeout(() => setFeedbackSuccess(null), 4000);
-    } catch (err: unknown) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to submit decision. Please verify permissions.";
-      setDecisionError(msg);
-    } finally {
-      setIsSubmittingDecision(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -216,35 +165,7 @@ export default function AdminVolunteerProfileViewPage() {
             </p>
           </div>
         </div>
-
-        {/* Pending Action Buttons */}
-        {appStatus === "PENDING" && application && (
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActionType("APPROVE")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition"
-            >
-              <ThumbsUp className="w-3.5 h-3.5" />
-              <span>Approve Volunteer</span>
-            </button>
-            <button
-              onClick={() => setActionType("REJECT")}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs transition"
-            >
-              <ThumbsDown className="w-3.5 h-3.5" />
-              <span>Reject</span>
-            </button>
-          </div>
-        )}
       </div>
-
-      {/* Success Notification */}
-      {feedbackSuccess && (
-        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3 shadow-xs">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-          <p className="text-sm font-semibold">{feedbackSuccess}</p>
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* Main Two-Column Grid: Exact Mirror of Volunteer Profile   */}
@@ -258,7 +179,15 @@ export default function AdminVolunteerProfileViewPage() {
             {/* Centered Circular Portrait Photo */}
             <div className="relative w-28 h-28 mx-auto mt-2 mb-3">
               <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-white shadow-md relative bg-[#FFF8E7] flex items-center justify-center text-amber-900 text-3xl font-extrabold border border-amber-200">
-                {initials}
+                {vol.avatar_url ? (
+                  <img
+                    src={vol.avatar_url}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span>{initials}</span>
+                )}
               </div>
             </div>
 
@@ -759,109 +688,6 @@ export default function AdminVolunteerProfileViewPage() {
           </div>
         </div>
       </div>
-
-      {/* Decision Modal (Approve / Reject) */}
-      {actionType && application && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-xl border border-stone-200 space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-charcoal-900">
-                  {actionType === "APPROVE" ? "Approve Volunteer" : "Reject Application"}
-                </h3>
-                <p className="text-xs text-charcoal-500 mt-0.5">
-                  Applicant: <strong className="text-charcoal-800">{fullName}</strong> ({userEmail})
-                </p>
-              </div>
-              <button
-                onClick={() => setActionType(null)}
-                className="p-1 rounded-lg text-charcoal-400 hover:text-charcoal-700 hover:bg-stone-100 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {decisionError && (
-              <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{decisionError}</span>
-              </div>
-            )}
-
-            {application?.user_status === "PENDING_VERIFICATION" && (
-              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
-                <span>Notice: Applicant email is pending verification. Admin approval will automatically verify and activate their account.</span>
-              </div>
-            )}
-
-            {actionType === "APPROVE" ? (
-              <div className="space-y-3">
-                <p className="text-xs text-charcoal-600 leading-relaxed">
-                  Approving this volunteer will grant them full access to published volunteer opportunities and send them an onboarding welcome email.
-                </p>
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-700 mb-1">
-                    Approval Notes (Optional)
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={decisionNotes}
-                    onChange={(e) => setDecisionNotes(e.target.value)}
-                    placeholder="Enter any administrative review observations..."
-                    className="w-full p-3 rounded-xl border border-stone-200 text-xs text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-[#F5B817]"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-xs text-charcoal-600 leading-relaxed">
-                  Rejecting will decline this volunteer&apos;s onboarding application. A mandatory reason is required for administrative audit logs.
-                </p>
-                <div>
-                  <label className="block text-xs font-semibold text-charcoal-700 mb-1">
-                    Rejection Reason <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    rows={3}
-                    required
-                    value={rejectReason}
-                    onChange={(e) => setRejectReason(e.target.value)}
-                    placeholder="Provide justification for rejecting this volunteer..."
-                    className="w-full p-3 rounded-xl border border-stone-200 text-xs text-charcoal-900 focus:outline-none focus:ring-2 focus:ring-red-400"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-stone-100">
-              <button
-                type="button"
-                onClick={() => setActionType(null)}
-                disabled={isSubmittingDecision}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-charcoal-600 hover:bg-stone-100 transition"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleDecisionSubmit()}
-                disabled={isSubmittingDecision}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-                  actionType === "APPROVE"
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    : "bg-red-600 hover:bg-red-700 text-white"
-                }`}
-              >
-                {isSubmittingDecision && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>
-                  {actionType === "APPROVE" ? "Confirm Approval" : "Confirm Rejection"}
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

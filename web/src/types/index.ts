@@ -360,6 +360,20 @@ export interface EventSummary {
   status: string;
 }
 
+export interface VolunteerSummary {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  mobile_number: string;
+  category: string;
+  email?: string | null;
+  avatar_url?: string | null;
+  college_or_org?: string | null;
+  current_year?: string | null;
+  years_of_experience?: number | null;
+}
+
 export interface RegistrationResponse {
   id: string;
   event_id: string;
@@ -371,7 +385,7 @@ export interface RegistrationResponse {
   created_at: string;
   updated_at: string;
   event?: EventSummary | null;
-  volunteer?: VolunteerProfileResponse | null;
+  volunteer?: (VolunteerSummary & Partial<VolunteerProfileResponse>) | null;
   history_entries?: RegistrationHistoryItem[];
 }
 

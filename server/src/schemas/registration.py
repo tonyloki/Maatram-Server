@@ -75,6 +75,10 @@ class VolunteerSummary(BaseSchema):
     mobile_number: str
     category: str
     email: str | None = None
+    avatar_url: str | None = None
+    college_or_org: str | None = None
+    current_year: str | None = None
+    years_of_experience: float | None = None
 
 
 class EventSummary(BaseSchema):

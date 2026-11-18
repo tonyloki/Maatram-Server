@@ -75,7 +75,10 @@ async def test_minor_safeguarding_consent_lifecycle_e2e(client: AsyncClient, asy
     # 3. Verify Email
     job_stmt = (
         select(CommunicationJob)
-        .where(CommunicationJob.recipient == minor_email)
+        .where(
+            CommunicationJob.recipient == minor_email,
+            CommunicationJob.template_name == "VERIFY_EMAIL",
+        )
         .order_by(CommunicationJob.created_at.desc())
     )
     job = (await async_db.execute(job_stmt)).scalars().first()

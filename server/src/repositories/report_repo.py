@@ -54,6 +54,10 @@ class ReportRepository:
               (SELECT {json_agg}(coalesce(status, 'OTHER'), count) FROM (
                   SELECT status, count(*) as count FROM users WHERE role = 'VOLUNTEER' GROUP BY status
               ) s) AS app_status_counts,
+              (SELECT count(*) FROM volunteer_applications WHERE status IN ('PENDING', 'SUBMITTED', 'UNDER_REVIEW')) AS pending_applications,
+              (SELECT count(*) FROM volunteer_applications WHERE status = 'APPROVED') AS approved_applications,
+              (SELECT count(*) FROM volunteer_applications WHERE status = 'REJECTED') AS rejected_applications,
+              (SELECT count(*) FROM volunteer_applications) AS total_applications,
               (SELECT count(*) FROM events) AS total_events,
               (SELECT {json_agg}(coalesce(status, 'OTHER'), count) FROM (
                   SELECT status, count(*) as count FROM events GROUP BY status
@@ -85,15 +89,29 @@ class ReportRepository:
 
         # 2. Application status breakdown
         app_counts = _parse_json_dict(row["app_status_counts"])
-        pending_apps = (
+        pending_from_users = (
             int(app_counts.get("SUBMITTED", 0))
             + int(app_counts.get("UNDER_REVIEW", 0))
             + int(app_counts.get("UNVERIFIED", 0))
             + int(app_counts.get("PENDING", 0))
+            + int(app_counts.get("PENDING_APPROVAL", 0))
+            + int(app_counts.get("PENDING_VERIFICATION", 0))
         )
-        approved_apps = int(app_counts.get("APPROVED", 0))
-        rejected_apps = int(app_counts.get("REJECTED", 0))
-        total_apps = sum(int(v) for v in app_counts.values())
+        pending_apps = int(row["pending_applications"] or 0)
+        if pending_apps == 0 and pending_from_users > 0:
+            pending_apps = pending_from_users
+
+        approved_apps = int(row["approved_applications"] or 0)
+        if approved_apps == 0:
+            approved_apps = int(app_counts.get("APPROVED", 0))
+
+        rejected_apps = int(row["rejected_applications"] or 0)
+        if rejected_apps == 0:
+            rejected_apps = int(app_counts.get("REJECTED", 0))
+
+        total_apps = int(row["total_applications"] or 0)
+        if total_apps == 0:
+            total_apps = pending_apps + approved_apps + rejected_apps
 
         # 3. Event stats
         total_events = int(row["total_events"] or 0)

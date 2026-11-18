@@ -6408,9 +6408,42 @@
       "VolunteerSummary": {
         "description": "Volunteer profile summary attached to registration responses.",
         "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
           "category": {
             "title": "Category",
             "type": "string"
+          },
+          "college_or_org": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "College Or Org"
+          },
+          "current_year": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Year"
           },
           "email": {
             "anyOf": [
@@ -6444,6 +6477,17 @@
             "format": "uuid",
             "title": "User Id",
             "type": "string"
+          },
+          "years_of_experience": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Years Of Experience"
           }
         },
         "required": [

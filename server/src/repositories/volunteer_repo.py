@@ -123,7 +123,14 @@ class VolunteerRepository:
         if category:
             filters.append(VolunteerProfile.category == category.upper())
         if status:
-            filters.append(User.status == status.upper())
+            if status.upper() in ("PENDING", "PENDING_APPROVAL", "PENDING_VERIFICATION"):
+                filters.append(
+                    User.status.in_(
+                        ["PENDING", "PENDING_APPROVAL", "PENDING_VERIFICATION", "SUBMITTED", "UNDER_REVIEW"]
+                    )
+                )
+            else:
+                filters.append(User.status == status.upper())
         if college:
             filters.append(
                 or_(

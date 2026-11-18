@@ -65,13 +65,20 @@ async def test_register_student_volunteer_success(client: AsyncClient, async_db:
     assert data["parental_consent_status"] == "NOT_REQUIRED"
     assert "user_id" in data
 
-    # Verify outbox email job was enqueued
+    # Verify outbox email jobs were enqueued (verification + registration confirmation)
     stmt = select(CommunicationJob).where(CommunicationJob.recipient == payload["email"].lower())
-    job = (await async_db.execute(stmt)).scalar_one_or_none()
-    assert job is not None
-    assert job.channel == "EMAIL"
-    assert job.template_name == "VERIFY_EMAIL"
-    assert "token" in job.payload
+    jobs = (await async_db.execute(stmt)).scalars().all()
+    templates = {j.template_name for j in jobs}
+    assert "VERIFY_EMAIL" in templates
+    assert "VOLUNTEER_REGISTRATION" in templates
+
+    verify_job = next(j for j in jobs if j.template_name == "VERIFY_EMAIL")
+    assert verify_job.channel == "EMAIL"
+    assert "token" in verify_job.payload
+
+    reg_job = next(j for j in jobs if j.template_name == "VOLUNTEER_REGISTRATION")
+    assert reg_job.channel == "EMAIL"
+    assert reg_job.payload["status"] == "Pending"
 
 
 @pytest.mark.asyncio

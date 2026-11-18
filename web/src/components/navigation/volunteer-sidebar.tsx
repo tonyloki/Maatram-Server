@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Headphones } from "lucide-react";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils";
@@ -17,10 +17,20 @@ interface VolunteerSidebarProps {
 }
 
 export function VolunteerSidebar({ className, onNavigate }: VolunteerSidebarProps) {
+  const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [profile, setProfile] = useState<VolunteerProfileResponse | null>(null);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch {
+      router.push("/login");
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -164,69 +174,49 @@ export function VolunteerSidebar({ className, onNavigate }: VolunteerSidebarProp
         </nav>
       </div>
 
-      {/* Bottom Section: User Identity Card & Volunteer Helpdesk */}
+      {/* Bottom Section: Always-Visible Volunteer Profile Card & Logout */}
       <div className="relative z-10 space-y-3 pt-4 border-t border-[#EFECE6]">
-        {/* On Profile page, render user identity card; on other portal pages, render reference "Together for a Better Tomorrow" card */}
-        {pathname !== "/volunteer/profile" ? (
-          <div className="p-4 rounded-2xl bg-[#FFF9EA] border border-[#FDE68A] shadow-2xs text-center flex flex-col items-center">
-            <div className="w-16 h-16 relative mb-2">
-              <Image
-                src="/assets/maatram/illustrations/together-heart.svg"
-                alt="Together for a Better Tomorrow"
-                width={64}
-                height={64}
-                className="w-full h-full object-contain"
-              />
+        {/* User Identity Card with Pinned Logout Option */}
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFECE6]/80 shadow-2xs">
+          <Link
+            href="/volunteer/profile"
+            onClick={onNavigate}
+            className="flex items-center gap-2.5 overflow-hidden group flex-1 mr-2"
+            title="View Profile"
+          >
+            <div className="w-9 h-9 rounded-full bg-[#FFF8E7] border border-[#F5B817]/60 text-[#946C00] font-extrabold text-xs flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+              {userInitial}
             </div>
-            <p className="font-serif italic font-extrabold text-sm text-[#1F2421] leading-tight">
-              Together<br />for a Better<br />Tomorrow
-            </p>
-          </div>
-        ) : (
-          /* User Profile Card */
-          user && (
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFECE6]/80">
-              <Link
-                href="/volunteer/profile"
-                onClick={onNavigate}
-                className="flex items-center gap-2.5 overflow-hidden group flex-1 mr-2"
-                title="View Profile"
-              >
-                <div className="w-9 h-9 rounded-full bg-[#FFF8E7] border border-[#F5B817]/60 text-[#946C00] font-extrabold text-xs flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                  {userInitial}
-                </div>
-                <div className="overflow-hidden text-left">
-                  <p className="text-xs font-bold text-[#1F2421] truncate group-hover:text-[#946C00] transition-colors">
-                    {displayName}
-                  </p>
-                  <span className="inline-block text-[10px] font-semibold text-[#15803D] uppercase tracking-wider">
-                    {volunteerCategory}
-                  </span>
-                </div>
-              </Link>
+            <div className="overflow-hidden text-left">
+              <p className="text-xs font-bold text-[#1F2421] truncate group-hover:text-[#946C00] transition-colors">
+                {displayName}
+              </p>
+              <span className="inline-block text-[10px] font-semibold text-[#15803D] uppercase tracking-wider">
+                {volunteerCategory}
+              </span>
+            </div>
+          </Link>
 
-              <button
-                type="button"
-                onClick={() => logout()}
-                title="Sign Out"
-                className="p-1.5 rounded-lg text-[#9CA3AF] hover:text-[#DC2626] hover:bg-red-50 transition-colors shrink-0"
-                aria-label="Sign out"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          )
-        )}
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Sign Out"
+            className="p-2 rounded-xl text-[#6B7280] hover:text-[#DC2626] hover:bg-red-50 transition-colors shrink-0 flex items-center gap-1 text-xs font-bold"
+            aria-label="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Volunteer Helpdesk Support Chip */}
-        <div className="px-3 py-2.5 bg-white rounded-xl border border-[#EFECE6] text-[11px] text-[#6B7280]">
+        <div className="px-3 py-2 bg-white rounded-xl border border-[#EFECE6] text-[11px] text-[#6B7280]">
           <div className="flex items-center gap-1.5 text-[#1F2421] font-semibold">
             <Headphones className="w-3.5 h-3.5 text-[#F5B817]" />
             <span>Volunteer Helpdesk</span>
           </div>
           <a
             href="mailto:volunteers@maatramfoundation.org"
-            className="text-[#946C00] font-medium hover:underline block truncate mt-1"
+            className="text-[#946C00] font-medium hover:underline block truncate mt-0.5"
           >
             volunteers@maatramfoundation.org
           </a>

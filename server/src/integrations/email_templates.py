@@ -45,7 +45,18 @@ def render_email_template(
     first_name = payload.get("first_name", "Volunteer")
     event_title = payload.get("event_title", "Maatram Event")
 
-    if template_name == "VERIFY_EMAIL":
+    if template_name in ("VOLUNTEER_REGISTRATION", "REGISTRATION_CONFIRMATION"):
+        subject = "Maatram Volunteer Registration Confirmation"
+        html = (
+            f"<p>Dear {first_name},</p>"
+            f"<p>We have received your registration. Our team will review your application and approve it within 2 days. Your current application status is Pending.</p>"
+        )
+        text = (
+            f"Dear {first_name},\n\n"
+            f"We have received your registration. Our team will review your application and approve it within 2 days. Your current application status is Pending."
+        )
+
+    elif template_name == "VERIFY_EMAIL":
         token = payload.get("token", "")
         email_addr = payload.get("email", "")
         verify_url = payload.get("verify_url") or (

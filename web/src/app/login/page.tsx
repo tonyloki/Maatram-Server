@@ -47,7 +47,18 @@ function LoginForm() {
       } else if (user.role === "SUPER_ADMIN" || user.role === "ADMIN") {
         router.replace("/admin/dashboard");
       } else {
-        router.replace("/volunteer/dashboard");
+        const userStatus = user.status;
+        if (
+          userStatus === "PENDING" ||
+          userStatus === "PENDING_APPROVAL" ||
+          userStatus === "PENDING_VERIFICATION"
+        ) {
+          router.replace("/onboarding/pending");
+        } else if (userStatus === "REJECTED") {
+          router.replace("/onboarding/rejected");
+        } else {
+          router.replace("/volunteer/dashboard");
+        }
       }
     }
   }, [authLoading, isAuthenticated, user, redirectPath, router]);

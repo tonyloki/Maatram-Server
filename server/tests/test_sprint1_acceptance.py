@@ -79,7 +79,10 @@ async def test_password_recovery_full_lifecycle(client: AsyncClient, async_db: A
 
     job_stmt = (
         select(CommunicationJob)
-        .where(CommunicationJob.recipient == test_email)
+        .where(
+            CommunicationJob.recipient == test_email,
+            CommunicationJob.template_name == "PASSWORD_RESET_OTP",
+        )
         .order_by(CommunicationJob.created_at.desc())
     )
     job_record = (await async_db.execute(job_stmt)).scalar_one_or_none()
@@ -277,7 +280,10 @@ async def test_volunteer_application_journeys(client: AsyncClient, async_db: Asy
     for email in [student_payload["email"], alumni_payload["email"], corporate_payload["email"]]:
         j_stmt = (
             select(CommunicationJob)
-            .where(CommunicationJob.recipient == email)
+            .where(
+                CommunicationJob.recipient == email,
+                CommunicationJob.template_name == "VERIFY_EMAIL",
+            )
             .order_by(CommunicationJob.created_at.desc())
         )
         j = (await async_db.execute(j_stmt)).scalar_one()

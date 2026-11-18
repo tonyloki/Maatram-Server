@@ -1,8 +1,8 @@
 "use client";
 
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   XCircle,
   Mail,
@@ -10,19 +10,62 @@ import {
   HelpCircle,
   RefreshCw,
   AlertTriangle,
+  LogOut,
 } from "lucide-react";
 import { PublicHeader } from "@/components/navigation/public-header";
 import { PublicFooter } from "@/components/navigation/public-footer";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth-context";
+import { apiClient } from "@/lib/api-client";
+import { ApplicationDetailResponse } from "@/types";
 
 function RejectedContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const reason =
+  const { user, logout, isAuthenticated } = useAuth();
+  const [dynamicReason, setDynamicReason] = useState<string | null>(null);
+
+  const fallbackReason =
     searchParams.get("reason") ||
     "Your application did not meet our verification criteria or category eligibility requirements at this time.";
-  const name = searchParams.get("name") || "Volunteer Applicant";
+  const name =
+    (user?.email ? user.email.split("@")[0] : null) ||
+    searchParams.get("name") ||
+    "Volunteer Applicant";
+
+  useEffect(() => {
+    async function loadAppDetails() {
+      if (!isAuthenticated) return;
+      try {
+        const appData = await apiClient<ApplicationDetailResponse>("/applications/me");
+        if (appData?.reviews && appData.reviews.length > 0) {
+          const latestReject = appData.reviews
+            .slice()
+            .reverse()
+            .find((r) => r.action === "REJECTED" && r.reason);
+          if (latestReject?.reason) {
+            setDynamicReason(latestReject.reason);
+          }
+        }
+      } catch {
+        // Silently fall back to searchParams or default
+      }
+    }
+    void loadAppDetails();
+  }, [isAuthenticated]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch {
+      router.push("/login");
+    }
+  };
+
+  const displayReason = dynamicReason || fallbackReason;
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -37,7 +80,7 @@ function RejectedContent() {
         {/* Heading & Context */}
         <div className="space-y-3">
           <Badge variant="error" className="px-3.5 py-1 text-xs font-bold tracking-wide uppercase">
-            Application Status Notice
+            Application Status: Rejected
           </Badge>
           <h1 className="text-2xl sm:text-3xl font-black text-[#1F2421]">
             Application Update for {name}
@@ -54,7 +97,7 @@ function RejectedContent() {
             Administrative Feedback / Reason
           </h2>
           <p className="text-xs sm:text-sm text-[#7F1D1D] leading-relaxed font-medium bg-white/70 p-3.5 rounded-xl border border-[#F87171]/40">
-            &ldquo;{reason}&rdquo;
+            &ldquo;{displayReason}&rdquo;
           </p>
           <p className="text-[11px] text-[#991B1B]">
             All volunteer intake decisions are reviewed according to strict safety, institutional guidelines, and volunteer cohort quotas.
@@ -90,6 +133,17 @@ function RejectedContent() {
               Submit New Application
             </Button>
           </Link>
+          {isAuthenticated && (
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={handleLogout}
+              className="w-full sm:w-auto text-xs font-bold gap-2 text-stone-700"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </Button>
+          )}
         </div>
       </Card>
     </div>

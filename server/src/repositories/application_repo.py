@@ -126,7 +126,19 @@ class ApplicationRepository:
 
         filters: list[Any] = []
         if status:
-            filters.append(VolunteerApplication.status == status.upper())
+            if status.upper() in ("PENDING", "PENDING_APPROVAL", "PENDING_VERIFICATION"):
+                filters.append(
+                    or_(
+                        VolunteerApplication.status.in_(
+                            ["PENDING", "PENDING_APPROVAL", "PENDING_VERIFICATION", "SUBMITTED", "UNDER_REVIEW"]
+                        ),
+                        User.status.in_(
+                            ["PENDING", "PENDING_APPROVAL", "PENDING_VERIFICATION", "SUBMITTED", "UNDER_REVIEW"]
+                        ),
+                    )
+                )
+            else:
+                filters.append(VolunteerApplication.status == status.upper())
         if category:
             filters.append(VolunteerProfile.category == category.upper())
         if date_from:

@@ -49,14 +49,13 @@ export function AdminShell({
   if (!isAuthorizedAdmin) {
     return (
       <div className="min-h-screen bg-[#FAF8F3] flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-red-200 p-8 text-center shadow-lg space-y-4">
-          <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto text-red-600">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-stone-200 p-8 text-center shadow-lg space-y-4">
+          <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto text-[#D97706]">
             <ShieldAlert className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-charcoal-950">Administrative Access Denied</h2>
+          <h2 className="text-xl font-bold text-charcoal-950">You don&apos;t have access. Go to Volunteer Dashboard.</h2>
           <p className="text-sm text-charcoal-600 leading-relaxed">
-            Your authenticated account (<span className="font-semibold text-charcoal-900">{user?.email}</span>) does not
-            have permission to access the Administrative Operations Portal.
+            Your authenticated volunteer account (<span className="font-semibold text-charcoal-900">{user?.email}</span>) does not have access to the Admin Portal.
           </p>
           <div className="pt-2">
             <Link
