@@ -1,6 +1,7 @@
 """FastAPI dependency injection for database sessions, security, RBAC, and CSRF protection."""
 
 import hmac
+import re
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime
@@ -153,13 +154,32 @@ async def verify_csrf(
 
     # 5. Cookie-authenticated request requires strict CSRF validation:
     # A. Origin / Referer validation if present
+    def _is_origin_allowed(orig: str) -> bool:
+        if orig in settings.BACKEND_CORS_ORIGINS:
+            return True
+        if settings.ENVIRONMENT == "development" and re.match(
+            r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$", orig
+        ):
+            return True
+        return False
+
     origin = request.headers.get("origin")
-    if origin and origin not in settings.BACKEND_CORS_ORIGINS:
+    if origin and not _is_origin_allowed(origin):
         raise CSRFValidationException("Origin not permitted.")
 
     referer = request.headers.get("referer")
-    if referer and not any(referer.startswith(allowed) for allowed in settings.BACKEND_CORS_ORIGINS):
-        raise CSRFValidationException("Referer origin not permitted.")
+    if referer:
+        referer_match = any(
+            referer.startswith(allowed) for allowed in settings.BACKEND_CORS_ORIGINS
+        )
+        if not referer_match and settings.ENVIRONMENT == "development":
+            import urllib.parse
+
+            parsed_ref = urllib.parse.urlparse(referer)
+            ref_origin = f"{parsed_ref.scheme}://{parsed_ref.netloc}"
+            referer_match = _is_origin_allowed(ref_origin)
+        if not referer_match:
+            raise CSRFValidationException("Referer origin not permitted.")
 
     # B. Enforce presence and non-emptiness of X-CSRF-Token
     if not x_csrf_token or not x_csrf_token.strip():

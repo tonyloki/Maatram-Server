@@ -70,12 +70,18 @@ app = FastAPI(
 app.add_middleware(RequestTimingMiddleware)
 
 # Configure Cross-Origin Resource Sharing (CORS)
+cors_kwargs: dict[str, Any] = {
+    "allow_origins": settings.BACKEND_CORS_ORIGINS,
+    "allow_credentials": True,
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+if settings.ENVIRONMENT == "development":
+    cors_kwargs["allow_origin_regex"] = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    **cors_kwargs,
 )
 
 # Register Exception Handlers
