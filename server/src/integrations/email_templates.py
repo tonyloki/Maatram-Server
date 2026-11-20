@@ -46,14 +46,44 @@ def render_email_template(
     event_title = payload.get("event_title", "Maatram Event")
 
     if template_name in ("VOLUNTEER_REGISTRATION", "REGISTRATION_CONFIRMATION"):
-        subject = "Maatram Volunteer Registration Confirmation"
+        name = (
+            payload.get("name")
+            or payload.get("volunteer_name")
+            or f"{payload.get('first_name', '')} {payload.get('last_name', '')}".strip()
+            or payload.get("first_name")
+            or "Volunteer"
+        )
+        category_raw = (
+            payload.get("category")
+            or payload.get("volunteer_category")
+            or "Student"
+        )
+        category = category_raw.replace("_", " ").title() if isinstance(category_raw, str) else "Student"
+
+        subject = "Thank you for registering with Maatram Volunteer Portal"
         html = (
-            f"<p>Dear {first_name},</p>"
-            f"<p>We have received your registration. Our team will review your application and approve it within 2 days. Your current application status is Pending.</p>"
+            f"<p>Dear {name},</p>"
+            f"<p>Thank you for registering as a {category} volunteer with Maatram Foundation. We have received your application.</p>"
+            f"<p><strong>Next steps:</strong><br/>"
+            f"Our team will review your details.<br/>"
+            f"You will receive an email once your application is approved.<br/>"
+            f"After approval, you can browse events and subscribe to the ones that match your interests.</p>"
+            f"<p><strong>A message from our team:</strong><br/>"
+            f"Your willingness to give your time means the world to our students. We are so happy to welcome you to the Maatram family.</p>"
+            f"<p>Warm regards,<br/>"
+            f"Maatram Foundation</p>"
         )
         text = (
-            f"Dear {first_name},\n\n"
-            f"We have received your registration. Our team will review your application and approve it within 2 days. Your current application status is Pending."
+            f"Dear {name},\n\n"
+            f"Thank you for registering as a {category} volunteer with Maatram Foundation. We have received your application.\n\n"
+            f"Next steps:\n"
+            f"Our team will review your details.\n"
+            f"You will receive an email once your application is approved.\n"
+            f"After approval, you can browse events and subscribe to the ones that match your interests.\n\n"
+            f"A message from our team:\n"
+            f"Your willingness to give your time means the world to our students. We are so happy to welcome you to the Maatram family.\n\n"
+            f"Warm regards,\n"
+            f"Maatram Foundation"
         )
 
     elif template_name == "VERIFY_EMAIL":
@@ -93,15 +123,31 @@ def render_email_template(
         )
 
     elif template_name == "APPLICATION_APPROVED":
-        subject = "Welcome to Maatram Foundation — Application Approved!"
+        name = (
+            payload.get("name")
+            or payload.get("volunteer_name")
+            or f"{payload.get('first_name', '')} {payload.get('last_name', '')}".strip()
+            or payload.get("first_name")
+            or "Volunteer"
+        )
+        subject = "Your application is Approved."
         html = (
-            f"<p>Dear {first_name},</p>"
-            f"<p>Congratulations! Your volunteer onboarding application has been approved.</p>"
+            f"<p>Dear {name},</p>"
+            f"<p>Your volunteer application has been reviewed and approved by the Maatram team.</p>"
+            f"<p>You can now log in to the portal at any time. All events and other portal features are now accessible to you.</p>"
+            f"<p><strong>A Message from Our Team:</strong></p>"
+            f"<p>Thank you for your patience and your interest in volunteering with us. We truly appreciate your support and look forward to working with you.</p>"
+            f"<p>Warm regards,<br/>"
+            f"Maatram Foundation</p>"
         )
         text = (
-            f"Dear {first_name},\n\n"
-            f"Congratulations! Your volunteer onboarding application has been approved.\n"
-            f"Welcome to Maatram Foundation."
+            f"Dear {name},\n\n"
+            f"Your volunteer application has been reviewed and approved by the Maatram team.\n\n"
+            f"You can now log in to the portal at any time. All events and other portal features are now accessible to you.\n\n"
+            f"A Message from Our Team:\n\n"
+            f"Thank you for your patience and your interest in volunteering with us. We truly appreciate your support and look forward to working with you.\n\n"
+            f"Warm regards,\n"
+            f"Maatram Foundation"
         )
 
     elif template_name == "APPLICATION_REJECTED":
@@ -129,17 +175,49 @@ def render_email_template(
         )
 
     elif template_name == "EVENT_THANK_YOU":
-        hours = payload.get("hours_credited", "0.00")
-        points = payload.get("total_points", "0.00")
-        subject = f"Thank you for volunteering at {event_title}!"
+        event_name = (
+            payload.get("event_name")
+            or payload.get("event_title")
+            or event_title
+        )
+        name = (
+            payload.get("name")
+            or payload.get("volunteer_name")
+            or f"{payload.get('first_name', '')} {payload.get('last_name', '')}".strip()
+            or payload.get("first_name")
+            or "Volunteer"
+        )
+        event_date = payload.get("event_date") or payload.get("date") or "the scheduled date"
+        hours = payload.get("hours") or payload.get("hours_credited") or "0"
+        points = payload.get("points") or payload.get("points_awarded") or payload.get("total_points") or "0"
+        rank = payload.get("rank") or payload.get("current_rank") or "—"
+
+        subject = f"Thank you for volunteering at {event_name}"
         html = (
-            f"<p>Dear {first_name},</p>"
-            f"<p>Thank you for your dedication at <strong>{event_title}</strong>. You have been credited with <strong>{hours} hours</strong> and <strong>{points} points</strong>!</p>"
+            f"<p>Dear {name},</p>"
+            f"<p>Thank you for volunteering at {event_name} on {event_date}. Your time and effort made a real difference.</p>"
+            f"<p><strong>Your contribution:</strong><br/>"
+            f"* Verified hours: {hours}<br/>"
+            f"* Points earned: {points}<br/>"
+            f"* Current rank: {rank}</p>"
+            f"<p><strong>A message from our team:</strong></p>"
+            f"<p>Your kindness and dedication gave our students the confidence to dream bigger. Thank you for being such a valuable part of the Maatram family.</p>"
+            f"<p>We look forward to seeing you at our next event.</p>"
+            f"<p>Warm regards,<br/>"
+            f"Maatram Foundation</p>"
         )
         text = (
-            f"Dear {first_name},\n\n"
-            f"Thank you for your dedication at {event_title}.\n\n"
-            f"You have been credited with {hours} hours and {points} points!"
+            f"Dear {name},\n\n"
+            f"Thank you for volunteering at {event_name} on {event_date}. Your time and effort made a real difference.\n\n"
+            f"Your contribution:\n"
+            f"* Verified hours: {hours}\n"
+            f"* Points earned: {points}\n"
+            f"* Current rank: {rank}\n\n"
+            f"A message from our team:\n\n"
+            f"Your kindness and dedication gave our students the confidence to dream bigger. Thank you for being such a valuable part of the Maatram family.\n\n\n"
+            f"We look forward to seeing you at our next event.\n\n"
+            f"Warm regards,\n"
+            f"Maatram Foundation"
         )
 
     elif template_name == "EVENT_REMINDER":

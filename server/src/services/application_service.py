@@ -210,11 +210,20 @@ class ApplicationService:
 
         # Enqueue welcome email notification
         try:
+            full_name = (
+                f"{profile.first_name} {profile.last_name}".strip()
+                if profile
+                else "Volunteer"
+            )
             outbox_job = CommunicationJob(
                 channel="EMAIL",
                 recipient=user.email,
                 template_name="APPLICATION_APPROVED",
-                payload={"first_name": profile.first_name, "email": user.email},
+                payload={
+                    "name": full_name or (profile.first_name if profile else "Volunteer"),
+                    "first_name": profile.first_name if profile else "Volunteer",
+                    "email": user.email,
+                },
                 idempotency_key=str(uuid.uuid4()),
             )
             await token_repository.create_communication_job(db, outbox_job)

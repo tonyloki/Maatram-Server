@@ -363,6 +363,23 @@ class GamificationService:
                 # Enqueue thank-you email outbox job if consent provided
                 if vp and vp.consent_record and vp.consent_record.thank_you_emails and vp.user:
                     idempotency_key = f"thank_you_{event.id}_{vp.id}"
+                    vol_name = f"{vp.first_name} {vp.last_name}".strip() or vp.first_name
+
+                    # Determine volunteer rank
+                    rank_str = "—"
+                    try:
+                        rank_summary = await self.get_summary(db, vp.id, cycle_year=cycle_year)
+                        if rank_summary.rank:
+                            rank_str = f"#{rank_summary.rank}"
+                    except Exception:
+                        pass
+
+                    event_date_str = (
+                        event.start_time.strftime("%d %B %Y")
+                        if event.start_time
+                        else "the scheduled date"
+                    )
+
                     job = CommunicationJob(
                         channel="EMAIL",
                         recipient=vp.user.email,
@@ -370,9 +387,17 @@ class GamificationService:
                         payload={
                             "event_id": str(event.id),
                             "event_title": event.title,
-                            "volunteer_name": f"{vp.first_name} {vp.last_name}",
+                            "event_name": event.title,
+                            "event_date": event_date_str,
+                            "volunteer_name": vol_name,
+                            "name": vol_name,
+                            "first_name": vp.first_name,
                             "hours_credited": str(hrs),
+                            "hours": str(hrs),
                             "points_awarded": str(tot_pts),
+                            "points": str(tot_pts),
+                            "rank": rank_str,
+                            "current_rank": rank_str,
                         },
                         idempotency_key=idempotency_key,
                         status="PENDING",

@@ -52,8 +52,8 @@ class GmailSMTPClient:
     ) -> None:
         self.host = host or getattr(settings, "SMTP_HOST", "smtp.gmail.com")
         self.port = port if port is not None else getattr(settings, "SMTP_PORT", 587)
-        self.username = username or getattr(settings, "SMTP_USERNAME", None)
-        self.password = password or getattr(settings, "SMTP_PASSWORD", None)
+        self.username = username if username is not None else getattr(settings, "SMTP_USERNAME", None)
+        self.password = password if password is not None else getattr(settings, "SMTP_PASSWORD", None)
         self.use_tls = (
             use_tls if use_tls is not None else getattr(settings, "SMTP_USE_TLS", True)
         )

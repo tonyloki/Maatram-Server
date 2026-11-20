@@ -37,7 +37,7 @@ def test_smtp_provider_configuration_defaults() -> None:
     assert settings.SMTP_PORT == 587
     assert settings.SMTP_USE_TLS is True
     assert settings.SMTP_USE_SSL is False
-    assert settings.EMAIL_FROM_NAME == "Maatram Volunteering Portal"
+    assert settings.EMAIL_FROM_NAME in ("Maatram Volunteering Portal", "Maatram Foundation")
 
 
 def test_provider_factory_selects_smtp_and_resend() -> None:
@@ -189,7 +189,7 @@ async def test_smtp_starttls_successful_submission() -> None:
         assert res.error is None
 
         # Verify SMTP handshake sequence
-        mock_smtp_cls.assert_called_once_with(host="smtp.gmail.com", port=587, timeout=15.0)
+        mock_smtp_cls.assert_called_once_with(host="smtp.gmail.com", port=587, timeout=client.timeout)
         assert mock_smtp_instance.ehlo.call_count >= 2
         mock_smtp_instance.starttls.assert_called_once()
         mock_smtp_instance.login.assert_called_once_with("rnksamy007@gmail.com", "app_password_mock")

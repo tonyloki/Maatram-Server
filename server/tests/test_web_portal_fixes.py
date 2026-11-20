@@ -19,16 +19,39 @@ from src.repositories.volunteer_repo import volunteer_repository
 
 @pytest.mark.asyncio
 async def test_volunteer_registration_email_template_content():
-    """Verify registration email template produces the exact required notification copy."""
-    payload = {"first_name": "Priya", "email": "priya@example.com"}
+    """Verify registration, approval, and event thank-you email templates produce exact required copy."""
+    # 1. Registration
+    payload = {"first_name": "Priya", "category": "STUDENT", "email": "priya@example.com"}
     subject, html, text = render_email_template("VOLUNTEER_REGISTRATION", payload)
+    assert subject == "Thank you for registering with Maatram Volunteer Portal"
+    assert "Thank you for registering as a Student volunteer with Maatram Foundation." in text
+    assert "Your willingness to give your time means the world to our students." in text
+    assert "Next steps:" in text
 
-    expected_copy = (
-        "We have received your registration. Our team will review your application and approve it within 2 days. Your current application status is Pending."
-    )
-    assert "Registration" in subject or "Maatram" in subject
-    assert expected_copy in text
-    assert expected_copy in html
+    # 2. Approval
+    payload_app = {"first_name": "Karthik", "email": "karthik@example.com"}
+    subj_app, html_app, text_app = render_email_template("APPLICATION_APPROVED", payload_app)
+    assert subj_app == "Your application is Approved."
+    assert "Your volunteer application has been reviewed and approved by the Maatram team." in text_app
+    assert "You can now log in to the portal at any time." in text_app
+    assert "A Message from Our Team:" in text_app
+
+    # 3. Event Completion / Thank you
+    payload_ev = {
+        "name": "Meera",
+        "event_name": "Teaching Drive",
+        "event_date": "25 November 2026",
+        "hours": "4.00",
+        "points": "18.00",
+        "rank": "#2",
+    }
+    subj_ev, html_ev, text_ev = render_email_template("EVENT_THANK_YOU", payload_ev)
+    assert subj_ev == "Thank you for volunteering at Teaching Drive"
+    assert "Thank you for volunteering at Teaching Drive on 25 November 2026." in text_ev
+    assert "Verified hours: 4.00" in text_ev
+    assert "Points earned: 18.00" in text_ev
+    assert "Current rank: #2" in text_ev
+    assert "Your kindness and dedication gave our students the confidence to dream bigger." in text_ev
 
 
 @pytest.mark.asyncio

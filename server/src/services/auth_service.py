@@ -247,12 +247,19 @@ class AuthService:
             await token_repository.create_communication_job(db, outbox_job)
 
             # Enqueue Volunteer Registration Confirmation Email
+            category_display = (
+                profile.category.replace("_", " ").title() if profile.category else "Student"
+            )
+            full_name = f"{profile.first_name} {profile.last_name}".strip() or profile.first_name
             reg_job = CommunicationJob(
                 channel="EMAIL",
                 recipient=user.email,
                 template_name="VOLUNTEER_REGISTRATION",
                 payload={
+                    "name": full_name,
                     "first_name": profile.first_name,
+                    "last_name": profile.last_name,
+                    "category": category_display,
                     "email": user.email,
                     "status": "Pending",
                 },
