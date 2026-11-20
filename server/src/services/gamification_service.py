@@ -328,6 +328,13 @@ class GamificationService:
                 att.duration_minutes = 0
                 continue
 
+        # 1. Process point allocations and achievements for all attendees
+        awarded_volunteers: list[tuple[EventRegistration, Decimal, Decimal]] = []
+        for reg in registrations:
+            att = reg.attendance
+            if not att:
+                continue
+
             if att.status == "COMPLETED":
                 dur = att.duration_minutes or 0
                 if dur <= 0:
@@ -359,51 +366,59 @@ class GamificationService:
                     db, reg.volunteer_profile_id
                 )
                 achievements_count += earned_now
+                awarded_volunteers.append((reg, tot_pts, hrs))
 
-                # Enqueue thank-you email outbox job if consent provided
-                if vp and vp.consent_record and vp.consent_record.thank_you_emails and vp.user:
-                    idempotency_key = f"thank_you_{event.id}_{vp.id}"
-                    vol_name = f"{vp.first_name} {vp.last_name}".strip() or vp.first_name
+        # Flush transactions so point totals and leaderboard ranks are immediately queryable
+        await db.flush()
 
-                    # Determine volunteer rank
-                    rank_str = "—"
-                    try:
-                        rank_summary = await self.get_summary(db, vp.id, cycle_year=cycle_year)
-                        if rank_summary.rank:
-                            rank_str = f"#{rank_summary.rank}"
-                    except Exception:
-                        pass
+        # 2. Enqueue thank-you email outbox jobs with updated hours, points, and accurate ranks
+        for reg, tot_pts, hrs in awarded_volunteers:
+            vp = reg.volunteer_profile
+            if vp and vp.consent_record and vp.consent_record.thank_you_emails and vp.user:
+                idempotency_key = f"thank_you_{event.id}_{vp.id}"
+                vol_name = f"{vp.first_name} {vp.last_name}".strip() if vp.last_name else vp.first_name
 
-                    event_date_str = (
-                        event.start_time.strftime("%d %B %Y")
-                        if event.start_time
-                        else "the scheduled date"
+                # Determine volunteer's updated rank after point credit
+                rank_str = "—"
+                try:
+                    rank_summary = await self.get_summary_by_profile_id(
+                        db, vp.id, cycle_year=cycle_year
                     )
+                    if rank_summary.rank:
+                        rank_str = f"#{rank_summary.rank}"
+                except Exception:
+                    pass
 
-                    job = CommunicationJob(
-                        channel="EMAIL",
-                        recipient=vp.user.email,
-                        template_name="EVENT_THANK_YOU",
-                        payload={
-                            "event_id": str(event.id),
-                            "event_title": event.title,
-                            "event_name": event.title,
-                            "event_date": event_date_str,
-                            "volunteer_name": vol_name,
-                            "name": vol_name,
-                            "first_name": vp.first_name,
-                            "hours_credited": str(hrs),
-                            "hours": str(hrs),
-                            "points_awarded": str(tot_pts),
-                            "points": str(tot_pts),
-                            "rank": rank_str,
-                            "current_rank": rank_str,
-                        },
-                        idempotency_key=idempotency_key,
-                        status="PENDING",
-                    )
-                    db.add(job)
-                    outbox_count += 1
+                event_date_str = (
+                    event.start_time.strftime("%d %B %Y")
+                    if event.start_time
+                    else "the scheduled date"
+                )
+
+                job = CommunicationJob(
+                    channel="EMAIL",
+                    recipient=vp.user.email,
+                    template_name="EVENT_THANK_YOU",
+                    payload={
+                        "event_id": str(event.id),
+                        "event_title": event.title,
+                        "event_name": event.title,
+                        "event_date": event_date_str,
+                        "volunteer_name": vol_name,
+                        "name": vol_name,
+                        "first_name": vp.first_name,
+                        "hours_credited": str(hrs),
+                        "hours": str(hrs),
+                        "points_awarded": str(tot_pts),
+                        "points": str(tot_pts),
+                        "rank": rank_str,
+                        "current_rank": rank_str,
+                    },
+                    idempotency_key=idempotency_key,
+                    status="PENDING",
+                )
+                db.add(job)
+                outbox_count += 1
 
         self._record_audit_log(
             db=db,
@@ -612,20 +627,13 @@ class GamificationService:
         await cache.set(cache_key, response, ttl_seconds=60.0)
         return response
 
-    async def get_my_summary(
-        self, db: AsyncSession, current_user: User, cycle_year: int | None = None
+    async def get_summary_by_profile_id(
+        self, db: AsyncSession, volunteer_profile_id: uuid.UUID, cycle_year: int | None = None
     ) -> GamificationSummaryResponse:
-        """Retrieve authenticated volunteer's gamification overview."""
-        vp_stmt = select(VolunteerProfile).where(VolunteerProfile.user_id == current_user.id)
-        vp_res = await db.execute(vp_stmt)
-        profile = vp_res.scalar_one_or_none()
-
-        if not profile:
-            raise NotFoundException("Volunteer profile not found.")
-
+        """Retrieve gamification overview directly by volunteer profile ID."""
         year = cycle_year or datetime.now(UTC).year
         pts, hrs, evs, badges = await gamification_repository.get_volunteer_summary(
-            db=db, volunteer_profile_id=profile.id, cycle_year=year
+            db=db, volunteer_profile_id=volunteer_profile_id, cycle_year=year
         )
 
         # Determine volunteer rank on overall leaderboard
@@ -643,7 +651,7 @@ class GamificationService:
         current_rank = ahead_count + 1 if pts > Decimal("0.00") else None
 
         return GamificationSummaryResponse(
-            volunteer_profile_id=profile.id,
+            volunteer_profile_id=volunteer_profile_id,
             total_points=pts,
             total_hours=hrs,
             completed_events_count=evs,
@@ -651,6 +659,19 @@ class GamificationService:
             rank=current_rank,
             cycle_year=year,
         )
+
+    async def get_my_summary(
+        self, db: AsyncSession, current_user: User, cycle_year: int | None = None
+    ) -> GamificationSummaryResponse:
+        """Retrieve authenticated volunteer's gamification overview."""
+        vp_stmt = select(VolunteerProfile).where(VolunteerProfile.user_id == current_user.id)
+        vp_res = await db.execute(vp_stmt)
+        profile = vp_res.scalar_one_or_none()
+
+        if not profile:
+            raise NotFoundException("Volunteer profile not found.")
+
+        return await self.get_summary_by_profile_id(db, profile.id, cycle_year=cycle_year)
 
     async def get_my_ledger(
         self,
